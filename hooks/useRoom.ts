@@ -1,7 +1,7 @@
 // hooks/useRoom.ts
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Room, Player, Buzz, QCMAnswer, GameMode } from '@/types';
 import { BUZZ_QUESTIONS, QCM_QUESTIONS } from '@/lib/questions';
@@ -16,11 +16,26 @@ export function useRoom(code: string, nickname: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Canal broadcast pour envoyer la révélation à tous
+  const broadcastChannelRef = useRef<any>(null);
+
   useEffect(() => {
     if (!code || !nickname) return;
     initRoom();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, nickname]);
+
+  // Créer le canal broadcast dès qu'on a l'id de la salle
+  useEffect(() => {
+    if (!room?.id) return;
+    const ch = supabase.channel(`room-${room.id}`);
+    ch.subscribe();
+    broadcastChannelRef.current = ch;
+    return () => {
+      supabase.removeChannel(ch);
+      broadcastChannelRef.current = null;
+    };
+  }, [room?.id]);
 
   const initRoom = async () => {
     setLoading(true);
@@ -50,7 +65,6 @@ export function useRoom(code: string, nickname: string) {
       return;
     }
 
-    // Vérifier si le joueur existe déjà (cas de l'hôte)
     const { data: existingPlayer } = await supabase
       .from('room_players')
       .select('*')
@@ -124,7 +138,16 @@ export function useRoom(code: string, nickname: string) {
 
   const revealQCMAndNext = useCallback(async () => {
     if (!room || !myPlayer?.is_host) return;
+
+    // Révéler localement
     setQcmRevealed(true);
+
+    // Broadcaster la révélation à tous les autres joueurs
+    broadcastChannelRef.current?.send({
+      type: 'broadcast',
+      event: 'qcm_reveal',
+      payload: {},
+    });
 
     // Attribuer les points pour les bonnes réponses
     const correctAnswers = qcmAnswers.filter(a => a.is_correct);
@@ -133,12 +156,12 @@ export function useRoom(code: string, nickname: string) {
       if (p) await supabase.from('room_players').update({ score: p.score + 100 }).eq('id', ans.player_id);
     }
 
-    // Attendre 2s puis passer à la question suivante
+    // Attendre 5 secondes (animation moustache) puis passer à la question suivante
     setTimeout(async () => {
       await nextQuestion(room);
       setQcmRevealed(false);
       setQcmAnswers([]);
-    }, 2500);
+    }, 5000);
   }, [room, myPlayer, qcmAnswers]);
 
   const nextQuestion = async (currentRoom: Room) => {
@@ -148,13 +171,11 @@ export function useRoom(code: string, nickname: string) {
     await supabase.from('rooms').update({ current_question: nextQ, status }).eq('id', currentRoom.id);
   };
 
-  // Lancer la partie (hôte)
   const startGame = useCallback(async () => {
     if (!room || !myPlayer?.is_host) return;
     await supabase.from('rooms').update({ status: 'playing', current_question: 0 }).eq('id', room.id);
   }, [room, myPlayer]);
 
-  // Sauvegarder les settings (hôte)
   const saveSettings = useCallback(async (settings: { timer_duration: number; max_players: number; sound_enabled: boolean }) => {
     if (!room || !myPlayer?.is_host) return;
     await supabase.from('rooms').update(settings).eq('id', room.id);

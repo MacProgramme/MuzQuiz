@@ -12,9 +12,10 @@ interface Props {
   onBuzz: (buzz: Buzz) => void;
   onQCMAnswer: (answer: QCMAnswer) => void;
   onNextQuestion: () => void;
+  onQCMReveal?: () => void;
 }
 
-export function useRealtime({ roomId, onRoomUpdate, onPlayersUpdate, onBuzz, onQCMAnswer, onNextQuestion }: Props) {
+export function useRealtime({ roomId, onRoomUpdate, onPlayersUpdate, onBuzz, onQCMAnswer, onNextQuestion, onQCMReveal }: Props) {
   useEffect(() => {
     if (!roomId) return;
 
@@ -48,6 +49,10 @@ export function useRealtime({ roomId, onRoomUpdate, onPlayersUpdate, onBuzz, onQ
         filter: `room_id=eq.${roomId}`,
       }, (payload) => {
         onQCMAnswer(payload.new as QCMAnswer);
+      })
+      // Broadcast : révélation QCM pour tous les joueurs
+      .on('broadcast', { event: 'qcm_reveal' }, () => {
+        onQCMReveal?.();
       })
       .subscribe();
 

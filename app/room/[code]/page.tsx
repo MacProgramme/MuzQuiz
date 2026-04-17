@@ -23,7 +23,7 @@ export default function RoomPage() {
 
   const {
     room, players, myPlayer, buzz, setBuzz,
-    qcmAnswers, setQcmAnswers, qcmRevealed,
+    qcmAnswers, setQcmAnswers, qcmRevealed, setQcmRevealed,
     loading, error,
     pressBuzzer, judgeAnswer,
     submitQCMAnswer, revealQCMAndNext,
@@ -40,6 +40,7 @@ export default function RoomPage() {
       setRoom(r);
       setBuzz(null);
       setQcmAnswers([]);
+      setQcmRevealed(false);
       setTimerKey(k => k + 1);
       if (r.status === 'finished') router.push(`/room/${code}/results`);
     },
@@ -50,6 +51,8 @@ export default function RoomPage() {
       return [...prev, a];
     }),
     onNextQuestion: () => { setBuzz(null); setQcmAnswers([]); },
+    // Tous les joueurs (pas seulement l'hôte) voient la révélation
+    onQCMReveal: () => setQcmRevealed(true),
   });
 
   useEffect(() => {

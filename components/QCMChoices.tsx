@@ -3,13 +3,29 @@
 
 const LABELS = ['A', 'B', 'C', 'D'];
 
-// Couleurs vives MUZQUIZ pour les 4 choix
 const CHOICE_COLORS = [
-  { bg: '#FF00AA', light: 'rgba(255,0,170,0.15)', border: 'rgba(255,0,170,0.5)' },   // pink
-  { bg: '#00E5D1', light: 'rgba(0,229,209,0.15)', border: 'rgba(0,229,209,0.5)' },   // cyan
-  { bg: '#8B5CF6', light: 'rgba(139,92,246,0.15)', border: 'rgba(139,92,246,0.5)' }, // violet
-  { bg: '#F59E0B', light: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.5)' }, // amber
+  { bg: '#FF00AA', light: 'rgba(255,0,170,0.15)', border: 'rgba(255,0,170,0.5)' },
+  { bg: '#00E5D1', light: 'rgba(0,229,209,0.15)', border: 'rgba(0,229,209,0.5)' },
+  { bg: '#8B5CF6', light: 'rgba(139,92,246,0.15)', border: 'rgba(139,92,246,0.5)' },
+  { bg: '#F59E0B', light: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.5)' },
 ];
+
+// Moustache SVG inline pour la bonne réponse
+function MustacheIcon({ color = '#00E5D1', size = 40 }: { color?: string; size?: number }) {
+  return (
+    <svg
+      viewBox="0 0 100 38"
+      className="muz-mustache-anim"
+      style={{ width: size, height: size * 0.38, flexShrink: 0, filter: `drop-shadow(0 0 8px ${color}99)` }}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M50 22 C46 17 36 13 24 17 C16 20 9 24 5 20 C2 17 3 11 8 10 C15 8 24 13 31 18 C36 22 44 25 50 22 C56 25 64 22 69 18 C76 13 85 8 92 10 C97 11 98 17 95 20 C91 24 84 20 76 17 C64 13 54 17 50 22 Z"
+        fill={color}
+      />
+    </svg>
+  );
+}
 
 interface Props {
   choices: [string, string, string, string];
@@ -31,7 +47,6 @@ export function QCMChoices({
         const isSelected = selectedIndex === i;
         const isCorrect = revealed && correctIndex === i;
         const isWrong = revealed && isSelected && correctIndex !== null && i !== correctIndex;
-        const isNeutral = revealed && !isCorrect && !isSelected;
 
         let bgStyle: React.CSSProperties;
         let borderColor: string;
@@ -39,16 +54,16 @@ export function QCMChoices({
 
         if (revealed) {
           if (isCorrect) {
-            bgStyle = { background: 'rgba(0,229,209,0.25)' };
+            bgStyle = { background: 'rgba(0,229,209,0.2)' };
             borderColor = '#00E5D1';
           } else if (isWrong) {
-            bgStyle = { background: 'rgba(255,0,170,0.1)' };
-            borderColor = 'rgba(255,0,170,0.3)';
-            textColor = 'rgba(240,244,255,0.4)';
+            bgStyle = { background: 'rgba(255,0,170,0.08)' };
+            borderColor = 'rgba(255,0,170,0.25)';
+            textColor = 'rgba(240,244,255,0.35)';
           } else {
-            bgStyle = { background: 'rgba(255,255,255,0.03)' };
-            borderColor = 'rgba(255,255,255,0.07)';
-            textColor = 'rgba(240,244,255,0.3)';
+            bgStyle = { background: 'rgba(255,255,255,0.02)' };
+            borderColor = 'rgba(255,255,255,0.06)';
+            textColor = 'rgba(240,244,255,0.25)';
           }
         } else if (selectedIndex !== null) {
           if (isSelected) {
@@ -71,14 +86,17 @@ export function QCMChoices({
             disabled={selectedIndex !== null || revealed}
             className={`relative flex items-center gap-3 p-4 rounded-2xl font-bold text-left transition-all duration-200
               ${!revealed && selectedIndex === null ? 'hover:scale-[1.03] active:scale-95' : ''}
-              ${isCorrect ? 'muz-pop' : ''}
             `}
             style={{
               ...bgStyle,
               border: `2px solid ${borderColor}`,
               color: textColor,
               cursor: selectedIndex !== null || revealed ? 'default' : 'pointer',
-              boxShadow: isCorrect ? `0 0 20px rgba(0,229,209,0.4)` : isSelected && !revealed ? `0 0 12px ${color.bg}55` : 'none',
+              boxShadow: isCorrect
+                ? '0 0 24px rgba(0,229,209,0.5)'
+                : isSelected && !revealed
+                ? `0 0 12px ${color.bg}55`
+                : 'none',
             }}
           >
             {/* Label lettre */}
@@ -86,7 +104,7 @@ export function QCMChoices({
               className="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
               style={{
                 background: revealed
-                  ? isCorrect ? '#00E5D1' : 'rgba(255,255,255,0.1)'
+                  ? isCorrect ? '#00E5D1' : 'rgba(255,255,255,0.07)'
                   : isSelected ? color.bg : color.light,
                 color: revealed
                   ? isCorrect ? '#0D1B3E' : textColor
@@ -98,8 +116,13 @@ export function QCMChoices({
 
             <span className="text-sm leading-tight flex-1">{choice}</span>
 
-            {isCorrect && <span className="text-xl ml-auto">✓</span>}
-            {isWrong && <span className="text-xl ml-auto opacity-50">✗</span>}
+            {/* Moustache animée pour la bonne réponse */}
+            {isCorrect && <MustacheIcon color="#00E5D1" size={48} />}
+
+            {/* Croix discrète pour la mauvaise réponse */}
+            {isWrong && (
+              <span className="ml-auto text-lg opacity-40" style={{ color: '#FF00AA' }}>✗</span>
+            )}
           </button>
         );
       })}

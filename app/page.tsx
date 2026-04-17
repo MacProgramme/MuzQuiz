@@ -61,14 +61,30 @@ export default function Home() {
     <main className="min-h-screen flex flex-col items-center justify-center p-6"
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
 
-      {/* Logo + Moustache */}
+      {/* Logo + Moustache SVG */}
       <div className="flex flex-col items-center mb-2">
-        <div className="text-5xl mb-1 select-none" style={{ filter: 'drop-shadow(0 0 12px rgba(255,0,170,0.5))' }}>
-          👨
-        </div>
         <h1 className="muz-logo text-6xl font-black tracking-tight" style={{ fontFamily: 'var(--font-black-han)' }}>
           MUZQUIZ
         </h1>
+        {/* Moustache SVG logo */}
+        <svg
+          viewBox="0 0 100 38"
+          className="muz-shake"
+          style={{ width: '120px', marginTop: '-4px', filter: 'drop-shadow(0 0 10px rgba(255,0,170,0.6))' }}
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M50 22 C46 17 36 13 24 17 C16 20 9 24 5 20 C2 17 3 11 8 10 C15 8 24 13 31 18 C36 22 44 25 50 22 C56 25 64 22 69 18 C76 13 85 8 92 10 C97 11 98 17 95 20 C91 24 84 20 76 17 C64 13 54 17 50 22 Z"
+            fill="url(#muz-grad)"
+          />
+          <defs>
+            <linearGradient id="muz-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#FF00AA" />
+              <stop offset="50%" stopColor="#8B5CF6" />
+              <stop offset="100%" stopColor="#00E5D1" />
+            </linearGradient>
+          </defs>
+        </svg>
       </div>
       <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.4)' }}>
         Quiz & Blind Test en temps réel
