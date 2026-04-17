@@ -34,10 +34,11 @@ interface Props {
   totalPlayers: number;
   onChoose: (index: number) => void;
   revealed: boolean;
+  disabledForNonBuzzer?: boolean; // true = boutons visibles mais non cliquables (spectateurs en mode Buzz Quiz)
 }
 
 export function QCMChoices({
-  choices, selectedIndex, correctIndex, onChoose, revealed,
+  choices, selectedIndex, correctIndex, onChoose, revealed, disabledForNonBuzzer = false,
 }: Props) {
   return (
     <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
@@ -73,6 +74,10 @@ export function QCMChoices({
             borderColor = 'rgba(255,255,255,0.07)';
             textColor = 'rgba(240,244,255,0.3)';
           }
+        } else if (disabledForNonBuzzer) {
+          bgStyle = { background: 'rgba(255,255,255,0.03)' };
+          borderColor = 'rgba(255,255,255,0.08)';
+          textColor = 'rgba(240,244,255,0.25)';
         } else {
           bgStyle = { background: color.light };
           borderColor = color.border;
@@ -82,7 +87,7 @@ export function QCMChoices({
           <button
             key={i}
             onClick={() => !revealed && selectedIndex === null && onChoose(i)}
-            disabled={selectedIndex !== null || revealed}
+            disabled={selectedIndex !== null || revealed || disabledForNonBuzzer}
             className={`relative flex items-center gap-3 p-4 rounded-2xl font-bold text-left transition-all duration-200
               ${!revealed && selectedIndex === null ? 'hover:scale-[1.03] active:scale-95' : ''}
             `}

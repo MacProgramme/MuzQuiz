@@ -1,7 +1,7 @@
 // app/room/[code]/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useRoom } from '@/hooks/useRoom';
 import { useRealtime } from '@/hooks/useRealtime';
@@ -11,7 +11,69 @@ import { Timer } from '@/components/Timer';
 import { Scoreboard } from '@/components/Scoreboard';
 import { SettingsModal } from '@/components/SettingsModal';
 import { BUZZ_QUESTIONS, QCM_QUESTIONS, FREE_QUESTION_LIMIT } from '@/lib/questions';
-import { Buzz, QCMAnswer } from '@/types';
+import { Buzz, QCMAnswer, Player } from '@/types';
+
+// --- Composant countdown animé (5 secondes) ---
+function RevealCountdown({ players, correctPlayerIds }: { players: Player[]; correctPlayerIds: string[] }) {
+  const [count, setCount] = useState(5);
+  const r = 26;
+  const circ = 2 * Math.PI * r;
+
+  useEffect(() => {
+    if (count <= 0) return;
+    const t = setTimeout(() => setCount(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [count]);
+
+  const offset = circ * (count / 5);
+
+  return (
+    <div className="flex flex-col items-center gap-4 w-full max-w-lg">
+      {/* Scores animés */}
+      <div className="flex flex-wrap justify-center gap-3">
+        {players.map(p => {
+          const correct = correctPlayerIds.includes(p.id);
+          return (
+            <div key={p.id} className="relative flex flex-col items-center px-3 py-2 rounded-xl"
+              style={{
+                background: correct ? 'rgba(0,229,209,0.15)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${correct ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.08)'}`,
+              }}>
+              <span className="text-xs font-bold" style={{ color: correct ? '#00E5D1' : 'rgba(240,244,255,0.4)' }}>
+                {p.nickname}
+              </span>
+              {correct && (
+                <span className="muz-score-float absolute -top-4 font-black text-sm"
+                  style={{ color: '#00E5D1', textShadow: '0 0 10px rgba(0,229,209,0.8)' }}>
+                  +100
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Cercle countdown */}
+      <div className="flex flex-col items-center gap-1">
+        <svg width="72" height="72" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
+          <circle cx="32" cy="32" r={r} fill="none" stroke="#8B5CF6" strokeWidth="5"
+            strokeDasharray={circ} strokeDashoffset={offset}
+            strokeLinecap="round" transform="rotate(-90 32 32)"
+            style={{ transition: 'stroke-dashoffset 0.95s linear' }}
+          />
+          <text x="32" y="38" textAnchor="middle" fill="#F0F4FF" fontSize="20" fontWeight="900"
+            style={{ fontFamily: 'var(--font-black-han)' }}>
+            {count}
+          </text>
+        </svg>
+        <p className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.35)' }}>
+          prochaine question...
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function RoomPage() {
   const { code } = useParams<{ code: string }>();
@@ -25,8 +87,7 @@ export default function RoomPage() {
     room, players, myPlayer, buzz, setBuzz,
     qcmAnswers, setQcmAnswers, qcmRevealed, setQcmRevealed,
     loading, error,
-    pressBuzzer, judgeAnswer,
-    submitQCMAnswer, revealQCMAndNext,
+    pressBuzzer, submitQCMAnswer, revealQCMAndNext,
     startGame, saveSettings,
     setRoom, setPlayers,
   } = useRoom(code, nickname);
@@ -51,16 +112,24 @@ export default function RoomPage() {
       return [...prev, a];
     }),
     onNextQuestion: () => { setBuzz(null); setQcmAnswers([]); },
-    // Tous les joueurs (pas seulement l'hôte) voient la révélation
     onQCMReveal: () => setQcmRevealed(true),
   });
 
+  // Auto-révéler QCM quand tous les joueurs ont répondu
   useEffect(() => {
     if (!room || room.mode !== 'qcm' || !myPlayer?.is_host || qcmRevealed) return;
     if (qcmAnswers.length >= players.length && players.length > 0) {
       revealQCMAndNext();
     }
   }, [qcmAnswers, players, room, myPlayer, qcmRevealed]);
+
+  // Auto-révéler Buzz Quiz quand le joueur buzzé a répondu
+  useEffect(() => {
+    if (!room || room.mode !== 'buzz' || !buzz || !myPlayer?.is_host || qcmRevealed) return;
+    if (qcmAnswers.length >= 1) {
+      revealQCMAndNext();
+    }
+  }, [qcmAnswers, room, buzz, myPlayer, qcmRevealed]);
 
   // --- Chargement ---
   if (loading) return (
@@ -74,8 +143,7 @@ export default function RoomPage() {
   if (error) return (
     <div className="flex items-center justify-center h-screen flex-col gap-4" style={{ background: '#0D1B3E' }}>
       <p className="font-bold" style={{ color: '#FF00AA' }}>{error}</p>
-      <button onClick={() => router.push('/')}
-        className="text-sm underline" style={{ color: '#8B5CF6' }}>
+      <button onClick={() => router.push('/')} className="text-sm underline" style={{ color: '#8B5CF6' }}>
         Retour à l'accueil
       </button>
     </div>
@@ -85,6 +153,9 @@ export default function RoomPage() {
 
   // --- Salle d'attente ---
   if (room.status === 'waiting') {
+    const modeLabel = room.mode === 'qcm' ? 'Quiz Blind Test' : 'Buzz Quiz';
+    const modeIcon = room.mode === 'qcm' ? '🎵' : '🔔';
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
@@ -97,33 +168,20 @@ export default function RoomPage() {
           />
         )}
 
-        {/* Logo + mode */}
         <div className="text-center">
-          <h1 className="muz-logo text-4xl font-black mb-1" style={{ fontFamily: 'var(--font-black-han)' }}>
-            MUZQUIZ
-          </h1>
+          <h1 className="muz-logo text-4xl font-black mb-1" style={{ fontFamily: 'var(--font-black-han)' }}>MUZQUIZ</h1>
           <div className="flex items-center justify-center gap-2 mb-1">
-            <span>{room.mode === 'buzz' ? '🔔' : '🎯'}</span>
-            <span className="font-bold" style={{ color: '#8B5CF6' }}>
-              Mode {room.mode === 'buzz' ? 'Buzz' : 'QCM'}
-            </span>
+            <span>{modeIcon}</span>
+            <span className="font-bold" style={{ color: '#8B5CF6' }}>{modeLabel}</span>
           </div>
-          {/* Code salle */}
           <div className="mt-3 px-6 py-3 rounded-2xl inline-block"
             style={{ background: 'rgba(0,229,209,0.08)', border: '2px solid rgba(0,229,209,0.3)' }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(0,229,209,0.5)' }}>
-              Code de la salle
-            </p>
-            <div className="font-black font-mono tracking-[0.25em] text-3xl" style={{ color: '#00E5D1' }}>
-              {code}
-            </div>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(0,229,209,0.5)' }}>Code de la salle</p>
+            <div className="font-black font-mono tracking-[0.25em] text-3xl" style={{ color: '#00E5D1' }}>{code}</div>
           </div>
-          <p className="text-xs mt-2" style={{ color: 'rgba(240,244,255,0.3)' }}>
-            Partage ce code avec tes amis !
-          </p>
+          <p className="text-xs mt-2" style={{ color: 'rgba(240,244,255,0.3)' }}>Partage ce code avec tes amis !</p>
         </div>
 
-        {/* Liste joueurs */}
         <div className="muz-card w-full max-w-md p-5">
           <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'rgba(240,244,255,0.4)' }}>
             Joueurs ({players.length}/{room.max_players})
@@ -137,16 +195,13 @@ export default function RoomPage() {
                 <span className="font-bold flex-1" style={{ color: '#F0F4FF' }}>{p.nickname}</span>
                 {p.is_host && (
                   <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-                    style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA' }}>
-                    hôte
-                  </span>
+                    style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA' }}>hôte</span>
                 )}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Boutons hôte */}
         {myPlayer.is_host ? (
           <div className="flex gap-3">
             <button onClick={() => setShowSettings(true)}
@@ -154,8 +209,7 @@ export default function RoomPage() {
               style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#8B5CF6' }}>
               ⚙️
             </button>
-            <button onClick={startGame}
-              className="muz-btn-pink px-8 py-4 rounded-xl text-base font-black">
+            <button onClick={startGame} className="muz-btn-pink px-8 py-4 rounded-xl text-base font-black">
               Lancer la partie ({players.length} joueur{players.length > 1 ? 's' : ''}) →
             </button>
           </div>
@@ -163,9 +217,7 @@ export default function RoomPage() {
           <div className="flex items-center gap-2 px-5 py-3 rounded-full"
             style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#8B5CF6' }} />
-            <p className="text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>
-              En attente que l'hôte lance la partie...
-            </p>
+            <p className="text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>En attente que l'hôte lance la partie...</p>
           </div>
         )}
       </div>
@@ -179,6 +231,7 @@ export default function RoomPage() {
   const buzzedByMe = buzz?.player_id === myPlayer.id;
   const myQCMAnswer = qcmAnswers.find(a => a.player_id === myPlayer.id);
   const answeredCount = qcmAnswers.length;
+  const correctPlayerIds = qcmAnswers.filter(a => a.is_correct).map(a => a.player_id);
 
   // --- Gate gratuit ---
   if (isFreeLimit) {
@@ -188,14 +241,10 @@ export default function RoomPage() {
         <div className="text-6xl">🔒</div>
         <div className="text-center">
           <h2 className="text-2xl font-black mb-2" style={{ color: '#F0F4FF' }}>Limite gratuite atteinte</h2>
-          <p style={{ color: 'rgba(240,244,255,0.5)' }}>Tu as joué {FREE_QUESTION_LIMIT} questions gratuites.</p>
-          <p className="mb-6" style={{ color: 'rgba(240,244,255,0.5)' }}>Passe à un abonnement pour continuer !</p>
+          <p style={{ color: 'rgba(240,244,255,0.5)' }}>Passe à un abonnement pour continuer !</p>
         </div>
-        <a href="/pricing" className="muz-btn-pink px-8 py-4 rounded-xl text-lg font-black">
-          Voir les abonnements →
-        </a>
-        <button onClick={() => router.push('/')}
-          className="text-sm underline" style={{ color: 'rgba(240,244,255,0.4)' }}>
+        <a href="/pricing" className="muz-btn-pink px-8 py-4 rounded-xl text-lg font-black">Voir les abonnements →</a>
+        <button onClick={() => router.push('/')} className="text-sm underline" style={{ color: 'rgba(240,244,255,0.4)' }}>
           Retour à l'accueil
         </button>
       </div>
@@ -216,9 +265,11 @@ export default function RoomPage() {
             {code}
           </span>
         </div>
-        <Timer key={timerKey} duration={room.timer_duration} running={room.mode === 'buzz' ? !buzz : !qcmRevealed} onExpire={() => {
-          if (room.mode === 'qcm' && myPlayer.is_host && !qcmRevealed) revealQCMAndNext();
-        }} />
+        <Timer key={timerKey} duration={room.timer_duration}
+          running={qcmRevealed ? false : room.mode === 'buzz' ? !buzz : !myQCMAnswer}
+          onExpire={() => {
+            if (myPlayer.is_host && !qcmRevealed) revealQCMAndNext();
+          }} />
         <span className="text-xs font-bold px-2 py-1 rounded-full"
           style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}>
           Q {room.current_question + 1}/{questions.length}
@@ -228,74 +279,91 @@ export default function RoomPage() {
       {/* Scoreboard */}
       <Scoreboard players={players} buzzedId={buzz?.player_id} />
 
-      {/* Question + jeu */}
+      {/* Zone de jeu */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
 
-        {/* Numéro de question */}
         <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.6)' }}>
-          Question {room.current_question + 1}
+          {room.mode === 'buzz' ? '🔔 Buzz Quiz' : '🎵 Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
 
-        {/* Texte question */}
+        {/* Question */}
         <div className="muz-card text-center px-6 py-5 w-full max-w-lg">
-          <h2 className="text-xl font-bold leading-snug" style={{ color: '#F0F4FF' }}>
-            {currentQ.q}
-          </h2>
+          <h2 className="text-xl font-bold leading-snug" style={{ color: '#F0F4FF' }}>{currentQ.q}</h2>
         </div>
 
-        {/* === MODE BUZZ === */}
+        {/* ===== MODE BUZZ QUIZ ===== */}
         {room.mode === 'buzz' && (
           <>
-            {buzz && (
-              <div className={`px-5 py-2 rounded-full font-bold text-sm muz-pop`}
-                style={{
-                  background: buzzedByMe ? 'rgba(255,0,170,0.2)' : 'rgba(0,229,209,0.1)',
-                  border: `1px solid ${buzzedByMe ? 'rgba(255,0,170,0.5)' : 'rgba(0,229,209,0.3)'}`,
-                  color: buzzedByMe ? '#FF00AA' : '#00E5D1',
-                }}>
-                {buzzedByMe ? '🎤 Donnez votre réponse !' : `🔔 ${buzzedPlayer?.nickname ?? '???'} a buzzé !`}
-              </div>
+            {/* Phase 1 : personne n'a buzzé */}
+            {!buzz && !qcmRevealed && (
+              <BuzzerButton
+                onBuzz={pressBuzzer}
+                disabled={false}
+                buzzedByMe={false}
+                buzzedByOther={null}
+              />
             )}
 
-            {myPlayer.is_host && buzz && 'a' in currentQ && (
-              <div className="px-5 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)', color: 'rgba(240,244,255,0.7)' }}>
-                Réponse : <span className="font-black" style={{ color: '#8B5CF6' }}>{(currentQ as any).a}</span>
-              </div>
+            {/* Phase 2 : quelqu'un a buzzé, en attente de réponse */}
+            {buzz && !qcmRevealed && (
+              <>
+                {/* Bannière buzz */}
+                <div className="px-5 py-2 rounded-full font-bold text-sm muz-pop"
+                  style={{
+                    background: buzzedByMe ? 'rgba(255,0,170,0.2)' : 'rgba(0,229,209,0.1)',
+                    border: `1px solid ${buzzedByMe ? 'rgba(255,0,170,0.5)' : 'rgba(0,229,209,0.3)'}`,
+                    color: buzzedByMe ? '#FF00AA' : '#00E5D1',
+                  }}>
+                  {buzzedByMe ? '🎤 À toi de répondre !' : `🔔 ${buzzedPlayer?.nickname ?? '???'} a buzzé !`}
+                </div>
+
+                {/* Choix QCM — actifs pour le buzzé, grisés pour les autres */}
+                <QCMChoices
+                  choices={(currentQ as any).choices}
+                  selectedIndex={myQCMAnswer?.answer_index ?? null}
+                  correctIndex={null}
+                  answeredBy={qcmAnswers.map(a => a.answer_index)}
+                  totalPlayers={1}
+                  onChoose={submitQCMAnswer}
+                  revealed={false}
+                  disabledForNonBuzzer={!buzzedByMe}
+                />
+
+                {!buzzedByMe && (
+                  <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                    En attente de la réponse de {buzzedPlayer?.nickname}...
+                  </p>
+                )}
+              </>
             )}
 
-            <BuzzerButton
-              onBuzz={pressBuzzer}
-              disabled={!!buzz}
-              buzzedByMe={buzzedByMe}
-              buzzedByOther={buzz && !buzzedByMe ? buzzedPlayer?.nickname ?? null : null}
-            />
-
-            {myPlayer.is_host && buzz && (
-              <div className="flex gap-3">
-                <button onClick={() => judgeAnswer(true)}
-                  className="px-6 py-3 rounded-xl font-black text-sm transition-all hover:scale-105"
-                  style={{ background: 'rgba(0,229,209,0.15)', border: '1px solid rgba(0,229,209,0.4)', color: '#00E5D1' }}>
-                  ✓ Bonne réponse (+100 pts)
-                </button>
-                <button onClick={() => judgeAnswer(false)}
-                  className="px-6 py-3 rounded-xl font-black text-sm transition-all hover:scale-105"
-                  style={{ background: 'rgba(255,0,170,0.1)', border: '1px solid rgba(255,0,170,0.3)', color: '#FF00AA' }}>
-                  ✗ Mauvaise
-                </button>
-              </div>
+            {/* Phase 3 : révélation */}
+            {qcmRevealed && (
+              <>
+                <QCMChoices
+                  choices={(currentQ as any).choices}
+                  selectedIndex={qcmAnswers.find(a => a.player_id === buzz?.player_id)?.answer_index ?? null}
+                  correctIndex={(currentQ as any).correct}
+                  answeredBy={[]}
+                  totalPlayers={1}
+                  onChoose={() => {}}
+                  revealed={true}
+                  disabledForNonBuzzer={false}
+                />
+                <RevealCountdown players={players} correctPlayerIds={correctPlayerIds} />
+              </>
             )}
           </>
         )}
 
-        {/* === MODE QCM === */}
+        {/* ===== MODE QUIZ BLIND TEST ===== */}
         {room.mode === 'qcm' && 'choices' in currentQ && (
           <>
-            <div className="text-xs font-bold" style={{ color: qcmRevealed ? '#00E5D1' : 'rgba(240,244,255,0.4)' }}>
-              {qcmRevealed
-                ? '✅ Résultats !'
-                : `${answeredCount} / ${players.length} joueur${players.length > 1 ? 's' : ''} ont répondu`}
-            </div>
+            {!qcmRevealed && (
+              <div className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                {answeredCount} / {players.length} joueur{players.length > 1 ? 's' : ''} ont répondu
+              </div>
+            )}
 
             <QCMChoices
               choices={(currentQ as any).choices}
@@ -308,10 +376,13 @@ export default function RoomPage() {
             />
 
             {myPlayer.is_host && !qcmRevealed && answeredCount > 0 && (
-              <button onClick={revealQCMAndNext}
-                className="muz-btn-cyan px-6 py-3 rounded-xl font-black text-sm mt-2">
+              <button onClick={revealQCMAndNext} className="muz-btn-cyan px-6 py-3 rounded-xl font-black text-sm mt-2">
                 Révéler la réponse →
               </button>
+            )}
+
+            {qcmRevealed && (
+              <RevealCountdown players={players} correctPlayerIds={correctPlayerIds} />
             )}
           </>
         )}

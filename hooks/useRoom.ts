@@ -117,7 +117,9 @@ export function useRoom(code: string, nickname: string) {
   // === QCM MODE ===
   const submitQCMAnswer = useCallback(async (answerIndex: number) => {
     if (!room || !myPlayer || qcmAnswers.some(a => a.player_id === myPlayer.id)) return;
-    const questions = QCM_QUESTIONS;
+    // En mode buzz, seul le joueur buzzé peut répondre
+    if (room.mode === 'buzz' && buzz?.player_id !== myPlayer.id) return;
+    const questions = room.mode === 'qcm' ? QCM_QUESTIONS : BUZZ_QUESTIONS;
     const currentQ = questions[room.current_question];
     if (!currentQ) return;
 

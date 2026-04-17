@@ -133,8 +133,8 @@ export default function Home() {
               </p>
               <div className="flex gap-3">
                 {[
-                  { value: 'buzz' as GameMode, icon: '🔔', label: 'Buzz', sub: 'Réponse orale' },
-                  { value: 'qcm' as GameMode, icon: '🎯', label: 'QCM', sub: '4 choix' },
+                  { value: 'qcm' as GameMode, icon: '🎵', label: 'Quiz Blind Test', sub: '4 choix simultané' },
+                  { value: 'buzz' as GameMode, icon: '🔔', label: 'Buzz Quiz', sub: 'Buzz puis 4 choix' },
                 ].map(m => (
                   <button key={m.value} onClick={() => setMode(m.value)}
                     className="flex-1 flex flex-col items-center gap-1 py-4 rounded-xl transition-all"

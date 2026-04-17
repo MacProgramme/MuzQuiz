@@ -99,6 +99,21 @@ body {
 }
 .muz-glow { animation: muz-pulse-glow 1.5s ease-in-out infinite; }
 
+/* Score +100 qui monte */
+@keyframes muz-score-float {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  60%  { transform: translateY(-28px) scale(1.2); opacity: 1; }
+  100% { transform: translateY(-48px) scale(0.9); opacity: 0; }
+}
+.muz-score-float { animation: muz-score-float 1.4s ease-out forwards; }
+
+/* Pulse de fond pendant le reveal */
+@keyframes muz-reveal-bg {
+  0%, 100% { opacity: 0.04; }
+  50%       { opacity: 0.10; }
+}
+.muz-reveal-bg { animation: muz-reveal-bg 1.2s ease-in-out infinite; }
+
 /* Animation moustache correcte (QCM) */
 @keyframes muz-mustache-in {
   0%   { transform: scale(0) rotate(-15deg); opacity: 0; }

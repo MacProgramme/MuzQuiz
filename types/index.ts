@@ -47,6 +47,8 @@ export interface BuzzQuestion {
   type: 'buzz';
   q: string;
   a: string;
+  choices: [string, string, string, string];
+  correct: 0 | 1 | 2 | 3;
 }
 
 export interface QCMQuestion {
