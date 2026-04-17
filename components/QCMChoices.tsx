@@ -11,18 +11,18 @@ const CHOICE_COLORS = [
 ];
 
 // Moustache SVG inline pour la bonne réponse
-function MustacheIcon({ color = '#00E5D1', size = 44 }: { color?: string; size?: number }) {
+function MustacheIcon({ color = '#00E5D1', size = 52 }: { color?: string; size?: number }) {
   return (
     <svg
-      viewBox="0 0 100 50"
+      viewBox="0 0 100 62"
       className="muz-mustache-anim"
-      style={{ width: size, height: size * 0.5, flexShrink: 0, filter: `drop-shadow(0 0 8px ${color}99)` }}
+      style={{ width: size, height: size * 0.62, flexShrink: 0, filter: `drop-shadow(0 0 10px ${color}bb)` }}
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path
-        d="M50 30 C44 24 32 18 18 22 C10 25 4 28 2 24 C0 20 2 13 8 12 C14 11 22 15 30 20 C38 25 46 28 50 26 C54 28 62 25 70 20 C78 15 86 11 92 12 C98 13 100 20 98 24 C96 28 90 25 82 22 C68 18 56 24 50 30 Z"
-        fill={color}
-      />
+      {/* Moitié gauche */}
+      <path d="M50 54 C42 57 26 56 14 49 C6 44 3 38 5 30 C6 24 10 20 15 21 C20 22 22 27 19 31 C17 34 13 33 12 30 C13 26 16 23 20 25 C26 28 36 34 50 42 Z" fill={color} />
+      {/* Moitié droite */}
+      <path d="M50 54 C58 57 74 56 86 49 C94 44 97 38 95 30 C94 24 90 20 85 21 C80 22 78 27 81 31 C83 34 87 33 88 30 C87 26 84 23 80 25 C74 28 64 34 50 42 Z" fill={color} />
     </svg>
   );
 }

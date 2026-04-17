@@ -66,11 +66,11 @@ export default function Home() {
         <h1 className="muz-logo text-6xl font-black tracking-tight" style={{ fontFamily: 'var(--font-black-han)' }}>
           MUZQUIZ
         </h1>
-        {/* Moustache SVG logo */}
+        {/* Moustache SVG logo — handlebar avec boucles */}
         <svg
-          viewBox="0 0 100 50"
+          viewBox="0 0 100 62"
           className="muz-shake"
-          style={{ width: '130px', marginTop: '-6px', filter: 'drop-shadow(0 0 10px rgba(255,0,170,0.6))' }}
+          style={{ width: '150px', marginTop: '-4px', filter: 'drop-shadow(0 0 12px rgba(255,0,170,0.6))' }}
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
@@ -80,10 +80,10 @@ export default function Home() {
               <stop offset="100%" stopColor="#00E5D1" />
             </linearGradient>
           </defs>
-          <path
-            d="M50 30 C44 24 32 18 18 22 C10 25 4 28 2 24 C0 20 2 13 8 12 C14 11 22 15 30 20 C38 25 46 28 50 26 C54 28 62 25 70 20 C78 15 86 11 92 12 C98 13 100 20 98 24 C96 28 90 25 82 22 C68 18 56 24 50 30 Z"
-            fill="url(#muz-logo-grad)"
-          />
+          {/* Moitié gauche */}
+          <path d="M50 54 C42 57 26 56 14 49 C6 44 3 38 5 30 C6 24 10 20 15 21 C20 22 22 27 19 31 C17 34 13 33 12 30 C13 26 16 23 20 25 C26 28 36 34 50 42 Z" fill="url(#muz-logo-grad)" />
+          {/* Moitié droite */}
+          <path d="M50 54 C58 57 74 56 86 49 C94 44 97 38 95 30 C94 24 90 20 85 21 C80 22 78 27 81 31 C83 34 87 33 88 30 C87 26 84 23 80 25 C74 28 64 34 50 42 Z" fill="url(#muz-logo-grad)" />
         </svg>
       </div>
       <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.4)' }}>
