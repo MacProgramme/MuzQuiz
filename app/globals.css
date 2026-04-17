@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   MUZQUIZ — Design System
+   ============================================================ */
+:root {
+  --muz-navy:   #0D1B3E;
+  --muz-navy2:  #112247;
+  --muz-card:   #162856;
+  --muz-pink:   #FF00AA;
+  --muz-cyan:   #00E5D1;
+  --muz-violet: #8B5CF6;
+  --muz-white:  #F0F4FF;
+}
+
+body {
+  background-color: var(--muz-navy);
+  color: var(--muz-white);
+  font-family: inherit;
+}
+
+/* Gradient texte logo */
+.muz-logo {
+  background: linear-gradient(135deg, #FF00AA 0%, #8B5CF6 50%, #00E5D1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Carte sombre */
+.muz-card {
+  background: var(--muz-card);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 1.25rem;
+}
+
+/* Bouton principal pink */
+.muz-btn-pink {
+  background: linear-gradient(135deg, #FF00AA, #CC0088);
+  color: white;
+  font-weight: 900;
+  border-radius: 1rem;
+  transition: all 0.15s;
+  box-shadow: 0 4px 20px rgba(255, 0, 170, 0.35);
+}
+.muz-btn-pink:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.muz-btn-pink:active { transform: scale(0.97); }
+
+/* Bouton cyan */
+.muz-btn-cyan {
+  background: linear-gradient(135deg, #00E5D1, #00B8A8);
+  color: #0D1B3E;
+  font-weight: 900;
+  border-radius: 1rem;
+  transition: all 0.15s;
+  box-shadow: 0 4px 20px rgba(0, 229, 209, 0.3);
+}
+
+/* Buzzer */
+.muz-buzzer {
+  background: radial-gradient(circle at 40% 35%, #FF44CC, #CC0088);
+  box-shadow: 0 0 0 6px rgba(255,0,170,0.25), 0 8px 32px rgba(255,0,170,0.5);
+  transition: all 0.12s;
+}
+.muz-buzzer:hover:not(:disabled) {
+  transform: scale(1.07);
+  box-shadow: 0 0 0 10px rgba(255,0,170,0.2), 0 12px 40px rgba(255,0,170,0.6);
+}
+.muz-buzzer:active:not(:disabled) { transform: scale(0.94); }
+.muz-buzzer:disabled { background: #2a3a5c; box-shadow: none; color: #4a5a7a; }
+.muz-buzzer.buzzed {
+  background: radial-gradient(circle at 40% 35%, #00E5D1, #00A898);
+  box-shadow: 0 0 0 10px rgba(0,229,209,0.25), 0 8px 32px rgba(0,229,209,0.5);
+}
+
+/* Animation moustache */
+@keyframes muz-shake {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  15%  { transform: rotate(-4deg) scale(1.08); }
+  30%  { transform: rotate(4deg) scale(1.08); }
+  45%  { transform: rotate(-3deg) scale(1.05); }
+  60%  { transform: rotate(3deg) scale(1.05); }
+  75%  { transform: rotate(-1deg) scale(1.02); }
+}
+.muz-shake { animation: muz-shake 0.6s ease-in-out; }
+
+@keyframes muz-pop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.muz-pop { animation: muz-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes muz-pulse-glow {
+  0%, 100% { box-shadow: 0 0 12px rgba(255, 0, 170, 0.4); }
+  50%       { box-shadow: 0 0 28px rgba(255, 0, 170, 0.8); }
+}
+.muz-glow { animation: muz-pulse-glow 1.5s ease-in-out infinite; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--muz-navy); }
+::-webkit-scrollbar-thumb { background: var(--muz-violet); border-radius: 3px; }
