@@ -66,11 +66,11 @@ export default function Home() {
         <h1 className="muz-logo text-6xl font-black tracking-tight" style={{ fontFamily: 'var(--font-black-han)' }}>
           MUZQUIZ
         </h1>
-        {/* Moustache SVG logo — handlebar avec boucles */}
+        {/* Moustache SVG logo — handlebar classique avec boucles */}
         <svg
-          viewBox="0 0 100 62"
+          viewBox="0 0 100 52"
           className="muz-shake"
-          style={{ width: '150px', marginTop: '-4px', filter: 'drop-shadow(0 0 12px rgba(255,0,170,0.6))' }}
+          style={{ width: '160px', marginTop: '2px', filter: 'drop-shadow(0 0 14px rgba(255,0,170,0.65))' }}
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
@@ -80,10 +80,10 @@ export default function Home() {
               <stop offset="100%" stopColor="#00E5D1" />
             </linearGradient>
           </defs>
-          {/* Moitié gauche */}
-          <path d="M50 54 C42 57 26 56 14 49 C6 44 3 38 5 30 C6 24 10 20 15 21 C20 22 22 27 19 31 C17 34 13 33 12 30 C13 26 16 23 20 25 C26 28 36 34 50 42 Z" fill="url(#muz-logo-grad)" />
-          {/* Moitié droite */}
-          <path d="M50 54 C58 57 74 56 86 49 C94 44 97 38 95 30 C94 24 90 20 85 21 C80 22 78 27 81 31 C83 34 87 33 88 30 C87 26 84 23 80 25 C74 28 64 34 50 42 Z" fill="url(#muz-logo-grad)" />
+          {/* Moitié gauche — lobe épais + boucle */}
+          <path d="M50 44 C42 48 26 46 14 38 C6 32 3 22 7 16 C10 12 15 10 19 13 C23 16 23 22 19 24 C15 26 11 24 11 21 C12 18 15 15 18 17 C24 20 36 28 50 34 Z" fill="url(#muz-logo-grad)" />
+          {/* Moitié droite — miroir */}
+          <path d="M50 44 C58 48 74 46 86 38 C94 32 97 22 93 16 C90 12 85 10 81 13 C77 16 77 22 81 24 C85 26 89 24 89 21 C88 18 85 15 82 17 C76 20 64 28 50 34 Z" fill="url(#muz-logo-grad)" />
         </svg>
       </div>
       <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.4)' }}>
