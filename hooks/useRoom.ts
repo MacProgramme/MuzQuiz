@@ -28,7 +28,8 @@ export function useRoom(code: string, nickname: string) {
   // Créer le canal broadcast dès qu'on a l'id de la salle
   useEffect(() => {
     if (!room?.id) return;
-    const ch = supabase.channel(`room-${room.id}`);
+    // Nom différent de useRealtime pour éviter les conflits
+    const ch = supabase.channel(`muz-bc-${room.id}`);
     ch.subscribe();
     broadcastChannelRef.current = ch;
     return () => {

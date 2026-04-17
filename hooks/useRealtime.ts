@@ -50,12 +50,19 @@ export function useRealtime({ roomId, onRoomUpdate, onPlayersUpdate, onBuzz, onQ
       }, (payload) => {
         onQCMAnswer(payload.new as QCMAnswer);
       })
-      // Broadcast : révélation QCM pour tous les joueurs
+      .subscribe();
+
+    // Canal séparé pour recevoir le broadcast de révélation QCM
+    const bcChannel = supabase
+      .channel(`muz-bc-${roomId}`)
       .on('broadcast', { event: 'qcm_reveal' }, () => {
         onQCMReveal?.();
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(bcChannel);
+    };
   }, [roomId]);
 }

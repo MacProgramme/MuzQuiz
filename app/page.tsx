@@ -68,22 +68,22 @@ export default function Home() {
         </h1>
         {/* Moustache SVG logo */}
         <svg
-          viewBox="0 0 100 38"
+          viewBox="0 0 100 50"
           className="muz-shake"
-          style={{ width: '120px', marginTop: '-4px', filter: 'drop-shadow(0 0 10px rgba(255,0,170,0.6))' }}
+          style={{ width: '130px', marginTop: '-6px', filter: 'drop-shadow(0 0 10px rgba(255,0,170,0.6))' }}
           xmlns="http://www.w3.org/2000/svg"
         >
-          <path
-            d="M50 22 C46 17 36 13 24 17 C16 20 9 24 5 20 C2 17 3 11 8 10 C15 8 24 13 31 18 C36 22 44 25 50 22 C56 25 64 22 69 18 C76 13 85 8 92 10 C97 11 98 17 95 20 C91 24 84 20 76 17 C64 13 54 17 50 22 Z"
-            fill="url(#muz-grad)"
-          />
           <defs>
-            <linearGradient id="muz-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id="muz-logo-grad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#FF00AA" />
               <stop offset="50%" stopColor="#8B5CF6" />
               <stop offset="100%" stopColor="#00E5D1" />
             </linearGradient>
           </defs>
+          <path
+            d="M50 30 C44 24 32 18 18 22 C10 25 4 28 2 24 C0 20 2 13 8 12 C14 11 22 15 30 20 C38 25 46 28 50 26 C54 28 62 25 70 20 C78 15 86 11 92 12 C98 13 100 20 98 24 C96 28 90 25 82 22 C68 18 56 24 50 30 Z"
+            fill="url(#muz-logo-grad)"
+          />
         </svg>
       </div>
       <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.4)' }}>
