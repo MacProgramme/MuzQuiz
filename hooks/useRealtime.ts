@@ -13,9 +13,10 @@ interface Props {
   onQCMAnswer: (answer: QCMAnswer) => void;
   onNextQuestion: () => void;
   onQCMReveal?: () => void;
+  onShowLeaderboard?: () => void;
 }
 
-export function useRealtime({ roomId, onRoomUpdate, onPlayersUpdate, onBuzz, onQCMAnswer, onNextQuestion, onQCMReveal }: Props) {
+export function useRealtime({ roomId, onRoomUpdate, onPlayersUpdate, onBuzz, onQCMAnswer, onNextQuestion, onQCMReveal, onShowLeaderboard }: Props) {
   useEffect(() => {
     if (!roomId) return;
 
@@ -52,11 +53,14 @@ export function useRealtime({ roomId, onRoomUpdate, onPlayersUpdate, onBuzz, onQ
       })
       .subscribe();
 
-    // Canal séparé pour recevoir le broadcast de révélation QCM
+    // Canal séparé pour recevoir les broadcasts (révélation QCM + classement)
     const bcChannel = supabase
       .channel(`muz-bc-${roomId}`)
       .on('broadcast', { event: 'qcm_reveal' }, () => {
         onQCMReveal?.();
+      })
+      .on('broadcast', { event: 'show_leaderboard' }, () => {
+        onShowLeaderboard?.();
       })
       .subscribe();
 

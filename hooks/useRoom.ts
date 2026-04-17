@@ -159,12 +159,12 @@ export function useRoom(code: string, nickname: string) {
       if (p) await supabase.from('room_players').update({ score: p.score + 100 }).eq('id', ans.player_id);
     }
 
-    // Attendre 5 secondes (animation moustache) puis passer à la question suivante
+    // Après 9s (5s reveal + 4s classement) : question suivante
     setTimeout(async () => {
       await nextQuestion(room);
       setQcmRevealed(false);
       setQcmAnswers([]);
-    }, 5000);
+    }, 9000);
   }, [room, myPlayer, qcmAnswers]);
 
   const nextQuestion = async (currentRoom: Room) => {

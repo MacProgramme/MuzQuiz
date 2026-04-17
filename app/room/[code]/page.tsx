@@ -10,6 +10,7 @@ import { QCMChoices } from '@/components/QCMChoices';
 import { Timer } from '@/components/Timer';
 import { Scoreboard } from '@/components/Scoreboard';
 import { SettingsModal } from '@/components/SettingsModal';
+import { InterLeaderboard } from '@/components/InterLeaderboard';
 import { BUZZ_QUESTIONS, QCM_QUESTIONS, FREE_QUESTION_LIMIT } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player } from '@/types';
 
@@ -82,6 +83,7 @@ export default function RoomPage() {
   const nickname = searchParams.get('nickname') ?? 'Joueur';
   const [showSettings, setShowSettings] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   const {
     room, players, myPlayer, buzz, setBuzz,
@@ -102,6 +104,7 @@ export default function RoomPage() {
       setBuzz(null);
       setQcmAnswers([]);
       setQcmRevealed(false);
+      setShowLeaderboard(false);
       setTimerKey(k => k + 1);
       if (r.status === 'finished') router.push(`/room/${code}/results`);
     },
@@ -114,6 +117,13 @@ export default function RoomPage() {
     onNextQuestion: () => { setBuzz(null); setQcmAnswers([]); },
     onQCMReveal: () => setQcmRevealed(true),
   });
+
+  // Afficher le classement 5s après la révélation (tous les clients, y compris l'hôte)
+  useEffect(() => {
+    if (!qcmRevealed) return;
+    const t = setTimeout(() => setShowLeaderboard(true), 5000);
+    return () => clearTimeout(t);
+  }, [qcmRevealed]);
 
   // Auto-révéler QCM quand tous les joueurs ont répondu
   useEffect(() => {
@@ -254,6 +264,13 @@ export default function RoomPage() {
   // --- Interface de jeu ---
   return (
     <div className="flex flex-col min-h-screen" style={{ background: '#0D1B3E' }}>
+
+      {/* Classement inter-question */}
+      <InterLeaderboard
+        players={players}
+        correctPlayerIds={correctPlayerIds}
+        visible={showLeaderboard}
+      />
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3"
