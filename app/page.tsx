@@ -1,7 +1,7 @@
 // app/page.tsx
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { GameMode } from '@/types';
@@ -15,6 +15,13 @@ export default function Home() {
   const [mode, setMode] = useState<GameMode>('buzz');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setIsLoggedIn(!!(data.user && !data.user.is_anonymous));
+    });
+  }, []);
 
   const genCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -58,8 +65,21 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6"
+    <main className="relative min-h-screen flex flex-col items-center justify-center p-6"
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
+
+      {/* Bouton Mon compte */}
+      <div className="absolute top-5 right-5">
+        <Link href={isLoggedIn ? '/profile' : '/login'}
+          className="text-sm font-bold px-4 py-2 rounded-xl transition-all hover:opacity-90"
+          style={{
+            background: isLoggedIn ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.07)',
+            color: isLoggedIn ? '#8B5CF6' : 'rgba(240,244,255,0.6)',
+            border: `1px solid ${isLoggedIn ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.1)'}`,
+          }}>
+          {isLoggedIn ? '👤 Mon compte' : 'Connexion'}
+        </Link>
+      </div>
 
       {/* Logo + Moustache SVG */}
       <div className="flex flex-col items-center mb-2">
