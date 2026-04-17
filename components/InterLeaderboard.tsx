@@ -28,8 +28,24 @@ function RankArrow({ diff }: { diff: number }) {
   return <span style={{ color: 'rgba(240,244,255,0.3)', fontSize: '0.85rem' }}>—</span>;
 }
 
+const COUNTDOWN_DURATION = 10;
+
 export function InterLeaderboard({ players, correctPlayerIds, visible }: Props) {
   const [ranked, setRanked] = useState<RankedPlayer[]>([]);
+  const [count, setCount] = useState(COUNTDOWN_DURATION);
+
+  // Countdown 10 → 0 quand visible
+  useEffect(() => {
+    if (!visible) { setCount(COUNTDOWN_DURATION); return; }
+    setCount(COUNTDOWN_DURATION);
+    const interval = setInterval(() => {
+      setCount(c => {
+        if (c <= 1) { clearInterval(interval); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [visible]);
 
   useEffect(() => {
     if (!visible) return;
@@ -142,10 +158,30 @@ export function InterLeaderboard({ players, correctPlayerIds, visible }: Props) 
         })}
       </div>
 
-      {/* Sous-titre "Prochaine question..." */}
-      <p className="mt-6 text-sm font-bold" style={{ color: 'rgba(139,92,246,0.7)' }}>
-        Prochaine question dans quelques secondes…
-      </p>
+      {/* Countdown vers la prochaine question */}
+      <div className="mt-6 flex flex-col items-center gap-2">
+        {/* Barre de progression */}
+        <div className="w-48 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(139,92,246,0.15)' }}>
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${(count / COUNTDOWN_DURATION) * 100}%`,
+              background: count <= 3 ? '#FF00AA' : count <= 6 ? '#F59E0B' : '#8B5CF6',
+              transition: 'width 0.95s linear, background 0.3s ease',
+            }}
+          />
+        </div>
+        <p className="text-xs font-bold" style={{ color: 'rgba(139,92,246,0.6)' }}>
+          Prochaine question dans{' '}
+          <span style={{
+            color: count <= 3 ? '#FF00AA' : count <= 6 ? '#F59E0B' : '#8B5CF6',
+            fontWeight: 900,
+            fontSize: '1rem',
+          }}>
+            {count}s
+          </span>
+        </p>
+      </div>
     </div>
   );
 }
