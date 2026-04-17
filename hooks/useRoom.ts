@@ -137,7 +137,7 @@ export function useRoom(code: string, nickname: string) {
       .single();
 
     if (data) setQcmAnswers(prev => [...prev, data]);
-  }, [room, myPlayer, qcmAnswers]);
+  }, [room, myPlayer, qcmAnswers, buzz]);
 
   const revealQCMAndNext = useCallback(async () => {
     if (!room || !myPlayer?.is_host) return;
