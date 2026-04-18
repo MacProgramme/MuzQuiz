@@ -197,7 +197,7 @@ export default function RoomPage() {
 
         {showSettings && myPlayer.is_host && (
           <SettingsModal
-            settings={{ timer_duration: room.timer_duration, max_players: room.max_players, sound_enabled: room.sound_enabled }}
+            settings={{ timer_duration: room.timer_duration, sound_enabled: room.sound_enabled }}
             onSave={saveSettings}
             onClose={() => setShowSettings(false)}
           />
