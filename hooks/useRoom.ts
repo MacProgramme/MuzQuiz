@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Room, Player, Buzz, QCMAnswer, GameMode } from '@/types';
+import { Room, Player, Buzz, QCMAnswer, GameMode, BuzzQuestion, QCMQuestion } from '@/types';
 import { BUZZ_QUESTIONS, QCM_QUESTIONS } from '@/lib/questions';
 
 export function useRoom(code: string, nickname: string) {
@@ -13,6 +13,7 @@ export function useRoom(code: string, nickname: string) {
   const [buzz, setBuzz] = useState<Buzz | null>(null);
   const [qcmAnswers, setQcmAnswers] = useState<QCMAnswer[]>([]);
   const [qcmRevealed, setQcmRevealed] = useState(false);
+  const [customQuestions, setCustomQuestions] = useState<(BuzzQuestion | QCMQuestion)[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,6 +90,25 @@ export function useRoom(code: string, nickname: string) {
       .select('*')
       .eq('room_id', roomData.id);
     if (playersData) setPlayers(playersData);
+
+    // Charger les questions custom si un pack est sélectionné
+    if (roomData.pack_id) {
+      const { data: cqs } = await supabase
+        .from('custom_questions')
+        .select('*')
+        .eq('pack_id', roomData.pack_id)
+        .order('created_at', { ascending: true });
+      if (cqs && cqs.length > 0) {
+        const formatted = cqs.map((q: any) => ({
+          type: roomData.mode,
+          q: q.question,
+          choices: [q.choice_a, q.choice_b, q.choice_c, q.choice_d] as [string, string, string, string],
+          correct: q.correct_index as 0 | 1 | 2 | 3,
+          a: q.choice_a,
+        }));
+        setCustomQuestions(formatted as any);
+      }
+    }
 
     setLoading(false);
   };
@@ -168,7 +188,9 @@ export function useRoom(code: string, nickname: string) {
   }, [room, myPlayer, qcmAnswers]);
 
   const nextQuestion = async (currentRoom: Room) => {
-    const questions = currentRoom.mode === 'qcm' ? QCM_QUESTIONS : BUZZ_QUESTIONS;
+    const questions = currentRoom.pack_id
+      ? customQuestions
+      : currentRoom.mode === 'qcm' ? QCM_QUESTIONS : BUZZ_QUESTIONS;
     const nextQ = currentRoom.current_question + 1;
     const status = nextQ >= questions.length ? 'finished' : 'playing';
     await supabase.from('rooms').update({ current_question: nextQ, status }).eq('id', currentRoom.id);
@@ -205,6 +227,7 @@ export function useRoom(code: string, nickname: string) {
     buzz, setBuzz,
     qcmAnswers, setQcmAnswers,
     qcmRevealed, setQcmRevealed,
+    customQuestions,
     loading, error,
     pressBuzzer, judgeAnswer,
     submitQCMAnswer, revealQCMAndNext,

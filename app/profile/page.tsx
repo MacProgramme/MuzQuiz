@@ -4,14 +4,22 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { SubscriptionTier, TIER_LIMITS } from '@/types';
 import Link from 'next/link';
 
 interface Profile {
   id: string;
   nickname: string;
   avatar_color: string;
+  subscription_tier: SubscriptionTier;
   created_at: string;
 }
+
+const TIER_INFO: Record<SubscriptionTier, { label: string; color: string; bg: string; price: string; perks: string[] }> = {
+  free:    { label: 'Gratuit',  color: 'rgba(240,244,255,0.5)', bg: 'rgba(255,255,255,0.06)',  price: '0€',    perks: ['Accès aux questions MUZQUIZ', 'Parties illimitées'] },
+  pro:     { label: 'Pro',      color: '#00E5D1',               bg: 'rgba(0,229,209,0.1)',      price: '9.99€', perks: ['Tout le Gratuit', 'Jusqu\'à 5 packs (30 questions chacun)', 'Questions personnalisées'] },
+  premium: { label: 'Premium',  color: '#F59E0B',               bg: 'rgba(245,158,11,0.1)',     price: '19.99€',perks: ['Tout le Pro', 'Packs illimités', 'Questions illimitées'] },
+};
 
 interface GameEntry {
   room_id: string;
@@ -278,9 +286,61 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 </div>
+                {/* Abonnement actuel */}
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1rem' }}>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-3"
+                    style={{ color: 'rgba(240,244,255,0.35)' }}>Abonnement</p>
+                  <div className="flex flex-col gap-2">
+                    {(Object.entries(TIER_INFO) as [SubscriptionTier, typeof TIER_INFO['free']][]).map(([key, info]) => (
+                      <button key={key}
+                        onClick={async () => {
+                          await supabase.from('profiles').update({ subscription_tier: key }).eq('id', profile.id);
+                          setProfile(p => p ? { ...p, subscription_tier: key } : p);
+                        }}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all"
+                        style={{
+                          background: profile.subscription_tier === key ? info.bg : 'rgba(255,255,255,0.03)',
+                          border: `1.5px solid ${profile.subscription_tier === key ? info.color + '66' : 'rgba(255,255,255,0.07)'}`,
+                        }}>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-sm" style={{ color: info.color }}>{info.label}</span>
+                            <span className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.35)' }}>{info.price}/mois</span>
+                          </div>
+                          <p className="text-xs mt-0.5" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                            {info.perks[info.perks.length - 1]}
+                          </p>
+                        </div>
+                        {profile.subscription_tier === key && (
+                          <span className="text-xs font-black px-2 py-1 rounded-full flex-shrink-0"
+                            style={{ background: info.color + '22', color: info.color }}>
+                            Actif
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs mt-2 text-center" style={{ color: 'rgba(240,244,255,0.25)' }}>
+                    Mode test — le paiement Stripe sera ajouté prochainement
+                  </p>
+                </div>
+
+                {/* Lien vers les packs */}
+                {TIER_LIMITS[profile.subscription_tier].canCreate && (
+                  <Link href="/questions"
+                    className="flex items-center justify-between px-4 py-3 rounded-xl transition-all hover:opacity-90"
+                    style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)' }}>
+                    <div className="flex items-center gap-2">
+                      <span>📦</span>
+                      <span className="font-bold text-sm" style={{ color: '#8B5CF6' }}>Mes packs de questions</span>
+                    </div>
+                    <span style={{ color: 'rgba(139,92,246,0.6)' }}>›</span>
+                  </Link>
+                )}
+
                 <button
                   onClick={() => { setEditing(true); setEditNickname(profile.nickname); setEditColor(profile.avatar_color); }}
-                  className="muz-btn-pink py-3 rounded-xl font-black text-sm mt-2">
+                  className="muz-btn-pink py-3 rounded-xl font-black text-sm">
                   Modifier le profil →
                 </button>
               </div>

@@ -94,6 +94,7 @@ export default function RoomPage() {
   const {
     room, players, myPlayer, buzz, setBuzz,
     qcmAnswers, setQcmAnswers, qcmRevealed, setQcmRevealed,
+    customQuestions,
     loading, error,
     pressBuzzer, submitQCMAnswer, revealQCMAndNext,
     startGame, saveSettings,
@@ -101,7 +102,9 @@ export default function RoomPage() {
     setRoom, setPlayers,
   } = useRoom(code, nickname);
 
-  const questions = room?.mode === 'qcm' ? QCM_QUESTIONS : BUZZ_QUESTIONS;
+  const questions = room?.pack_id
+    ? customQuestions
+    : room?.mode === 'qcm' ? QCM_QUESTIONS : BUZZ_QUESTIONS;
   const isFreeLimit = room ? room.current_question >= FREE_QUESTION_LIMIT : false;
 
   useRealtime({

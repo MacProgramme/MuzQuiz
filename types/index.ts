@@ -2,6 +2,36 @@
 
 export type RoomStatus = 'waiting' | 'playing' | 'finished';
 export type GameMode = 'buzz' | 'qcm';
+export type SubscriptionTier = 'free' | 'pro' | 'premium';
+
+export const TIER_LIMITS: Record<SubscriptionTier, { maxPacks: number; maxQuestionsPerPack: number; canCreate: boolean }> = {
+  free:    { maxPacks: 0,        maxQuestionsPerPack: 0,        canCreate: false },
+  pro:     { maxPacks: 5,        maxQuestionsPerPack: 30,       canCreate: true },
+  premium: { maxPacks: Infinity, maxQuestionsPerPack: Infinity, canCreate: true },
+};
+
+export interface QuestionPack {
+  id: string;
+  owner_id: string;
+  name: string;
+  description: string;
+  mode: GameMode;
+  created_at: string;
+  question_count?: number;
+}
+
+export interface CustomQuestion {
+  id: string;
+  pack_id: string;
+  owner_id: string;
+  question: string;
+  choice_a: string;
+  choice_b: string;
+  choice_c: string;
+  choice_d: string;
+  correct_index: 0 | 1 | 2 | 3;
+  created_at: string;
+}
 
 export interface Room {
   id: string;
@@ -14,6 +44,7 @@ export interface Room {
   max_players: number;
   sound_enabled: boolean;
   is_paused: boolean;
+  pack_id: string | null;
   created_at: string;
 }
 
