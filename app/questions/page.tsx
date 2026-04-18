@@ -10,7 +10,7 @@ import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 type View = 'packs' | 'questions';
 
-const MODE_LABEL: Record<string, string> = { qcm: '🎵 Quiz Blind Test', buzz: '🔔 Buzz Quiz' };
+const MODE_LABEL: Record<string, string> = { qcm: 'Quiz Blind Test', buzz: 'Buzz Quiz' };
 const LABELS = ['A', 'B', 'C', 'D'];
 const TIER_COLORS: Record<SubscriptionTier, { bg: string; text: string; label: string }> = {
   free:    { bg: 'rgba(255,255,255,0.06)',  text: 'rgba(240,244,255,0.5)', label: 'Gratuit' },
@@ -215,7 +215,7 @@ export default function QuestionsPage() {
             </Link>
           )}
           <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
-            {view === 'packs' ? '📦 Mes packs' : `📝 ${selectedPack?.name}`}
+            {view === 'packs' ? 'Mes packs' : selectedPack?.name}
           </span>
         </div>
 

@@ -212,8 +212,8 @@ export default function Home() {
               </p>
               <div className="flex gap-3">
                 {[
-                  { value: 'qcm' as GameMode, icon: '🎵', label: 'Quiz Blind Test', sub: '4 choix simultané' },
-                  { value: 'buzz' as GameMode, icon: '🔔', label: 'Buzz Quiz', sub: 'Buzz puis 4 choix' },
+                  { value: 'qcm' as GameMode, label: 'Quiz Blind Test', sub: '4 choix simultané' },
+                  { value: 'buzz' as GameMode, label: 'Buzz Quiz', sub: 'Buzz puis 4 choix' },
                 ].map(m => (
                   <button key={m.value} onClick={() => setMode(m.value)}
                     className="flex-1 flex flex-col items-center gap-1 py-4 rounded-xl transition-all"
@@ -221,7 +221,7 @@ export default function Home() {
                       border: mode === m.value ? '2px solid #FF00AA' : '2px solid rgba(139,92,246,0.2)',
                       background: mode === m.value ? 'rgba(255,0,170,0.1)' : 'rgba(255,255,255,0.04)',
                     }}>
-                    <span className="text-2xl">{m.icon}</span>
+                    <MuzquizLogo width={32} showText={false} />
                     <span className="font-black text-sm" style={{ color: mode === m.value ? '#FF00AA' : '#F0F4FF' }}>
                       {m.label}
                     </span>
@@ -242,9 +242,12 @@ export default function Home() {
                 border: `1.5px solid ${publicScreen ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.1)'}`,
               }}>
               <div>
-                <p className="font-black text-sm" style={{ color: publicScreen ? '#00E5D1' : '#F0F4FF' }}>
-                  📺 Mode écran public
-                </p>
+                <div className="flex items-center gap-2">
+                  <MuzquizLogo width={20} showText={false} />
+                  <p className="font-black text-sm" style={{ color: publicScreen ? '#00E5D1' : '#F0F4FF' }}>
+                    Mode écran public
+                  </p>
+                </div>
                 <p className="text-xs mt-0.5" style={{ color: 'rgba(240,244,255,0.4)' }}>
                   Bar / salle de jeux — question sur grand écran, boutons sur téléphone
                 </p>
@@ -275,7 +278,7 @@ export default function Home() {
                     background: !useCustom ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.04)',
                     border: !useCustom ? '1.5px solid rgba(139,92,246,0.4)' : '1.5px solid rgba(255,255,255,0.08)',
                   }}>
-                  <span className="text-lg">📚</span>
+                  <MuzquizLogo width={22} showText={false} />
                   <span className="text-sm font-bold" style={{ color: '#F0F4FF' }}>Questions MUZQUIZ (défaut)</span>
                 </button>
                 {myPacks.map(pack => (
@@ -286,13 +289,13 @@ export default function Home() {
                       background: useCustom && selectedPackId === pack.id ? 'rgba(255,0,170,0.1)' : 'rgba(255,255,255,0.04)',
                       border: useCustom && selectedPackId === pack.id ? '1.5px solid rgba(255,0,170,0.4)' : '1.5px solid rgba(255,255,255,0.08)',
                     }}>
-                    <span className="text-lg">📦</span>
+                    <MuzquizLogo width={22} showText={false} />
                     <div>
                       <p className="text-sm font-bold" style={{ color: useCustom && selectedPackId === pack.id ? '#FF00AA' : '#F0F4FF' }}>
                         {pack.name}
                       </p>
                       <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                        {pack.mode === 'qcm' ? '🎵 Quiz Blind Test' : '🔔 Buzz Quiz'}
+                        {pack.mode === 'qcm' ? 'Quiz Blind Test' : 'Buzz Quiz'}
                       </p>
                     </div>
                   </button>

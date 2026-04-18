@@ -301,7 +301,6 @@ export default function RoomPage() {
   // --- Salle d'attente ---
   if (room.status === 'waiting') {
     const modeLabel = room.mode === 'qcm' ? 'Quiz Blind Test' : 'Buzz Quiz';
-    const modeIcon = room.mode === 'qcm' ? '🎵' : '🔔';
 
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6"
@@ -318,7 +317,7 @@ export default function RoomPage() {
         <div className="text-center">
           <MuzquizLogo width={140} textSize="2rem" animate />
           <div className="flex items-center justify-center gap-2 mb-1">
-            <span>{modeIcon}</span>
+            <MuzquizLogo width={18} showText={false} />
             <span className="font-bold" style={{ color: '#8B5CF6' }}>{modeLabel}</span>
           </div>
           <div className="mt-3 px-6 py-3 rounded-2xl inline-block"
@@ -491,7 +490,7 @@ export default function RoomPage() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
 
         <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.6)' }}>
-          {room.mode === 'buzz' ? '🔔 Buzz Quiz' : '🎵 Quiz Blind Test'} — Question {room.current_question + 1}
+          {room.mode === 'buzz' ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
 
         {/* Question */}

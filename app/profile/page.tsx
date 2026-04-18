@@ -146,7 +146,7 @@ interface HostRoom {
   created_at: string;
 }
 
-const MODE_LABEL: Record<string, string> = { qcm: '🎵 Quiz Blind Test', buzz: '🔔 Buzz Quiz' };
+const MODE_LABEL: Record<string, string> = { qcm: 'Quiz Blind Test', buzz: 'Buzz Quiz' };
 const AVATAR_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981'];
 const MEDALS = ['🥇', '🥈', '🥉'];
 

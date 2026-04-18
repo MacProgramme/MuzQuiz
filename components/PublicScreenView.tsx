@@ -83,7 +83,7 @@ export function PublicScreenView({
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
         <MuzquizLogo width={200} textSize="3.5rem" animate />
         <p className="text-lg mb-10" style={{ color: 'rgba(240,244,255,0.4)' }}>
-          {room.mode === 'qcm' ? '🎵 Quiz Blind Test' : '🔔 Buzz Quiz'} · Mode écran public
+          {room.mode === 'qcm' ? 'Quiz Blind Test' : 'Buzz Quiz'} · Mode écran public
         </p>
 
         {/* Grand code salle */}

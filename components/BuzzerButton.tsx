@@ -25,7 +25,7 @@ export function BuzzerButton({ onBuzz, disabled, buzzedByMe, buzzedByOther }: Pr
       {buzzedByOther && (
         <div className="px-5 py-2 rounded-full font-bold text-sm muz-pop"
           style={{ background: 'rgba(255,0,170,0.15)', border: '1px solid rgba(255,0,170,0.4)', color: '#FF00AA' }}>
-          🔔 {buzzedByOther} a buzzé !
+          {buzzedByOther} a buzzé !
         </div>
       )}
     </div>

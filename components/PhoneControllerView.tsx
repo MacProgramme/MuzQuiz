@@ -2,6 +2,7 @@
 "use client";
 
 import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion } from '@/types';
+import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 const COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B'];
 const LABELS = ['A', 'B', 'C', 'D'];
@@ -110,7 +111,7 @@ export function PhoneControllerView({
       return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8"
           style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-          <div className="text-5xl mb-4">🔔</div>
+          <div className="mb-4"><MuzquizLogo width={80} showText={false} /></div>
           <p className="text-2xl font-black text-center" style={{ color: '#FF00AA' }}>
             {buzzerName} a buzzé en premier !
           </p>
@@ -131,7 +132,7 @@ export function PhoneControllerView({
             </div>
             <div className="px-3 py-1.5 rounded-full"
               style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.3)' }}>
-              <p className="text-xs font-black">🔔 Vous avez buzzé !</p>
+              <p className="text-xs font-black">Vous avez buzzé !</p>
             </div>
           </div>
 
@@ -202,7 +203,7 @@ export function PhoneControllerView({
             boxShadow: '0 0 60px rgba(255,0,170,0.5), 0 0 120px rgba(255,0,170,0.2)',
             fontSize: '2rem',
           }}>
-          🔔<br />
+          <MuzquizLogo width={56} showText={false} />
           <span className="text-2xl font-black">BUZZ !</span>
         </button>
       </div>
