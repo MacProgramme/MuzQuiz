@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion } from '@/types';
+import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 const COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B'];
 const LABELS = ['A', 'B', 'C', 'D'];
@@ -80,9 +81,7 @@ export function PublicScreenView({
     return (
       <div className="min-h-screen flex flex-col items-center justify-center"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-        <h1 className="font-black mb-1" style={{ fontSize: '3.5rem', fontFamily: 'var(--font-black-han)', color: '#FF00AA', textShadow: '0 0 40px rgba(255,0,170,0.4)' }}>
-          MUZQUIZ
-        </h1>
+        <MuzquizLogo width={200} textSize="3.5rem" animate />
         <p className="text-lg mb-10" style={{ color: 'rgba(240,244,255,0.4)' }}>
           {room.mode === 'qcm' ? '🎵 Quiz Blind Test' : '🔔 Buzz Quiz'} · Mode écran public
         </p>
@@ -195,9 +194,7 @@ export function PublicScreenView({
         {/* Barre du haut */}
         <div className="flex items-center justify-between px-8 py-4"
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <span className="font-black text-xl" style={{ fontFamily: 'var(--font-black-han)', color: '#FF00AA' }}>
-            MUZQUIZ
-          </span>
+          <MuzquizLogo width={50} textSize="1rem" horizontal />
           <span className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
             Question {(room.current_question ?? 0) + 1} · {answeredCount}/{players.filter(p => !p.is_host).length} ont répondu
           </span>
@@ -295,9 +292,7 @@ export function PublicScreenView({
         {/* Barre du haut */}
         <div className="flex items-center justify-between px-8 py-4"
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <span className="font-black text-xl" style={{ fontFamily: 'var(--font-black-han)', color: '#FF00AA' }}>
-            MUZQUIZ
-          </span>
+          <MuzquizLogo width={50} textSize="1rem" horizontal />
           <span className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
             Question {(room.current_question ?? 0) + 1}
           </span>

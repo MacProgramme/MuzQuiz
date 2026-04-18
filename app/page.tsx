@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { GameMode, QuestionPack, SubscriptionTier, TIER_LIMITS } from '@/types';
 import Link from 'next/link';
+import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 export default function Home() {
   const router = useRouter();
@@ -132,7 +133,7 @@ export default function Home() {
       {/* Barre de navigation */}
       <div className="flex items-center justify-between px-5 py-4"
         style={{ borderBottom: '1px solid rgba(139,92,246,0.1)' }}>
-        <span className="muz-logo text-xl font-black" style={{ fontFamily: 'var(--font-black-han)' }}>MUZQUIZ</span>
+        <MuzquizLogo width={40} textSize="1.1rem" horizontal />
         <Link href={isLoggedIn ? '/profile' : '/login'}
           className="text-sm font-bold px-4 py-2 rounded-xl transition-all hover:opacity-90"
           style={{
@@ -149,27 +150,7 @@ export default function Home() {
 
       {/* Logo + Moustache SVG */}
       <div className="flex flex-col items-center mb-2">
-        <h1 className="muz-logo text-6xl font-black tracking-tight" style={{ fontFamily: 'var(--font-black-han)' }}>
-          MUZQUIZ
-        </h1>
-        {/* Moustache SVG logo */}
-        <svg
-          viewBox="0 0 1280 640"
-          className="muz-shake"
-          style={{ width: '180px', marginTop: '4px', filter: 'drop-shadow(0 0 14px rgba(255,0,170,0.65))' }}
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <linearGradient id="muz-logo-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#FF00AA" />
-              <stop offset="50%" stopColor="#8B5CF6" />
-              <stop offset="100%" stopColor="#00E5D1" />
-            </linearGradient>
-          </defs>
-          <g transform="translate(0,640) scale(0.1,-0.1)" fill="url(#muz-logo-grad)" stroke="none">
-            <path d="M5078 4980 c-350 -37 -700 -176 -1079 -431 -212 -142 -402 -292 -804 -634 -426 -362 -624 -510 -885 -657 -301 -171 -525 -263 -788 -325 -100 -23 -139 -27 -262 -27 -124 0 -154 3 -204 22 -89 33 -137 65 -199 132 -97 104 -150 250 -151 410 -1 116 23 178 91 241 79 72 155 100 443 162 132 28 199 56 246 104 63 63 41 97 -104 158 -158 66 -295 85 -442 61 -288 -47 -514 -194 -699 -452 -254 -356 -307 -752 -151 -1116 295 -687 1406 -1140 2966 -1209 818 -36 1849 104 2378 322 193 79 297 142 532 321 76 58 233 136 309 153 84 20 192 23 224 6 13 -7 62 -41 110 -76 806 -589 2529 -867 4021 -649 664 97 1218 291 1600 562 118 83 298 262 368 364 237 347 265 713 82 1078 -96 191 -259 388 -429 516 -97 74 -276 165 -366 188 -194 49 -363 16 -487 -94 -52 -46 -108 -124 -108 -152 0 -40 130 -81 426 -137 166 -31 240 -59 302 -115 100 -91 119 -254 46 -399 -30 -58 -144 -180 -241 -258 -208 -165 -447 -201 -728 -107 -97 32 -275 122 -376 190 -119 80 -514 380 -1009 767 -212 166 -456 352 -542 414 -513 365 -931 561 -1363 638 -112 20 -162 23 -360 23 -175 0 -253 -4 -325 -18 -230 -42 -451 -114 -659 -213 -152 -73 -166 -73 -301 0 -203 109 -468 198 -672 226 -114 16 -311 21 -410 11z"/>
-          </g>
-        </svg>
+        <MuzquizLogo width={200} textSize="3.5rem" animate />
       </div>
       <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.4)' }}>
         Quiz & Blind Test en temps réel

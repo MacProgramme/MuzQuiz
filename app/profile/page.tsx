@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { SubscriptionTier, TIER_LIMITS } from '@/types';
 import Link from 'next/link';
+import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 interface Profile {
   id: string;
@@ -348,9 +349,7 @@ export default function ProfilePage() {
       <div className="flex items-center justify-between px-6 py-4"
         style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
         <Link href="/">
-          <span className="muz-logo text-2xl font-black cursor-pointer" style={{ fontFamily: 'var(--font-black-han)' }}>
-            MUZQUIZ
-          </span>
+          <MuzquizLogo width={50} textSize="1rem" horizontal />
         </Link>
         <div className="flex items-center gap-2">
           {isAdmin && (

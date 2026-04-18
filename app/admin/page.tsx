@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { SubscriptionTier, TIER_LIMITS } from '@/types';
 import Link from 'next/link';
+import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 // Emails des administrateurs — seuls eux peuvent accéder à cette page
 const ADMIN_EMAILS = ['antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr'];
@@ -87,7 +88,7 @@ export default function AdminPage() {
         style={{ borderBottom: '1px solid rgba(255,0,170,0.2)' }}>
         <div className="flex items-center gap-3">
           <Link href="/">
-            <span className="muz-logo text-2xl font-black cursor-pointer" style={{ fontFamily: 'var(--font-black-han)' }}>MUZQUIZ</span>
+            <MuzquizLogo width={60} textSize="1.1rem" horizontal />
           </Link>
           <span className="text-xs font-black px-3 py-1 rounded-full"
             style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.3)' }}>

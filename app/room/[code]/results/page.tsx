@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Player } from '@/types';
+import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 const PODIUM_HEIGHTS = [160, 210, 120]; // 2nd, 1st, 3rd (px)
 const PODIUM_ORDER = [1, 0, 2]; // indices dans le tableau players pour l'ordre visuel: gauche=2e, centre=1er, droite=3e
@@ -71,10 +72,8 @@ export default function ResultsPage() {
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 60%, #0D1B3E 100%)' }}>
 
       {/* Logo */}
-      <div className="mt-6 mb-4 text-center">
-        <h1 className="muz-logo text-4xl font-black" style={{ fontFamily: 'var(--font-black-han)' }}>
-          MUZQUIZ
-        </h1>
+      <div className="mt-6 mb-4 text-center flex flex-col items-center">
+        <MuzquizLogo width={120} textSize="2rem" />
         <p className="text-sm font-bold mt-1" style={{ color: 'rgba(240,244,255,0.4)' }}>
           Résultats finaux
         </p>

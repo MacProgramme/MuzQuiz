@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { QuestionPack, CustomQuestion, SubscriptionTier, TIER_LIMITS } from '@/types';
 import Link from 'next/link';
+import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 type View = 'packs' | 'questions';
 
@@ -210,7 +211,7 @@ export default function QuestionsPage() {
             </button>
           ) : (
             <Link href="/">
-              <span className="muz-logo text-2xl font-black cursor-pointer" style={{ fontFamily: 'var(--font-black-han)' }}>MUZQUIZ</span>
+              <MuzquizLogo width={50} textSize="1rem" horizontal />
             </Link>
           )}
           <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>

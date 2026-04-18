@@ -2,6 +2,7 @@
 "use client";
 
 import Link from 'next/link';
+import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 const PLANS = [
   {
@@ -81,9 +82,9 @@ export default function PricingPage() {
           style={{ color: 'rgba(139,92,246,0.7)' }}>
           ← Retour
         </Link>
-        <h1 className="muz-logo text-5xl font-black mb-3" style={{ fontFamily: 'var(--font-black-han)' }}>
-          MUZQUIZ
-        </h1>
+        <div className="mb-3">
+          <MuzquizLogo width={160} textSize="3rem" animate />
+        </div>
         <p className="text-2xl font-black mb-2" style={{ color: '#F0F4FF' }}>
           Choisissez votre formule
         </p>

@@ -19,6 +19,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={`${inter.variable} ${blackHan.variable}`}>
       <body className={inter.className} style={{ background: '#0D1B3E', minHeight: '100vh' }}>
+        {/* Gradient SVG partagé — référencé par id="muz-logo-grad" dans tous les logos */}
+        <svg width="0" height="0" aria-hidden="true" style={{ position: 'absolute' }}>
+          <defs>
+            <linearGradient id="muz-logo-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#FF00AA" />
+              <stop offset="50%" stopColor="#8B5CF6" />
+              <stop offset="100%" stopColor="#00E5D1" />
+            </linearGradient>
+          </defs>
+        </svg>
         {children}
       </body>
     </html>

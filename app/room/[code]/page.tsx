@@ -16,6 +16,7 @@ import { PublicScreenView } from '@/components/PublicScreenView';
 import { PhoneControllerView } from '@/components/PhoneControllerView';
 import { BUZZ_QUESTIONS, QCM_QUESTIONS, FREE_QUESTION_LIMIT } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player } from '@/types';
+import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 // --- Confettis lors de la révélation ---
 const CONFETTI_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#FF6B6B', '#4ECDC4', '#FFE66D'];
@@ -315,7 +316,7 @@ export default function RoomPage() {
         )}
 
         <div className="text-center">
-          <h1 className="muz-logo text-4xl font-black mb-1" style={{ fontFamily: 'var(--font-black-han)' }}>MUZQUIZ</h1>
+          <MuzquizLogo width={140} textSize="2rem" animate />
           <div className="flex items-center justify-center gap-2 mb-1">
             <span>{modeIcon}</span>
             <span className="font-bold" style={{ color: '#8B5CF6' }}>{modeLabel}</span>
@@ -441,7 +442,7 @@ export default function RoomPage() {
       <div style={{ background: '#112247', borderBottom: '1px solid rgba(139,92,246,0.2)' }}>
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <span className="font-black muz-logo text-xl" style={{ fontFamily: 'var(--font-black-han)' }}>MUZ</span>
+            <MuzquizLogo width={36} showText={false} />
             <span className="text-xs font-mono tracking-widest px-2 py-0.5 rounded"
               style={{ background: 'rgba(0,229,209,0.1)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.2)' }}>
               {code}

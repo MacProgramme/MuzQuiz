@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,10 +35,8 @@ export default function LoginPage() {
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
 
       {/* Logo */}
-      <Link href="/">
-        <h1 className="muz-logo text-4xl font-black mb-8 cursor-pointer" style={{ fontFamily: 'var(--font-black-han)' }}>
-          MUZQUIZ
-        </h1>
+      <Link href="/" className="mb-8 block">
+        <MuzquizLogo width={160} textSize="2rem" animate />
       </Link>
 
       {/* Card */}
