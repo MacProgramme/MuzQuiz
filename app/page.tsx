@@ -16,6 +16,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [userTier, setUserTier] = useState<SubscriptionTier>('free');
   const [myPacks, setMyPacks] = useState<QuestionPack[]>([]);
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
@@ -23,13 +24,15 @@ export default function Home() {
   const [publicScreen, setPublicScreen] = useState(false);
 
   useEffect(() => {
-    // getSession() lit depuis le cache local — instantané et fiable
-    const loadAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    // Une seule source de vérité : onAuthStateChange.
+    // Il fire INITIAL_SESSION immédiatement depuis le cache — pas de double requête.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const user = session?.user;
       const loggedIn = !!(user && !user.is_anonymous);
       setIsLoggedIn(loggedIn);
+
       if (loggedIn && user) {
+        setProfileLoading(true);
         const { data: profile } = await supabase
           .from('profiles')
           .select('nickname, subscription_tier')
@@ -47,28 +50,12 @@ export default function Home() {
             .order('created_at', { ascending: false });
           if (packs) setMyPacks(packs as QuestionPack[]);
         }
-      }
-    };
-    loadAuth();
-
-    // Écouter les changements d'auth (connexion/déconnexion)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const user = session?.user;
-      const loggedIn = !!(user && !user.is_anonymous);
-      setIsLoggedIn(loggedIn);
-      if (loggedIn && user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('nickname, subscription_tier')
-          .eq('id', user.id)
-          .single();
-        if (profile?.nickname) setNickname(profile.nickname);
-        const tier = (profile?.subscription_tier as SubscriptionTier) ?? 'free';
-        setUserTier(tier);
-      } else if (!loggedIn) {
+        setProfileLoading(false);
+      } else {
         setNickname('');
         setUserTier('free');
         setMyPacks([]);
+        setProfileLoading(false);
       }
     });
     return () => subscription.unsubscribe();
@@ -195,25 +182,27 @@ export default function Home() {
           <div className="relative">
             <input
               value={nickname}
-              onChange={e => !isLoggedIn && setNickname(e.target.value)}
+              onChange={e => !(isLoggedIn && nickname) && setNickname(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && (tab === 'create' ? createRoom() : joinRoom())}
-              placeholder="Ton pseudo"
+              placeholder={profileLoading && isLoggedIn ? 'Chargement…' : 'Ton pseudo'}
               maxLength={16}
-              readOnly={isLoggedIn}
+              readOnly={isLoggedIn && !!nickname}
               className="w-full px-4 py-3 rounded-xl font-medium outline-none transition-all"
               style={{
-                background: isLoggedIn ? 'rgba(139,92,246,0.08)' : 'rgba(255,255,255,0.07)',
-                border: `1.5px solid ${isLoggedIn ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.3)'}`,
+                background: isLoggedIn && nickname ? 'rgba(139,92,246,0.08)' : 'rgba(255,255,255,0.07)',
+                border: `1.5px solid ${isLoggedIn && nickname ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.3)'}`,
                 color: '#F0F4FF',
-                cursor: isLoggedIn ? 'default' : 'text',
+                cursor: isLoggedIn && nickname ? 'default' : 'text',
               }}
-              onFocus={e => { if (!isLoggedIn) e.target.style.borderColor = '#FF00AA'; }}
-              onBlur={e => { if (!isLoggedIn) e.target.style.borderColor = 'rgba(139,92,246,0.3)'; }}
+              onFocus={e => { if (!(isLoggedIn && nickname)) e.target.style.borderColor = '#FF00AA'; }}
+              onBlur={e => { if (!(isLoggedIn && nickname)) e.target.style.borderColor = 'rgba(139,92,246,0.3)'; }}
             />
             {isLoggedIn && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold px-2 py-0.5 rounded-full"
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
                 style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}>
-                compte
+                {profileLoading && !nickname
+                  ? <span className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#8B5CF6', borderTopColor: 'transparent' }} />
+                  : 'compte'}
               </span>
             )}
           </div>
