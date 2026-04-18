@@ -145,6 +145,13 @@ export default function RoomPage() {
   const questions = room?.pack_id
     ? customQuestions
     : room?.mode === 'qcm' ? QCM_QUESTIONS : BUZZ_QUESTIONS;
+
+  // Quitter la salle (joueur invité uniquement)
+  const leaveRoom = async () => {
+    if (!myPlayer || myPlayer.is_host) return;
+    await supabase.from('room_players').delete().eq('id', myPlayer.id);
+    router.push('/');
+  };
   const isFreeLimit = room ? room.current_question >= FREE_QUESTION_LIMIT : false;
 
   useRealtime({
@@ -380,10 +387,18 @@ export default function RoomPage() {
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-2 px-5 py-3 rounded-full"
-            style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#8B5CF6' }} />
-            <p className="text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>En attente que l'hôte lance la partie...</p>
+          <div className="flex flex-col items-center gap-3 w-full max-w-md">
+            <div className="flex items-center gap-2 px-5 py-3 rounded-full"
+              style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#8B5CF6' }} />
+              <p className="text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>En attente que l'hôte lance la partie...</p>
+            </div>
+            <button
+              onClick={() => { if (confirm('Quitter la salle ?')) leaveRoom(); }}
+              className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80"
+              style={{ background: 'rgba(255,0,170,0.06)', color: 'rgba(255,0,170,0.5)', border: '1px solid rgba(255,0,170,0.15)' }}>
+              Quitter la salle
+            </button>
           </div>
         )}
       </div>
@@ -469,6 +484,18 @@ export default function RoomPage() {
             Q {room.current_question + 1}/{questions.length}
           </span>
         </div>
+
+        {/* Bouton quitter pour les invités */}
+        {!myPlayer.is_host && (
+          <div className="flex px-4 pb-2">
+            <button
+              onClick={() => { if (confirm('Quitter la partie ?')) leaveRoom(); }}
+              className="px-3 py-1.5 rounded-xl font-bold text-xs transition-all hover:opacity-80"
+              style={{ background: 'rgba(255,0,170,0.06)', color: 'rgba(255,0,170,0.5)', border: '1px solid rgba(255,0,170,0.15)' }}>
+              Quitter
+            </button>
+          </div>
+        )}
 
         {/* Barre de contrôles hôte — même style que PublicScreenView */}
         {myPlayer.is_host && (
