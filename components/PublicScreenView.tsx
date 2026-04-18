@@ -69,7 +69,8 @@ export function PublicScreenView({
   room, players, myPlayer, currentQuestion, buzz, qcmAnswers, qcmRevealed,
   showLeaderboard, timerKey, startGame, revealQCMAndNext, pauseGame, resumeGame, endGame,
 }: Props) {
-  const sorted = [...players].sort((a, b) => b.score - a.score);
+  // En mode écran public, l'hôte ne joue pas → exclure du classement
+  const sorted = [...players].filter(p => !p.is_host).sort((a, b) => b.score - a.score);
   const answeredIds = new Set(qcmAnswers.map(a => a.player_id));
   const answeredCount = answeredIds.size;
   const buzzerPlayer = players.find(p => p.id === buzz?.player_id);
@@ -100,11 +101,11 @@ export function PublicScreenView({
           Rejoignez sur <strong style={{ color: '#F0F4FF' }}>muzquiz.app</strong> avec ce code
         </p>
 
-        {/* Liste des joueurs */}
+        {/* Liste des joueurs (hôte exclu — il n'est pas un joueur) */}
         <div className="flex flex-wrap gap-3 justify-center max-w-3xl mb-10 px-8">
-          {players.length === 0 ? (
+          {players.filter(p => !p.is_host).length === 0 ? (
             <p style={{ color: 'rgba(240,244,255,0.3)' }}>En attente de joueurs…</p>
-          ) : players.map(p => (
+          ) : players.filter(p => !p.is_host).map(p => (
             <div key={p.id} className="px-5 py-2 rounded-xl font-bold text-lg"
               style={{ background: 'rgba(255,255,255,0.07)', color: '#F0F4FF', border: '1px solid rgba(255,255,255,0.1)' }}>
               {p.nickname}
@@ -113,14 +114,14 @@ export function PublicScreenView({
         </div>
 
         {/* Bouton démarrer (hôte) */}
-        {myPlayer.is_host && players.length >= 1 && (
+        {myPlayer.is_host && players.filter(p => !p.is_host).length >= 1 && (
           <button onClick={startGame}
             className="muz-btn-pink px-14 py-5 rounded-2xl font-black"
             style={{ fontSize: '1.5rem' }}>
-            Lancer la partie ({players.length} joueur{players.length > 1 ? 's' : ''}) →
+            {(() => { const n = players.filter(p => !p.is_host).length; return `Lancer la partie (${n} joueur${n > 1 ? 's' : ''}) →`; })()}
           </button>
         )}
-        {myPlayer.is_host && players.length === 0 && (
+        {myPlayer.is_host && players.filter(p => !p.is_host).length === 0 && (
           <p className="text-base" style={{ color: 'rgba(240,244,255,0.3)' }}>
             En attente de joueurs…
           </p>
