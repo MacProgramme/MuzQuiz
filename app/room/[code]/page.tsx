@@ -354,7 +354,7 @@ export default function RoomPage() {
               <button onClick={() => setShowSettings(true)}
                 className="w-14 h-14 rounded-xl text-xl font-bold transition-all hover:scale-105 flex-shrink-0"
                 style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#8B5CF6' }}>
-                ⚙️
+                ⚙
               </button>
               <button onClick={startGame} className="muz-btn-pink flex-1 py-4 rounded-xl text-base font-black">
                 Lancer ({players.length} joueur{players.length > 1 ? 's' : ''}) →
@@ -364,7 +364,7 @@ export default function RoomPage() {
               onClick={() => { if (confirm('Fermer la salle ?')) endGame(); }}
               className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80"
               style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.6)', border: '1px solid rgba(255,0,170,0.2)' }}>
-              🚪 Fermer la salle
+              Fermer la salle
             </button>
           </div>
         ) : (
@@ -417,7 +417,7 @@ export default function RoomPage() {
         <div className="fixed inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">
           <div className="px-10 py-5 rounded-2xl text-center muz-pop"
             style={{ background: 'rgba(13,27,62,0.95)', border: '2px solid rgba(245,158,11,0.5)', backdropFilter: 'blur(8px)' }}>
-            <div className="text-5xl mb-2">⏸</div>
+            <div className="flex justify-center mb-2"><MuzquizLogo width={80} showText={false} /></div>
             <p className="text-2xl font-black" style={{ color: '#F59E0B' }}>Partie en pause</p>
             {!myPlayer.is_host && (
               <p className="text-sm mt-1" style={{ color: 'rgba(240,244,255,0.5)' }}>
@@ -471,13 +471,13 @@ export default function RoomPage() {
               <button onClick={pauseGame}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all hover:opacity-90"
                 style={{ background: 'rgba(245,158,11,0.12)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)' }}>
-                ⏸ Pause
+                Pause
               </button>
             )}
             <button onClick={() => { if (confirm('Terminer la partie ?')) endGame(); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all hover:opacity-90"
               style={{ background: 'rgba(255,0,170,0.08)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
-              🚪 Terminer
+              Terminer
             </button>
           </div>
         )}

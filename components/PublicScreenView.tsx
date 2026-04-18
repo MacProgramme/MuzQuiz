@@ -135,7 +135,7 @@ export function PublicScreenView({
       <div className="min-h-screen flex flex-col items-center justify-center p-12"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
         <h2 className="font-black mb-10" style={{ fontSize: '2.5rem', color: '#F0F4FF' }}>
-          🏆 Classement
+          Classement
         </h2>
         <div className="flex flex-col gap-4 w-full max-w-2xl">
           {sorted.slice(0, 5).map((p, i) => (
@@ -162,7 +162,7 @@ export function PublicScreenView({
       <div className="min-h-screen flex flex-col items-center justify-center p-12"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
         <h1 className="font-black mb-10" style={{ fontSize: '3rem', color: '#F59E0B' }}>
-          🏆 Résultats finaux
+          Résultats finaux
         </h1>
         <div className="flex flex-col gap-4 w-full max-w-2xl">
           {sorted.map((p, i) => (
@@ -209,13 +209,13 @@ export function PublicScreenView({
               <button onClick={pauseGame}
                 className="px-4 py-2 rounded-xl font-bold text-sm"
                 style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                ⏸ Pause
+                Pause
               </button>
             )}
             <button onClick={endGame}
               className="px-4 py-2 rounded-xl font-bold text-sm"
               style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.6)', border: '1px solid rgba(255,0,170,0.2)' }}>
-              🚪 Terminer
+              Terminer
             </button>
           </div>
         </div>
@@ -305,7 +305,7 @@ export function PublicScreenView({
             ) : (
               <button onClick={pauseGame} className="px-4 py-2 rounded-xl font-bold text-sm"
                 style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                ⏸ Pause
+                Pause
               </button>
             )}
           </div>
@@ -350,7 +350,7 @@ export function PublicScreenView({
           ) : (
             <div className="text-center mb-8">
               <p className="font-black" style={{ fontSize: '1.5rem', color: 'rgba(240,244,255,0.3)' }}>
-                📱 Buzzez sur votre téléphone !
+                Buzzez sur votre téléphone !
               </p>
             </div>
           )}

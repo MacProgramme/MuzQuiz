@@ -92,7 +92,7 @@ export default function AdminPage() {
           </Link>
           <span className="text-xs font-black px-3 py-1 rounded-full"
             style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.3)' }}>
-            🔐 Admin
+            Admin
           </span>
         </div>
         <Link href="/profile" className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>

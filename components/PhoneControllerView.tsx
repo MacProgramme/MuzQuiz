@@ -52,7 +52,7 @@ export function PhoneControllerView({
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-        <div className="text-6xl mb-4">🎮</div>
+        <div className="mb-4"><MuzquizLogo width={80} showText={false} /></div>
         <h1 className="text-2xl font-black mb-2 text-center" style={{ color: '#F0F4FF' }}>
           Prêt à jouer !
         </h1>
@@ -78,7 +78,7 @@ export function PhoneControllerView({
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
         <div className="text-7xl mb-4">{medal}</div>
         <h1 className="text-3xl font-black mb-2" style={{ color: '#F0F4FF' }}>
-          {myRank === 1 ? '🎉 Victoire !' : 'Partie terminée !'}
+          {myRank === 1 ? 'Victoire !' : 'Partie terminée !'}
         </h1>
         <p className="text-2xl font-black mb-3" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts</p>
         <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
@@ -146,7 +146,7 @@ export function PhoneControllerView({
                 </>
               ) : qcmRevealed ? (
                 <>
-                  <span className="text-7xl">❌</span>
+                  <MuzquizLogo width={80} showText={false} />
                   <p className="text-2xl font-black" style={{ color: '#FF00AA' }}>Pas tout à fait…</p>
                   <p className="font-black text-xl" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts</p>
                 </>

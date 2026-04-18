@@ -26,7 +26,7 @@ export function SettingsModal({ settings, onSave, onClose }: Props) {
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-black" style={{ color: '#F0F4FF' }}>⚙️ Paramètres</h2>
+          <h2 className="text-lg font-black" style={{ color: '#F0F4FF' }}>Paramètres</h2>
           <button onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all hover:scale-110"
             style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(240,244,255,0.6)' }}>
@@ -38,7 +38,7 @@ export function SettingsModal({ settings, onSave, onClose }: Props) {
         <div className="mb-5">
           <label className="text-xs font-bold uppercase tracking-widest block mb-3"
             style={{ color: 'rgba(240,244,255,0.4)' }}>
-            ⏱ Durée du timer
+            Durée du timer
           </label>
           <div className="flex gap-2">
             {TIMER_OPTIONS.map(t => (
@@ -60,7 +60,7 @@ export function SettingsModal({ settings, onSave, onClose }: Props) {
         {/* Son */}
         <div className="mb-6 flex items-center justify-between">
           <label className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.7)' }}>
-            🔊 Son
+            Son
           </label>
           <button
             onClick={() => setLocal(l => ({ ...l, sound_enabled: !l.sound_enabled }))}

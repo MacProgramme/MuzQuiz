@@ -356,7 +356,7 @@ export default function ProfilePage() {
             <Link href="/admin"
               className="text-sm font-bold px-4 py-2 rounded-xl transition-all hover:opacity-80"
               style={{ background: 'rgba(255,0,170,0.08)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
-              🔐 Admin
+              Admin
             </Link>
           )}
           <button onClick={logout}
@@ -408,8 +408,8 @@ export default function ProfilePage() {
         <div className="flex mb-6 rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
           {([
             { key: 'profile', label: 'Profil' },
-            { key: 'history', label: '📜 Historique' },
-            { key: 'dashboard', label: '🎮 Mes salles' },
+            { key: 'history', label: 'Historique' },
+            { key: 'dashboard', label: 'Mes salles' },
           ] as { key: Tab; label: string }[]).map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className="flex-1 py-3 text-sm font-bold transition-all"
@@ -455,7 +455,7 @@ export default function ProfilePage() {
                     {isAdmin && (
                       <span className="text-xs px-2 py-0.5 rounded-full font-bold"
                         style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
-                        🔐 Admin
+                        Admin
                       </span>
                     )}
                   </div>
@@ -485,7 +485,7 @@ export default function ProfilePage() {
                   {isAdmin && (
                     <div className="mt-3">
                       <p className="text-xs font-bold mb-2" style={{ color: 'rgba(255,0,170,0.6)' }}>
-                        🔧 Changer le tier (test admin)
+                        Changer le tier (test admin)
                       </p>
                       <div className="flex gap-2">
                         {(['free', 'pro', 'premium'] as SubscriptionTier[]).map(tier => {
@@ -569,7 +569,7 @@ export default function ProfilePage() {
                         <div className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin"
                           style={{ borderColor: 'white', borderTopColor: 'transparent' }} />
                       ) : (
-                        <span style={{ fontSize: '0.65rem' }}>📷</span>
+                        <MuzquizLogo width={14} showText={false} />
                       )}
                     </button>
                   </div>
@@ -641,7 +641,7 @@ export default function ProfilePage() {
           <div className="flex flex-col gap-3">
             {games.length === 0 ? (
               <div className="muz-card p-8 text-center">
-                <div className="text-4xl mb-3">🎮</div>
+                <div className="flex justify-center mb-3"><MuzquizLogo width={60} showText={false} /></div>
                 <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>Aucune partie terminée</p>
                 <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
                   Rejoins ou crée une salle pour commencer !
@@ -704,7 +704,7 @@ export default function ProfilePage() {
 
             {hostedRooms.length === 0 ? (
               <div className="muz-card p-8 text-center">
-                <div className="text-4xl mb-3">🏠</div>
+                <div className="flex justify-center mb-3"><MuzquizLogo width={60} showText={false} /></div>
                 <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>Aucune salle créée</p>
                 <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
                   Crée ta première salle et invite tes amis !
