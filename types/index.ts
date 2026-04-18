@@ -45,6 +45,7 @@ export interface Room {
   sound_enabled: boolean;
   is_paused: boolean;
   pack_id: string | null;
+  public_screen: boolean;
   created_at: string;
 }
 

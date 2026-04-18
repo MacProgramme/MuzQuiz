@@ -20,6 +20,7 @@ export default function Home() {
   const [myPacks, setMyPacks] = useState<QuestionPack[]>([]);
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
   const [useCustom, setUseCustom] = useState(false);
+  const [publicScreen, setPublicScreen] = useState(false);
 
   useEffect(() => {
     // getSession() lit depuis le cache local — instantané et fiable
@@ -80,32 +81,44 @@ export default function Home() {
     setLoading(true);
     setErr('');
 
-    const { data: { user } } = await supabase.auth.getUser();
-    let userId = user?.id;
-    if (!userId) {
-      const { data } = await supabase.auth.signInAnonymously();
-      userId = data.user?.id;
+    try {
+      // getSession() lit depuis le cache — plus fiable que getUser() qui fait une requête réseau
+      const { data: { session } } = await supabase.auth.getSession();
+      let userId = session?.user?.id;
+
+      // Seulement si pas du tout connecté (pas de session du tout)
+      if (!userId) {
+        const { data } = await supabase.auth.signInAnonymously();
+        userId = data.user?.id;
+      }
+      if (!userId) { setErr("Erreur d'authentification. Recharge la page."); setLoading(false); return; }
+
+      const roomCode = genCode();
+      const { data: room, error } = await supabase
+        .from('rooms')
+        .insert({ code: roomCode, host_id: userId, mode, timer_duration: 20, max_players: 100, sound_enabled: true, pack_id: (useCustom && selectedPackId) ? selectedPackId : null, public_screen: publicScreen })
+        .select('*')
+        .single();
+
+      if (error || !room) {
+        setErr(`Erreur lors de la création : ${error?.message ?? 'inconnue'}`);
+        setLoading(false);
+        return;
+      }
+
+      await supabase.from('room_players').insert({
+        room_id: room.id,
+        user_id: userId,
+        nickname: nickname.trim(),
+        is_host: true,
+      });
+
+      setLoading(false);
+      router.push(`/room/${roomCode}?nickname=${encodeURIComponent(nickname.trim())}`);
+    } catch (e: any) {
+      setErr(`Erreur inattendue : ${e?.message ?? String(e)}`);
+      setLoading(false);
     }
-    if (!userId) { setErr("Erreur d'authentification"); setLoading(false); return; }
-
-    const roomCode = genCode();
-    const { data: room, error } = await supabase
-      .from('rooms')
-      .insert({ code: roomCode, host_id: userId, mode, timer_duration: 20, max_players: 100, sound_enabled: true, pack_id: (useCustom && selectedPackId) ? selectedPackId : null })
-      .select('*')
-      .single();
-
-    if (error || !room) { setErr('Erreur lors de la création. Réessaie.'); setLoading(false); return; }
-
-    await supabase.from('room_players').insert({
-      room_id: room.id,
-      user_id: userId,
-      nickname: nickname.trim(),
-      is_host: true,
-    });
-
-    setLoading(false);
-    router.push(`/room/${roomCode}?nickname=${encodeURIComponent(nickname.trim())}`);
   };
 
   const joinRoom = async () => {
@@ -231,6 +244,31 @@ export default function Home() {
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Toggle mode écran public */}
+          {tab === 'create' && (
+            <button
+              onClick={() => setPublicScreen(s => !s)}
+              className="flex items-center justify-between px-4 py-3 rounded-xl w-full text-left transition-all"
+              style={{
+                background: publicScreen ? 'rgba(0,229,209,0.08)' : 'rgba(255,255,255,0.04)',
+                border: `1.5px solid ${publicScreen ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.1)'}`,
+              }}>
+              <div>
+                <p className="font-black text-sm" style={{ color: publicScreen ? '#00E5D1' : '#F0F4FF' }}>
+                  📺 Mode écran public
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                  Bar / salle de jeux — question sur grand écran, boutons sur téléphone
+                </p>
+              </div>
+              <div className="w-12 h-6 rounded-full transition-all relative ml-4 flex-shrink-0"
+                style={{ background: publicScreen ? '#00E5D1' : 'rgba(255,255,255,0.12)' }}>
+                <span className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all"
+                  style={{ left: publicScreen ? '1.5rem' : '2px' }} />
+              </div>
+            </button>
           )}
 
           {/* Sélection pack (créer, Pro/Premium) */}

@@ -12,6 +12,8 @@ import { Timer } from '@/components/Timer';
 import { Scoreboard } from '@/components/Scoreboard';
 import { SettingsModal } from '@/components/SettingsModal';
 import { InterLeaderboard } from '@/components/InterLeaderboard';
+import { PublicScreenView } from '@/components/PublicScreenView';
+import { PhoneControllerView } from '@/components/PhoneControllerView';
 import { BUZZ_QUESTIONS, QCM_QUESTIONS, FREE_QUESTION_LIMIT } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player } from '@/types';
 
@@ -192,6 +194,47 @@ export default function RoomPage() {
   );
 
   if (!room || !myPlayer) return null;
+
+  const currentQForPublic = questions[room.current_question] ?? null;
+  const correctPlayerIdsForPublic = qcmAnswers.filter(a => a.is_correct).map(a => a.player_id);
+
+  // --- MODE ÉCRAN PUBLIC ---
+  if (room.public_screen) {
+    if (!myPlayer.is_host) {
+      return (
+        <PhoneControllerView
+          room={room}
+          myPlayer={myPlayer}
+          players={players}
+          buzz={buzz}
+          qcmAnswers={qcmAnswers}
+          qcmRevealed={qcmRevealed}
+          showLeaderboard={showLeaderboard}
+          currentQuestion={currentQForPublic}
+          pressBuzzer={pressBuzzer}
+          submitQCMAnswer={submitQCMAnswer}
+        />
+      );
+    }
+    return (
+      <PublicScreenView
+        room={room}
+        players={players}
+        myPlayer={myPlayer}
+        currentQuestion={currentQForPublic}
+        buzz={buzz}
+        qcmAnswers={qcmAnswers}
+        qcmRevealed={qcmRevealed}
+        showLeaderboard={showLeaderboard}
+        timerKey={timerKey}
+        startGame={startGame}
+        revealQCMAndNext={revealQCMAndNext}
+        pauseGame={pauseGame}
+        resumeGame={resumeGame}
+        endGame={endGame}
+      />
+    );
+  }
 
   // --- Salle d'attente ---
   if (room.status === 'waiting') {
