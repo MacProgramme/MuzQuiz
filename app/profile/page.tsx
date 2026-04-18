@@ -526,6 +526,23 @@ export default function ProfilePage() {
                     {r.player_count} joueur{r.player_count > 1 ? 's' : ''} • {formatDate(r.created_at)}
                   </p>
                 </div>
+
+                {/* Bouton fermer pour les salles actives */}
+                {r.status !== 'finished' && (
+                  <button
+                    onClick={async () => {
+                      await supabase.from('rooms').update({ status: 'finished' }).eq('id', r.id);
+                      setHostedRooms(prev => prev.map(x => x.id === r.id ? { ...x, status: 'finished' } : x));
+                    }}
+                    className="text-xs font-bold px-3 py-1.5 rounded-lg flex-shrink-0 transition-all hover:opacity-80"
+                    style={{
+                      background: 'rgba(255,0,170,0.08)',
+                      color: 'rgba(255,0,170,0.6)',
+                      border: '1px solid rgba(255,0,170,0.15)',
+                    }}>
+                    Fermer
+                  </button>
+                )}
               </div>
             ))}
           </div>

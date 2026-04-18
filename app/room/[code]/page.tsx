@@ -157,12 +157,19 @@ export default function RoomPage() {
 
   // Auto-fermeture : si l'hôte quitte la page et que la salle n'est pas terminée → la fermer
   useEffect(() => {
-    return () => {
+    const closeRoomIfHost = () => {
       const r = roomRef.current;
       const p = myPlayerRef.current;
       if (p?.is_host && r && r.status !== 'finished') {
         supabase.from('rooms').update({ status: 'finished' }).eq('id', r.id);
       }
+    };
+
+    // Fermer aussi quand l'onglet/fenêtre se ferme (beforeunload)
+    window.addEventListener('beforeunload', closeRoomIfHost);
+    return () => {
+      window.removeEventListener('beforeunload', closeRoomIfHost);
+      closeRoomIfHost(); // aussi au démontage React (navigation)
     };
   }, []); // uniquement au démontage
 
