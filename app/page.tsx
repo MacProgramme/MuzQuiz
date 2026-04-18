@@ -22,8 +22,10 @@ export default function Home() {
   const [useCustom, setUseCustom] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      const user = data.user;
+    // getSession() lit depuis le cache local — instantané et fiable
+    const loadAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       const loggedIn = !!(user && !user.is_anonymous);
       setIsLoggedIn(loggedIn);
       if (loggedIn && user) {
@@ -45,7 +47,30 @@ export default function Home() {
           if (packs) setMyPacks(packs as QuestionPack[]);
         }
       }
+    };
+    loadAuth();
+
+    // Écouter les changements d'auth (connexion/déconnexion)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const user = session?.user;
+      const loggedIn = !!(user && !user.is_anonymous);
+      setIsLoggedIn(loggedIn);
+      if (loggedIn && user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nickname, subscription_tier')
+          .eq('id', user.id)
+          .single();
+        if (profile?.nickname) setNickname(profile.nickname);
+        const tier = (profile?.subscription_tier as SubscriptionTier) ?? 'free';
+        setUserTier(tier);
+      } else if (!loggedIn) {
+        setNickname('');
+        setUserTier('free');
+        setMyPacks([]);
+      }
     });
+    return () => subscription.unsubscribe();
   }, []);
 
   const genCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
