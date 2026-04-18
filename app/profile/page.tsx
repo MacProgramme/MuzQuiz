@@ -64,92 +64,97 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || user.is_anonymous) {
-        router.push('/login');
-        return;
-      }
-      if (user.email === 'antoine.gegedu27@gmail.com') setIsAdmin(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || user.is_anonymous) {
+          router.push('/login');
+          return;
+        }
+        if (user.email === 'antoine.gegedu27@gmail.com') setIsAdmin(true);
 
-      // Charger le profil
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (!prof) {
-        // Créer un profil vide si inexistant
-        const { data: newProf } = await supabase
+        // Charger le profil
+        const { data: prof } = await supabase
           .from('profiles')
-          .insert({ id: user.id, nickname: user.email?.split('@')[0] ?? 'Joueur', avatar_color: '#8B5CF6' })
           .select('*')
+          .eq('id', user.id)
           .single();
-        setProfile(newProf);
-      } else {
-        setProfile(prof);
-      }
 
-      // Charger l'historique des parties
-      const { data: playerRows } = await supabase
-        .from('room_players')
-        .select('room_id, score, is_host, rooms(id, code, mode, status, created_at)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (playerRows) {
-        // Pour chaque partie, calculer le rang
-        const entries: GameEntry[] = [];
-        for (const row of playerRows) {
-          const room = row.rooms as any;
-          if (!room || room.status !== 'finished') continue;
-
-          // Récupérer tous les joueurs de cette salle pour calculer le rang
-          const { data: allPlayers } = await supabase
-            .from('room_players')
-            .select('user_id, score')
-            .eq('room_id', row.room_id)
-            .order('score', { ascending: false });
-
-          const total = allPlayers?.length ?? 1;
-          const rank = (allPlayers?.findIndex(p => p.user_id === user.id) ?? 0) + 1;
-
-          entries.push({
-            room_id: row.room_id,
-            room_code: room.code,
-            mode: room.mode,
-            score: row.score,
-            rank,
-            total_players: total,
-            created_at: room.created_at,
-            is_host: row.is_host,
-          });
+        if (!prof) {
+          // Créer un profil vide si inexistant
+          const { data: newProf } = await supabase
+            .from('profiles')
+            .insert({ id: user.id, nickname: user.email?.split('@')[0] ?? 'Joueur', avatar_color: '#8B5CF6' })
+            .select('*')
+            .single();
+          if (newProf) setProfile(newProf);
+        } else {
+          setProfile(prof);
         }
-        setGames(entries);
-      }
 
-      // Charger les salles hébergées
-      const { data: rooms } = await supabase
-        .from('rooms')
-        .select('id, code, mode, status, created_at')
-        .eq('host_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
+        // Charger l'historique des parties
+        // Note: room_players utilise "joined_at" (pas "created_at")
+        const { data: playerRows } = await supabase
+          .from('room_players')
+          .select('room_id, score, is_host, rooms(id, code, mode, status, created_at)')
+          .eq('user_id', user.id)
+          .order('joined_at', { ascending: false })
+          .limit(20);
 
-      if (rooms) {
-        const hostedEntries: HostRoom[] = [];
-        for (const room of rooms) {
-          const { count } = await supabase
-            .from('room_players')
-            .select('id', { count: 'exact', head: true })
-            .eq('room_id', room.id);
-          hostedEntries.push({ ...room, player_count: count ?? 0 });
+        if (playerRows) {
+          // Pour chaque partie, calculer le rang
+          const entries: GameEntry[] = [];
+          for (const row of playerRows) {
+            const room = row.rooms as any;
+            if (!room || room.status !== 'finished') continue;
+
+            // Récupérer tous les joueurs de cette salle pour calculer le rang
+            const { data: allPlayers } = await supabase
+              .from('room_players')
+              .select('user_id, score')
+              .eq('room_id', row.room_id)
+              .order('score', { ascending: false });
+
+            const total = allPlayers?.length ?? 1;
+            const rank = (allPlayers?.findIndex(p => p.user_id === user.id) ?? 0) + 1;
+
+            entries.push({
+              room_id: row.room_id,
+              room_code: room.code,
+              mode: room.mode,
+              score: row.score,
+              rank,
+              total_players: total,
+              created_at: room.created_at,
+              is_host: row.is_host,
+            });
+          }
+          setGames(entries);
         }
-        setHostedRooms(hostedEntries);
-      }
 
-      setLoading(false);
+        // Charger les salles hébergées
+        const { data: rooms } = await supabase
+          .from('rooms')
+          .select('id, code, mode, status, created_at')
+          .eq('host_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (rooms) {
+          const hostedEntries: HostRoom[] = [];
+          for (const room of rooms) {
+            const { count } = await supabase
+              .from('room_players')
+              .select('id', { count: 'exact', head: true })
+              .eq('room_id', room.id);
+            hostedEntries.push({ ...room, player_count: count ?? 0 });
+          }
+          setHostedRooms(hostedEntries);
+        }
+      } catch (e) {
+        console.error('Erreur chargement profil:', e);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -189,7 +194,15 @@ export default function ProfilePage() {
     </div>
   );
 
-  if (!profile) return null;
+  if (!profile) return (
+    <div className="flex items-center justify-center h-screen flex-col gap-4" style={{ background: '#0D1B3E' }}>
+      <p className="font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>Profil introuvable.</p>
+      <button onClick={() => router.push('/login')}
+        className="muz-btn-pink px-6 py-3 rounded-xl font-black text-sm">
+        Se connecter
+      </button>
+    </div>
+  );
 
   const initial = profile.nickname[0]?.toUpperCase() ?? '?';
 

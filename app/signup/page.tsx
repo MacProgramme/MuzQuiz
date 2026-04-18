@@ -30,7 +30,17 @@ export default function SignupPage() {
     setErr('');
 
     // Créer le compte Supabase
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+    // On passe le pseudo dans les métadonnées pour que le trigger SQL puisse l'utiliser
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        data: {
+          full_name: nickname.trim(),
+          avatar_color: avatarColor,
+        }
+      }
+    });
     if (error) {
       setErr(error.message === 'User already registered'
         ? 'Cet email est déjà utilisé.'
@@ -42,14 +52,23 @@ export default function SignupPage() {
     const userId = data.user?.id;
     if (!userId) { setErr("Erreur lors de la création du compte."); setLoading(false); return; }
 
-    // Créer le profil
-    await supabase.from('profiles').insert({
+    // Créer le profil (fonctionne si session active = confirmation email désactivée)
+    // Si email confirmation activée, le trigger SQL crée le profil automatiquement
+    const { error: profileError } = await supabase.from('profiles').insert({
       id: userId,
       nickname: nickname.trim(),
       avatar_color: avatarColor,
     });
 
-    router.push('/profile');
+    // Si l'insertion a réussi (session active), on va directement au profil
+    if (!profileError) {
+      router.push('/profile');
+      return;
+    }
+
+    // Sinon, confirmation d'email requise — on affiche un message à l'utilisateur
+    setLoading(false);
+    setErr('✅ Compte créé ! Vérifie ton email pour confirmer ton inscription, puis connecte-toi.');
   };
 
   const initial = nickname.trim() ? nickname.trim()[0].toUpperCase() : '?';

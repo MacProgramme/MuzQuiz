@@ -12,12 +12,15 @@ BEGIN
   VALUES (
     NEW.id,
     COALESCE(
-      NEW.raw_user_meta_data->>'full_name',   -- Nom Google
+      NEW.raw_user_meta_data->>'full_name',   -- Nom Google / pseudo choisi à l'inscription
       NEW.raw_user_meta_data->>'name',         -- Autre OAuth
       split_part(NEW.email, '@', 1),           -- Partie avant @ de l'email
       'Joueur'                                 -- Fallback
     ),
-    '#8B5CF6',
+    COALESCE(
+      NEW.raw_user_meta_data->>'avatar_color', -- Couleur choisie à l'inscription
+      '#8B5CF6'                                -- Violet par défaut
+    ),
     'free'
   )
   ON CONFLICT (id) DO NOTHING; -- Ne pas écraser si profil déjà existant
