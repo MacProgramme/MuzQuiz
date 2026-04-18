@@ -40,7 +40,7 @@ export default function LoginPage() {
       </Link>
 
       {/* Card */}
-      <div className="muz-card w-full max-w-md p-8">
+      <div className="muz-card muz-card-pink w-full max-w-md p-8">
         <h2 className="text-2xl font-black mb-1" style={{ color: '#F0F4FF' }}>Connexion</h2>
         <p className="text-sm mb-6" style={{ color: 'rgba(240,244,255,0.4)' }}>
           Pas encore de compte ?{' '}

@@ -19,6 +19,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={`${inter.variable} ${blackHan.variable}`}>
       <body className={inter.className} style={{ background: '#0D1B3E', minHeight: '100vh' }}>
+        {/* Grain cinématique — toujours au-dessus, jamais bloquant */}
+        <div className="muz-grain" aria-hidden="true" />
         {/* Gradient SVG partagé — référencé par id="muz-logo-grad" dans tous les logos */}
         <svg width="0" height="0" aria-hidden="true" style={{ position: 'absolute' }}>
           <defs>

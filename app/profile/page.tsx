@@ -526,7 +526,7 @@ export default function ProfilePage() {
                 {/* Lien vers les packs */}
                 {TIER_LIMITS[profile.subscription_tier].canCreate && (
                   <Link href="/questions"
-                    className="flex items-center justify-between px-4 py-3 rounded-xl transition-all hover:opacity-90"
+                    className="flex items-center justify-between px-4 py-3 rounded-xl muz-card-lift"
                     style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)' }}>
                     <div className="flex items-center gap-2">
                       <MuzquizLogo width={22} showText={false} />
@@ -640,7 +640,7 @@ export default function ProfilePage() {
         {tab === 'history' && (
           <div className="flex flex-col gap-3">
             {games.length === 0 ? (
-              <div className="muz-card p-8 text-center">
+              <div className="muz-card muz-card-cyan p-8 text-center">
                 <div className="flex justify-center mb-3"><MuzquizLogo width={60} showText={false} /></div>
                 <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>Aucune partie terminée</p>
                 <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
@@ -651,7 +651,7 @@ export default function ProfilePage() {
                 </Link>
               </div>
             ) : games.map((g, i) => (
-              <div key={`${g.room_id}-${i}`} className="muz-card p-4 flex items-center gap-4">
+              <div key={`${g.room_id}-${i}`} className="muz-card muz-card-lift p-4 flex items-center gap-4">
                 {/* Rang */}
                 <div className="w-12 h-12 rounded-full flex items-center justify-center font-black flex-shrink-0 text-lg"
                   style={{
@@ -703,7 +703,7 @@ export default function ProfilePage() {
             </div>
 
             {hostedRooms.length === 0 ? (
-              <div className="muz-card p-8 text-center">
+              <div className="muz-card muz-card-pink p-8 text-center">
                 <div className="flex justify-center mb-3"><MuzquizLogo width={60} showText={false} /></div>
                 <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>Aucune salle créée</p>
                 <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
@@ -711,7 +711,7 @@ export default function ProfilePage() {
                 </p>
               </div>
             ) : hostedRooms.map(r => (
-              <div key={r.id} className="muz-card p-4 flex items-center gap-4">
+              <div key={r.id} className="muz-card muz-card-lift p-4 flex items-center gap-4">
                 {/* Code salle */}
                 <div className="font-black font-mono tracking-widest text-base flex-shrink-0 px-3 py-2 rounded-xl"
                   style={{ background: 'rgba(0,229,209,0.08)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.2)' }}>

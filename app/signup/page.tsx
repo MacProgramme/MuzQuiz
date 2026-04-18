@@ -84,7 +84,7 @@ export default function SignupPage() {
       </Link>
 
       {/* Card */}
-      <div className="muz-card w-full max-w-md p-8">
+      <div className="muz-card muz-card-cyan w-full max-w-md p-8">
         <h2 className="text-2xl font-black mb-1" style={{ color: '#F0F4FF' }}>Créer un compte</h2>
         <p className="text-sm mb-6" style={{ color: 'rgba(240,244,255,0.4)' }}>
           Déjà inscrit ?{' '}

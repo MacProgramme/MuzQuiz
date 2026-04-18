@@ -7,7 +7,6 @@ import { MuzquizLogo } from '@/components/MuzquizLogo';
 const PLANS = [
   {
     name: 'Gratuit',
-    emoji: '✨',
     price: '0€',
     period: 'pour toujours',
     accent: '#8B5CF6',
@@ -28,7 +27,6 @@ const PLANS = [
   },
   {
     name: 'Pro',
-    emoji: '🔥',
     price: '9,99€',
     period: 'par mois',
     accent: '#FF00AA',
@@ -43,13 +41,12 @@ const PLANS = [
       { text: "Jusqu'à 5 packs (30 questions chacun)", ok: true },
       { text: 'Support prioritaire', ok: false },
     ],
-    cta: 'Passer Pro',
+    cta: 'Passer Pro →',
     href: '#',
     ctaStyle: 'pink',
   },
   {
     name: 'Premium',
-    emoji: '👑',
     price: '19,99€',
     period: 'par mois',
     accent: '#F59E0B',
@@ -64,7 +61,7 @@ const PLANS = [
       { text: 'Packs & questions illimités', ok: true },
       { text: 'Support prioritaire', ok: true },
     ],
-    cta: 'Passer Premium',
+    cta: 'Passer Premium →',
     href: '#',
     ctaStyle: 'cyan',
   },
@@ -88,15 +85,15 @@ export default function PricingPage() {
         <p className="text-2xl font-black mb-2" style={{ color: '#F0F4FF' }}>
           Choisissez votre formule
         </p>
-        <p style={{ color: 'rgba(240,244,255,0.4)' }}>
-          Testez gratuitement, payez quand vous êtes convaincu.
+        <p style={{ color: 'rgba(240,244,255,0.4)', letterSpacing: '0.02em' }}>
+          Gratuit pour toujours. Pro quand tu veux aller plus loin.
         </p>
       </div>
 
       {/* Cards */}
       <div className="flex flex-col md:flex-row gap-5 max-w-4xl mx-auto items-stretch">
         {PLANS.map(plan => (
-          <div key={plan.name} className="relative flex-1 flex flex-col rounded-2xl p-6"
+          <div key={plan.name} className="relative flex-1 flex flex-col rounded-2xl p-6 muz-card-lift"
             style={{
               background: plan.accentLight,
               border: `2px solid ${plan.accentBorder}`,
@@ -112,7 +109,9 @@ export default function PricingPage() {
 
             {/* Plan info */}
             <div className="text-center mb-6">
-              <div className="text-4xl mb-2">{plan.emoji}</div>
+              <div className="flex justify-center mb-3">
+                <MuzquizLogo width={44} showText={false} />
+              </div>
               <h2 className="text-xl font-black mb-2" style={{ color: plan.accent }}>
                 {plan.name}
               </h2>
@@ -179,7 +178,7 @@ export default function PricingPage() {
               a: "Avec Pro ou Premium, vous créez vos propres questions (Buzz ou QCM), les organisez en packs et les réutilisez dans n'importe quelle salle.",
             },
           ].map((item, i) => (
-            <div key={i} className="muz-card p-4">
+            <div key={i} className="muz-card muz-card-lift p-4">
               <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>{item.q}</p>
               <p className="text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>{item.a}</p>
             </div>

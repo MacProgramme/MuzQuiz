@@ -232,7 +232,7 @@ export function PublicScreenView({
         <div className="flex justify-center mb-6">
           {room.is_paused ? (
             <div className="px-8 py-4 rounded-2xl" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)' }}>
-              <p className="text-2xl font-black" style={{ color: '#F59E0B' }}>⏸ Pause</p>
+              <p className="text-2xl font-black" style={{ color: '#F59E0B' }}>Pause</p>
             </div>
           ) : !qcmRevealed ? (
             <BigTimer key={timerKey} duration={room.timer_duration} running={!room.is_paused}

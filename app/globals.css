@@ -17,8 +17,37 @@
 
 body {
   background-color: var(--muz-navy);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% 40%, rgba(139,92,246,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 15%, rgba(255,0,170,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 65% 85%, rgba(0,229,209,0.04) 0%, transparent 55%);
   color: var(--muz-white);
   font-family: inherit;
+}
+
+/* Grain cinématique — le détail qui change tout */
+.muz-grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.032;
+  pointer-events: none;
+  z-index: 9990;
+  animation: muz-grain-shift 10s steps(8) infinite;
+}
+
+@keyframes muz-grain-shift {
+  0%   { transform: translate(0%, 0%); }
+  12%  { transform: translate(-2%, -3%); }
+  25%  { transform: translate(3%, 1%); }
+  37%  { transform: translate(-1%, 4%); }
+  50%  { transform: translate(2%, -2%); }
+  62%  { transform: translate(-3%, 2%); }
+  75%  { transform: translate(4%, -1%); }
+  87%  { transform: translate(-2%, 3%); }
+  100% { transform: translate(0%, 0%); }
 }
 
 /* Gradient texte logo */
@@ -29,33 +58,84 @@ body {
   background-clip: text;
 }
 
-/* Carte sombre */
+/* Carte sombre — avec vrai relief */
 .muz-card {
-  background: var(--muz-card);
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  border-radius: 1.25rem;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.04) 0%, transparent 50%),
+    var(--muz-card);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 1.15rem;
+  box-shadow:
+    0 2px 20px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(255, 255, 255, 0.035) inset;
 }
 
-/* Bouton principal pink */
+/* Carte avec hover lift */
+.muz-card-lift {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  cursor: pointer;
+}
+.muz-card-lift:hover {
+  transform: translateY(-3px) scale(1.005);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(139, 92, 246, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.05) inset;
+}
+
+/* Variante accent — bordure colorée en haut */
+.muz-card-pink  { border-top: 2px solid rgba(255, 0, 170, 0.45); }
+.muz-card-cyan  { border-top: 2px solid rgba(0, 229, 209, 0.4); }
+.muz-card-gold  { border-top: 2px solid rgba(245, 158, 11, 0.45); }
+
+/* Bouton principal pink — effet tactile */
 .muz-btn-pink {
-  background: linear-gradient(135deg, #FF00AA, #CC0088);
+  background: linear-gradient(160deg, #FF22BB 0%, #CC0088 100%);
   color: white;
   font-weight: 900;
-  border-radius: 1rem;
-  transition: all 0.15s;
-  box-shadow: 0 4px 20px rgba(255, 0, 170, 0.35);
+  border-radius: 0.875rem;
+  transition: all 0.12s ease;
+  box-shadow:
+    0 4px 20px rgba(255, 0, 170, 0.4),
+    0 -1px 0 rgba(255,255,255,0.1) inset,
+    0 3px 0 #880055;
+  position: relative;
+  top: 0;
 }
-.muz-btn-pink:hover { filter: brightness(1.15); transform: translateY(-1px); }
-.muz-btn-pink:active { transform: scale(0.97); }
+.muz-btn-pink:hover {
+  background: linear-gradient(160deg, #FF33CC 0%, #DD0099 100%);
+  box-shadow: 0 6px 28px rgba(255, 0, 170, 0.5), 0 -1px 0 rgba(255,255,255,0.12) inset, 0 3px 0 #880055;
+  transform: translateY(-1px);
+}
+.muz-btn-pink:active {
+  top: 2px;
+  box-shadow: 0 2px 10px rgba(255, 0, 170, 0.3), 0 1px 0 #880055;
+  transform: translateY(0);
+}
 
-/* Bouton cyan */
+/* Bouton cyan — effet tactile */
 .muz-btn-cyan {
-  background: linear-gradient(135deg, #00E5D1, #00B8A8);
+  background: linear-gradient(160deg, #00EED8 0%, #00B8A8 100%);
   color: #0D1B3E;
   font-weight: 900;
-  border-radius: 1rem;
-  transition: all 0.15s;
-  box-shadow: 0 4px 20px rgba(0, 229, 209, 0.3);
+  border-radius: 0.875rem;
+  transition: all 0.12s ease;
+  box-shadow:
+    0 4px 20px rgba(0, 229, 209, 0.35),
+    0 -1px 0 rgba(255,255,255,0.2) inset,
+    0 3px 0 #007A6E;
+  position: relative;
+  top: 0;
+}
+.muz-btn-cyan:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(0, 229, 209, 0.45), 0 -1px 0 rgba(255,255,255,0.2) inset, 0 3px 0 #007A6E;
+}
+.muz-btn-cyan:active {
+  top: 2px;
+  box-shadow: 0 2px 10px rgba(0, 229, 209, 0.25), 0 1px 0 #007A6E;
+  transform: translateY(0);
 }
 
 /* Buzzer */
@@ -203,6 +283,63 @@ body {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--muz-navy); }
-::-webkit-scrollbar-thumb { background: var(--muz-violet); border-radius: 3px; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #8B5CF6, #FF00AA);
+  border-radius: 3px;
+}
+
+/* Focus visible — pour l'accessibilité */
+:focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.6);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Séparateur décoratif */
+.muz-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139,92,246,0.25) 30%, rgba(255,0,170,0.2) 60%, transparent);
+  margin: 0.5rem 0;
+}
+
+/* Badge pill soigné */
+.muz-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  border: 1px solid;
+}
+
+/* Texte label section */
+.muz-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(240, 244, 255, 0.35);
+}
+
+/* Input soigné */
+.muz-input {
+  background: rgba(255,255,255,0.065);
+  border: 1.5px solid rgba(139,92,246,0.25);
+  border-bottom: 1.5px solid rgba(139,92,246,0.4);
+  color: #F0F4FF;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.muz-input:focus {
+  border-color: #FF00AA;
+  box-shadow: 0 0 0 3px rgba(255,0,170,0.1);
+}

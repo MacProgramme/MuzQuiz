@@ -148,16 +148,18 @@ export default function Home() {
       {/* Contenu centré */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
 
-      {/* Logo + Moustache SVG */}
-      <div className="flex flex-col items-center mb-2">
+      {/* Logo */}
+      <div className="flex flex-col items-center mb-3">
         <MuzquizLogo width={200} textSize="3.5rem" animate />
+        <p className="text-sm mt-3 font-medium tracking-wide" style={{ color: 'rgba(240,244,255,0.38)', letterSpacing: '0.05em' }}>
+          Quizz musical avec tes potes — le vrai.
+        </p>
       </div>
-      <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.4)' }}>
-        Quiz & Blind Test en temps réel
-      </p>
+      {/* Séparateur décoratif */}
+      <div className="muz-divider w-48 mb-8" />
 
       {/* Card principale */}
-      <div className="muz-card w-full max-w-md p-8">
+      <div className="muz-card muz-card-pink w-full max-w-md p-8">
 
         {/* Tabs */}
         <div className="flex mb-6 rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
@@ -341,13 +343,10 @@ export default function Home() {
 
       {/* Footer */}
       <Link href="/pricing"
-        className="mt-6 text-sm font-bold transition-all hover:opacity-100"
-        style={{ color: 'rgba(139,92,246,0.7)' }}>
-        Voir les abonnements →
+        className="mt-7 text-xs font-bold tracking-wide uppercase transition-all hover:opacity-100"
+        style={{ color: 'rgba(139,92,246,0.55)', letterSpacing: '0.08em' }}>
+        Formules & abonnements →
       </Link>
-      <p className="text-xs mt-2" style={{ color: 'rgba(240,244,255,0.25)' }}>
-        Gratuit • Jouez maintenant avec vos amis
-      </p>
 
       </div>{/* fin contenu centré */}
     </main>

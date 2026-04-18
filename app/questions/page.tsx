@@ -314,7 +314,7 @@ export default function QuestionsPage() {
 
             <div className="flex flex-col gap-3">
               {packs.map(pack => (
-                <div key={pack.id} className="muz-card p-4 flex items-center gap-4 cursor-pointer transition-all hover:scale-[1.01]"
+                <div key={pack.id} className="muz-card muz-card-lift p-4 flex items-center gap-4 cursor-pointer"
                   onClick={() => openPack(pack)}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -333,9 +333,9 @@ export default function QuestionsPage() {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button onClick={e => { e.stopPropagation(); deletePack(pack.id); }}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all hover:scale-110"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black transition-all hover:scale-110"
                       style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}>
-                      🗑
+                      ×
                     </button>
                     <span style={{ color: 'rgba(240,244,255,0.3)', fontSize: '1.2rem' }}>›</span>
                   </div>
@@ -446,11 +446,11 @@ export default function QuestionsPage() {
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
                       <button onClick={() => openQForm(q)}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-all hover:scale-110"
-                        style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6' }}>✏</button>
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black transition-all hover:scale-110"
+                        style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6' }}>✎</button>
                       <button onClick={() => deleteQuestion(q.id)}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-all hover:scale-110"
-                        style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}>🗑</button>
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black transition-all hover:scale-110"
+                        style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}>×</button>
                     </div>
                   </div>
                 </div>
