@@ -17,8 +17,8 @@ interface Props {
 }
 
 function RankArrow({ diff }: { diff: number }) {
-  if (diff < 0) return <span style={{ color: '#00E5D1', fontSize: '1rem', fontWeight: 900 }}>▲</span>;
-  if (diff > 0) return <span style={{ color: '#FF00AA', fontSize: '1rem', fontWeight: 900 }}>▼</span>;
+  if (diff > 0) return <span style={{ color: '#00E5D1', fontSize: '1rem', fontWeight: 900 }}>▲</span>;
+  if (diff < 0) return <span style={{ color: '#FF00AA', fontSize: '1rem', fontWeight: 900 }}>▼</span>;
   return <span style={{ color: 'rgba(240,244,255,0.3)', fontSize: '0.85rem' }}>—</span>;
 }
 
@@ -27,44 +27,25 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 
 export function InterLeaderboard({ players, correctPlayerIds, visible }: Props) {
   const [ranked, setRanked] = useState<RankedPlayer[]>([]);
-  const [visibleCount, setVisibleCount] = useState(0);
   const [count, setCount] = useState(COUNTDOWN_DURATION);
 
-  // Calculer le classement
+  // Calculer le classement quand visible
   useEffect(() => {
     if (!visible) return;
-
     const sorted = [...players].sort((a, b) => b.score - a.score);
     const prevScores = players.map(p => ({
       ...p,
       prevScore: correctPlayerIds.includes(p.id) ? p.score - 100 : p.score,
     }));
     const prevSorted = [...prevScores].sort((a, b) => b.prevScore - a.prevScore);
-
     const result: RankedPlayer[] = sorted.map((p, idx) => ({
       ...p,
       rank: idx + 1,
       prevRank: prevSorted.findIndex(pp => pp.id === p.id) + 1,
       delta: correctPlayerIds.includes(p.id) ? 100 : 0,
     }));
-
     setRanked(result);
-  }, [visible, players, correctPlayerIds]);
-
-  // Révéler les joueurs un par un de bas en haut (dernier → premier)
-  useEffect(() => {
-    if (!visible || ranked.length === 0) { setVisibleCount(0); return; }
-    setVisibleCount(0);
-    let i = 0;
-    // Délai entre chaque joueur : adapté au nombre (max 350ms, min 150ms)
-    const delay = Math.min(350, Math.max(150, Math.floor(3000 / ranked.length)));
-    const interval = setInterval(() => {
-      i++;
-      setVisibleCount(i);
-      if (i >= ranked.length) clearInterval(interval);
-    }, delay);
-    return () => clearInterval(interval);
-  }, [visible, ranked.length]);
+  }, [visible]);
 
   // Countdown 5 → 0
   useEffect(() => {
@@ -76,7 +57,10 @@ export function InterLeaderboard({ players, correctPlayerIds, visible }: Props) 
     return () => clearInterval(interval);
   }, [visible]);
 
-  if (!visible) return null;
+  if (!visible || ranked.length === 0) return null;
+
+  // Délai entre chaque joueur (du dernier au premier) — max 400ms par joueur
+  const stepMs = Math.min(400, Math.floor(2800 / ranked.length));
 
   return (
     <div
@@ -85,31 +69,26 @@ export function InterLeaderboard({ players, correctPlayerIds, visible }: Props) 
     >
       {/* Titre */}
       <div className="mb-6 text-center">
-        <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>
-          Classement
-        </p>
+        <p className="text-xs font-bold uppercase tracking-widest mb-1"
+          style={{ color: 'rgba(240,244,255,0.4)' }}>Classement</p>
         <h2 className="text-3xl font-black" style={{ color: '#F0F4FF', fontFamily: 'var(--font-black-han)' }}>
           En ce moment…
         </h2>
       </div>
 
-      {/* Liste — révélation du bas vers le haut */}
+      {/* Liste — du dernier au premier, chacun apparaît après son délai CSS */}
       <div className="w-full max-w-sm flex flex-col gap-2">
-        {[...ranked].map((p, displayIdx) => {
-          // Ordre affiché : dernier rang d'abord, premier rang à la fin
-          // On inverse l'ordre de rendu mais on garde les données telles quelles
-          const reverseIdx = ranked.length - 1 - p.rank + 1; // 0 = dernier, ranked.length-1 = premier
-          const isVisible = visibleCount > ranked.length - p.rank;
+        {ranked.map((p) => {
+          // Dernier rang (ex: 5/5) apparaît en premier → délai = 0
+          // Premier rang (1/5) apparaît en dernier → délai = (n-1) * step
+          const delayMs = (ranked.length - p.rank) * stepMs;
           const isFirst = p.rank === 1;
 
           return (
             <div
               key={p.id}
-              style={{
-                transition: 'opacity 0.35s ease, transform 0.45s cubic-bezier(0.34,1.56,0.64,1)',
-                opacity: isVisible ? 1 : 0,
-                transform: isVisible ? 'translateX(0) scale(1)' : 'translateX(-48px) scale(0.95)',
-              }}
+              className="muz-lb-item"
+              style={{ animationDelay: `${delayMs}ms` }}
             >
               <div
                 className="flex items-center gap-3 px-4 py-3 rounded-2xl"
@@ -121,48 +100,48 @@ export function InterLeaderboard({ players, correctPlayerIds, visible }: Props) 
                     : 'rgba(255,255,255,0.04)',
                   border: isFirst
                     ? '1.5px solid rgba(245,158,11,0.6)'
-                    : p.rank === 2 ? '1.5px solid rgba(156,163,175,0.35)'
-                    : p.rank === 3 ? '1.5px solid rgba(180,83,9,0.35)'
+                    : p.rank === 2 ? '1.5px solid rgba(156,163,175,0.3)'
+                    : p.rank === 3 ? '1.5px solid rgba(180,83,9,0.3)'
                     : '1.5px solid rgba(255,255,255,0.06)',
-                  boxShadow: isFirst && isVisible ? '0 0 20px rgba(245,158,11,0.2)' : 'none',
+                  boxShadow: isFirst ? '0 0 20px rgba(245,158,11,0.15)' : 'none',
                 }}
               >
                 {/* Rang */}
                 <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
+                  className="w-9 h-9 rounded-full flex items-center justify-center font-black flex-shrink-0"
                   style={{
                     background: p.rank === 1 ? '#F59E0B' : p.rank === 2 ? '#9CA3AF' : p.rank === 3 ? '#B45309' : 'rgba(255,255,255,0.08)',
                     color: p.rank <= 3 ? '#0D1B3E' : '#F0F4FF',
                     fontSize: p.rank <= 3 ? '1.1rem' : '0.8rem',
-                    boxShadow: isFirst ? '0 0 12px rgba(245,158,11,0.5)' : 'none',
+                    boxShadow: isFirst ? '0 0 14px rgba(245,158,11,0.5)' : 'none',
                   }}
                 >
                   {p.rank <= 3 ? MEDALS[p.rank - 1] : `#${p.rank}`}
                 </div>
 
                 {/* Pseudo */}
-                <span className="flex-1 font-bold text-sm truncate" style={{ color: '#F0F4FF', fontWeight: isFirst ? 900 : 700 }}>
+                <span className="flex-1 font-bold text-sm truncate"
+                  style={{ color: '#F0F4FF', fontWeight: isFirst ? 900 : 700 }}>
                   {p.nickname}
                 </span>
 
                 {/* +100 */}
                 {p.delta > 0 && (
-                  <span
-                    className="text-xs font-black px-2 py-0.5 rounded-full flex-shrink-0"
-                    style={{ background: 'rgba(0,229,209,0.15)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.3)' }}
-                  >
+                  <span className="text-xs font-black px-2 py-0.5 rounded-full flex-shrink-0"
+                    style={{ background: 'rgba(0,229,209,0.15)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.3)' }}>
                     +{p.delta}
                   </span>
                 )}
 
                 {/* Score */}
-                <span className="font-black text-base flex-shrink-0" style={{ color: '#8B5CF6', minWidth: '3.5rem', textAlign: 'right' }}>
+                <span className="font-black text-base flex-shrink-0"
+                  style={{ color: '#8B5CF6', minWidth: '3.5rem', textAlign: 'right' }}>
                   {p.score}
                 </span>
 
                 {/* Flèche */}
                 <div className="w-5 flex-shrink-0 flex items-center justify-center">
-                  <RankArrow diff={-(p.prevRank - p.rank)} />
+                  <RankArrow diff={p.prevRank - p.rank} />
                 </div>
               </div>
             </div>
@@ -172,7 +151,8 @@ export function InterLeaderboard({ players, correctPlayerIds, visible }: Props) 
 
       {/* Countdown */}
       <div className="mt-6 flex flex-col items-center gap-2">
-        <div className="w-48 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(139,92,246,0.15)' }}>
+        <div className="w-48 h-1.5 rounded-full overflow-hidden"
+          style={{ background: 'rgba(139,92,246,0.15)' }}>
           <div
             className="h-full rounded-full"
             style={{
@@ -184,7 +164,10 @@ export function InterLeaderboard({ players, correctPlayerIds, visible }: Props) 
         </div>
         <p className="text-xs font-bold" style={{ color: 'rgba(139,92,246,0.6)' }}>
           Prochaine question dans{' '}
-          <span style={{ color: count <= 2 ? '#FF00AA' : count <= 3 ? '#F59E0B' : '#8B5CF6', fontWeight: 900, fontSize: '1rem' }}>
+          <span style={{
+            color: count <= 2 ? '#FF00AA' : count <= 3 ? '#F59E0B' : '#8B5CF6',
+            fontWeight: 900, fontSize: '1rem',
+          }}>
             {count}s
           </span>
         </p>

@@ -126,11 +126,13 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen flex flex-col items-center justify-center p-6"
+    <main className="min-h-screen flex flex-col"
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
 
-      {/* Bouton Mon compte */}
-      <div className="absolute top-5 right-5">
+      {/* Barre de navigation */}
+      <div className="flex items-center justify-between px-5 py-4"
+        style={{ borderBottom: '1px solid rgba(139,92,246,0.1)' }}>
+        <span className="muz-logo text-xl font-black" style={{ fontFamily: 'var(--font-black-han)' }}>MUZQUIZ</span>
         <Link href={isLoggedIn ? '/profile' : '/login'}
           className="text-sm font-bold px-4 py-2 rounded-xl transition-all hover:opacity-90"
           style={{
@@ -141,6 +143,9 @@ export default function Home() {
           {isLoggedIn ? '👤 Mon compte' : 'Connexion'}
         </Link>
       </div>
+
+      {/* Contenu centré */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6">
 
       {/* Logo + Moustache SVG */}
       <div className="flex flex-col items-center mb-2">
@@ -359,6 +364,8 @@ export default function Home() {
       <p className="text-xs mt-2" style={{ color: 'rgba(240,244,255,0.25)' }}>
         Gratuit • Jouez maintenant avec vos amis
       </p>
+
+      </div>{/* fin contenu centré */}
     </main>
   );
 }

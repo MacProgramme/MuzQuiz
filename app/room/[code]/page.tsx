@@ -19,32 +19,33 @@ import { Buzz, QCMAnswer, Player } from '@/types';
 
 // --- Confettis lors de la révélation ---
 const CONFETTI_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#FF6B6B', '#4ECDC4', '#FFE66D'];
-function Confetti({ active }: { active: boolean }) {
-  const pieces = useMemo(() => Array.from({ length: 60 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
-    delay: Math.random() * 0.8,
-    size: Math.random() * 9 + 5,
-    isCircle: Math.random() > 0.4,
-  })), []);
+const CONFETTI_PIECES = Array.from({ length: 70 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+  delay: (Math.random() * 0.9).toFixed(2),
+  dur: (1.6 + Math.random() * 1).toFixed(2),
+  size: Math.round(Math.random() * 9 + 5),
+  isCircle: Math.random() > 0.4,
+}));
 
+function Confetti({ active }: { active: boolean }) {
   if (!active) return null;
   return (
-    <div className="fixed inset-0 pointer-events-none z-30 overflow-hidden">
-      {pieces.map(p => (
+    <div className="fixed inset-0 pointer-events-none z-40 overflow-hidden">
+      {CONFETTI_PIECES.map(p => (
         <div
           key={p.id}
           className="muz-confetti"
           style={{
             left: `${p.x}%`,
-            top: '-12px',
+            top: '-16px',
             width: p.size,
             height: p.size,
             background: p.color,
             borderRadius: p.isCircle ? '50%' : '2px',
-            animationDelay: `${p.delay}s`,
-            animationDuration: `${1.8 + Math.random() * 0.8}s`,
+            ['--cdel' as any]: `${p.delay}s`,
+            ['--cdur' as any]: `${p.dur}s`,
           }}
         />
       ))}
@@ -427,43 +428,7 @@ export default function RoomPage() {
         </div>
       )}
 
-      {/* Menu hôte flottant */}
-      {myPlayer.is_host && (
-        <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2">
-          {showHostMenu && (
-            <div className="flex flex-col gap-2 muz-pop mb-1">
-              {room.is_paused ? (
-                <button onClick={() => { resumeGame(); setShowHostMenu(false); }}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm"
-                  style={{ background: '#00E5D1', color: '#0D1B3E', boxShadow: '0 4px 16px rgba(0,229,209,0.4)' }}>
-                  ▶ Reprendre
-                </button>
-              ) : (
-                <button onClick={() => { pauseGame(); setShowHostMenu(false); }}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm"
-                  style={{ background: '#F59E0B', color: '#0D1B3E', boxShadow: '0 4px 16px rgba(245,158,11,0.4)' }}>
-                  ⏸ Mettre en pause
-                </button>
-              )}
-              <button onClick={() => { endGame(); setShowHostMenu(false); }}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm"
-                style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.4)' }}>
-                🚪 Terminer la partie
-              </button>
-            </div>
-          )}
-          <button onClick={() => setShowHostMenu(m => !m)}
-            className="w-12 h-12 rounded-full flex items-center justify-center font-black text-xl transition-all"
-            style={{
-              background: showHostMenu ? '#FF00AA' : 'rgba(255,0,170,0.2)',
-              border: '2px solid rgba(255,0,170,0.5)',
-              boxShadow: '0 4px 16px rgba(255,0,170,0.3)',
-              color: showHostMenu ? 'white' : '#FF00AA',
-            }}>
-            {showHostMenu ? '✕' : '⚙'}
-          </button>
-        </div>
-      )}
+      {/* (menu flottant supprimé — contrôles dans le header) */}
 
       {/* Classement inter-question */}
       <InterLeaderboard
@@ -473,24 +438,49 @@ export default function RoomPage() {
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3"
-        style={{ background: '#112247', borderBottom: '1px solid rgba(139,92,246,0.2)' }}>
-        <div className="flex items-center gap-2">
-          <span className="font-black muz-logo text-xl" style={{ fontFamily: 'var(--font-black-han)' }}>MUZ</span>
-          <span className="text-xs font-mono tracking-widest px-2 py-0.5 rounded"
-            style={{ background: 'rgba(0,229,209,0.1)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.2)' }}>
-            {code}
+      <div style={{ background: '#112247', borderBottom: '1px solid rgba(139,92,246,0.2)' }}>
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="font-black muz-logo text-xl" style={{ fontFamily: 'var(--font-black-han)' }}>MUZ</span>
+            <span className="text-xs font-mono tracking-widest px-2 py-0.5 rounded"
+              style={{ background: 'rgba(0,229,209,0.1)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.2)' }}>
+              {code}
+            </span>
+          </div>
+          <Timer key={timerKey} duration={room.timer_duration}
+            running={room.is_paused ? false : qcmRevealed ? false : room.mode === 'buzz' ? !buzz : !myQCMAnswer}
+            onExpire={() => {
+              if (myPlayer.is_host && !qcmRevealed && !room.is_paused) revealQCMAndNext();
+            }} />
+          <span className="text-xs font-bold px-2 py-1 rounded-full"
+            style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}>
+            Q {room.current_question + 1}/{questions.length}
           </span>
         </div>
-        <Timer key={timerKey} duration={room.timer_duration}
-          running={room.is_paused ? false : qcmRevealed ? false : room.mode === 'buzz' ? !buzz : !myQCMAnswer}
-          onExpire={() => {
-            if (myPlayer.is_host && !qcmRevealed && !room.is_paused) revealQCMAndNext();
-          }} />
-        <span className="text-xs font-bold px-2 py-1 rounded-full"
-          style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}>
-          Q {room.current_question + 1}/{questions.length}
-        </span>
+
+        {/* Barre de contrôles hôte — même style que PublicScreenView */}
+        {myPlayer.is_host && (
+          <div className="flex items-center gap-2 px-4 pb-2">
+            {room.is_paused ? (
+              <button onClick={resumeGame}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all hover:opacity-90"
+                style={{ background: 'rgba(0,229,209,0.15)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.3)' }}>
+                ▶ Reprendre
+              </button>
+            ) : (
+              <button onClick={pauseGame}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all hover:opacity-90"
+                style={{ background: 'rgba(245,158,11,0.12)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)' }}>
+                ⏸ Pause
+              </button>
+            )}
+            <button onClick={() => { if (confirm('Terminer la partie ?')) endGame(); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all hover:opacity-90"
+              style={{ background: 'rgba(255,0,170,0.08)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
+              🚪 Terminer
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Scoreboard */}
