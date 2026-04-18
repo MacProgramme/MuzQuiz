@@ -56,6 +56,7 @@ export default function ProfilePage() {
   const [tab, setTab] = useState<Tab>('profile');
 
   // Edition profil
+  const [isAdmin, setIsAdmin] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editNickname, setEditNickname] = useState('');
   const [editColor, setEditColor] = useState('');
@@ -68,6 +69,7 @@ export default function ProfilePage() {
         router.push('/login');
         return;
       }
+      if (user.email === 'antoine.gegedu27@gmail.com') setIsAdmin(true);
 
       // Charger le profil
       const { data: prof } = await supabase
@@ -202,11 +204,20 @@ export default function ProfilePage() {
             MUZQUIZ
           </span>
         </Link>
-        <button onClick={logout}
-          className="text-sm font-bold px-4 py-2 rounded-xl transition-all hover:opacity-80"
-          style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.25)' }}>
-          Déconnexion
-        </button>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Link href="/admin"
+              className="text-sm font-bold px-4 py-2 rounded-xl transition-all hover:opacity-80"
+              style={{ background: 'rgba(255,0,170,0.08)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
+              🔐 Admin
+            </Link>
+          )}
+          <button onClick={logout}
+            className="text-sm font-bold px-4 py-2 rounded-xl transition-all hover:opacity-80"
+            style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.25)' }}>
+            Déconnexion
+          </button>
+        </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8">
