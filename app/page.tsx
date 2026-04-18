@@ -141,7 +141,7 @@ export default function Home() {
             color: isLoggedIn ? '#8B5CF6' : 'rgba(240,244,255,0.6)',
             border: `1px solid ${isLoggedIn ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.1)'}`,
           }}>
-          {isLoggedIn ? '👤 Mon compte' : 'Connexion'}
+          {isLoggedIn ? 'Mon compte' : 'Connexion'}
         </Link>
       </div>
 

@@ -19,7 +19,7 @@ export function BuzzerButton({ onBuzz, disabled, buzzedByMe, buzzedByOther }: Pr
         `}
         style={{ fontSize: buzzedByMe ? '1rem' : '1.5rem' }}
       >
-        {buzzedByMe ? '🎤 Buzzé !' : 'BUZZ!'}
+        {buzzedByMe ? 'Buzzé !' : 'BUZZ!'}
       </button>
 
       {buzzedByOther && (

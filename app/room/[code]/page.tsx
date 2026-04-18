@@ -392,7 +392,7 @@ export default function RoomPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 gap-6"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-        <div className="text-6xl">🔒</div>
+        <MuzquizLogo width={100} showText={false} />
         <div className="text-center">
           <h2 className="text-2xl font-black mb-2" style={{ color: '#F0F4FF' }}>Limite gratuite atteinte</h2>
           <p style={{ color: 'rgba(240,244,255,0.5)' }}>Passe à un abonnement pour continuer !</p>
@@ -521,7 +521,7 @@ export default function RoomPage() {
                     border: `1px solid ${buzzedByMe ? 'rgba(255,0,170,0.5)' : 'rgba(0,229,209,0.3)'}`,
                     color: buzzedByMe ? '#FF00AA' : '#00E5D1',
                   }}>
-                  {buzzedByMe ? '🎤 À toi de répondre !' : `🔔 ${buzzedPlayer?.nickname ?? '???'} a buzzé !`}
+                  {buzzedByMe ? 'À toi de répondre !' : `${buzzedPlayer?.nickname ?? '???'} a buzzé !`}
                 </div>
 
                 {/* Choix QCM — actifs pour le buzzé, grisés pour les autres */}

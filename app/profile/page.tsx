@@ -407,7 +407,7 @@ export default function ProfilePage() {
         {/* Tabs */}
         <div className="flex mb-6 rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
           {([
-            { key: 'profile', label: '👤 Profil' },
+            { key: 'profile', label: 'Profil' },
             { key: 'history', label: '📜 Historique' },
             { key: 'dashboard', label: '🎮 Mes salles' },
           ] as { key: Tab; label: string }[]).map(t => (
@@ -529,7 +529,7 @@ export default function ProfilePage() {
                     className="flex items-center justify-between px-4 py-3 rounded-xl transition-all hover:opacity-90"
                     style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)' }}>
                     <div className="flex items-center gap-2">
-                      <span>📦</span>
+                      <MuzquizLogo width={22} showText={false} />
                       <span className="font-bold text-sm" style={{ color: '#8B5CF6' }}>Mes packs de questions</span>
                     </div>
                     <span style={{ color: 'rgba(139,92,246,0.6)' }}>›</span>

@@ -324,7 +324,7 @@ export function PublicScreenView({
           {buzzerPlayer ? (
             <div>
               <p className="text-center font-black mb-6" style={{ fontSize: '2rem', color: '#FF00AA' }}>
-                🔔 {buzzerPlayer.nickname} a buzzé !
+                {buzzerPlayer.nickname} a buzzé !
               </p>
               {/* Réponses */}
               <div className="grid grid-cols-2 gap-4 mb-6">

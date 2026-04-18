@@ -235,7 +235,7 @@ export default function QuestionsPage() {
             {!limits.canCreate && (
               <div className="muz-card p-6 mb-6 text-center"
                 style={{ border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.06)' }}>
-                <div className="text-3xl mb-2">🔒</div>
+                <div className="flex justify-center mb-2"><MuzquizLogo width={48} showText={false} /></div>
                 <h3 className="font-black text-lg mb-1" style={{ color: '#F59E0B' }}>Fonctionnalité Pro & Premium</h3>
                 <p className="text-sm mb-4" style={{ color: 'rgba(240,244,255,0.5)' }}>
                   Passe à un abonnement supérieur pour créer tes propres packs de questions.
@@ -306,7 +306,7 @@ export default function QuestionsPage() {
             {/* Liste des packs */}
             {packs.length === 0 && limits.canCreate && !showPackForm && (
               <div className="muz-card p-8 text-center">
-                <div className="text-4xl mb-3">📦</div>
+                <div className="flex justify-center mb-3"><MuzquizLogo width={60} showText={false} /></div>
                 <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>Aucun pack pour l'instant</p>
                 <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>Crée ton premier pack de questions !</p>
               </div>
@@ -413,7 +413,7 @@ export default function QuestionsPage() {
             {/* Liste questions */}
             {questions.length === 0 && !showQForm && (
               <div className="muz-card p-8 text-center">
-                <div className="text-4xl mb-3">📝</div>
+                <div className="flex justify-center mb-3"><MuzquizLogo width={60} showText={false} /></div>
                 <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>Aucune question</p>
                 <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>Ajoute ta première question !</p>
               </div>
