@@ -17,6 +17,7 @@ import { PhoneControllerView } from '@/components/PhoneControllerView';
 import { BUZZ_QUESTIONS, QCM_QUESTIONS, FREE_QUESTION_LIMIT } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
+import { RoomQRCode } from '@/components/RoomQRCode';
 
 // --- Confettis lors de la révélation ---
 const CONFETTI_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#FF6B6B', '#4ECDC4', '#FFE66D'];
@@ -316,16 +317,27 @@ export default function RoomPage() {
 
         <div className="text-center">
           <MuzquizLogo width={140} textSize="2rem" animate />
-          <div className="flex items-center justify-center gap-2 mb-1">
+          <div className="flex items-center justify-center gap-2 mb-3">
             <MuzquizLogo width={18} showText={false} />
             <span className="font-bold" style={{ color: '#8B5CF6' }}>{modeLabel}</span>
           </div>
-          <div className="mt-3 px-6 py-3 rounded-2xl inline-block"
-            style={{ background: 'rgba(0,229,209,0.08)', border: '2px solid rgba(0,229,209,0.3)' }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(0,229,209,0.5)' }}>Code de la salle</p>
-            <div className="font-black font-mono tracking-[0.25em] text-3xl" style={{ color: '#00E5D1' }}>{code}</div>
+
+          {/* QR code (affiché sur mobile en premier, sur PC en plus petit) */}
+          <div className="flex flex-col items-center gap-4">
+            <RoomQRCode code={code} size={160} />
+
+            {/* Code texte — toujours accessible */}
+            <div className="px-6 py-3 rounded-2xl"
+              style={{ background: 'rgba(0,229,209,0.06)', border: '1.5px solid rgba(0,229,209,0.2)' }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(0,229,209,0.4)' }}>
+                Code de la salle
+              </p>
+              <div className="font-black font-mono tracking-[0.25em] text-2xl" style={{ color: '#00E5D1' }}>{code}</div>
+            </div>
+            <p className="text-xs" style={{ color: 'rgba(240,244,255,0.25)' }}>
+              Scanne le QR ou partage le code
+            </p>
           </div>
-          <p className="text-xs mt-2" style={{ color: 'rgba(240,244,255,0.3)' }}>Partage ce code avec tes amis !</p>
         </div>
 
         <div className="muz-card w-full max-w-md p-5">

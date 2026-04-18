@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { GameMode, QuestionPack, SubscriptionTier, TIER_LIMITS } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
+import { QRScanner } from '@/components/QRScanner';
 
 export default function Home() {
   const router = useRouter();
@@ -23,6 +24,19 @@ export default function Home() {
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
   const [useCustom, setUseCustom] = useState(false);
   const [publicScreen, setPublicScreen] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+
+  // Lecture du param ?join=CODE dans l'URL (depuis un QR code scanné nativement)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const joinCode = params.get('join');
+    if (joinCode) {
+      setTab('join');
+      setCode(joinCode.toUpperCase());
+      // Nettoyer l'URL sans recharger la page
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
 
   useEffect(() => {
     const loadProfile = async (userId: string) => {
@@ -129,6 +143,17 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col"
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
+
+      {/* Scanner QR modal */}
+      {showScanner && (
+        <QRScanner
+          onScan={(scanned) => {
+            setCode(scanned);
+            setTab('join');
+          }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
 
       {/* Barre de navigation */}
       <div className="flex items-center justify-between px-5 py-4"
@@ -308,22 +333,49 @@ export default function Home() {
 
           {/* Input code (rejoindre) */}
           {tab === 'join' && (
-            <input
-              value={code}
-              onChange={e => setCode(e.target.value.toUpperCase())}
-              onKeyDown={e => e.key === 'Enter' && joinRoom()}
-              placeholder="CODE DE LA SALLE"
-              maxLength={8}
-              className="w-full px-4 py-3 rounded-xl font-mono text-lg font-black tracking-widest uppercase outline-none transition-all text-center"
-              style={{
-                background: 'rgba(255,255,255,0.07)',
-                border: '1.5px solid rgba(0,229,209,0.3)',
-                color: '#00E5D1',
-                letterSpacing: '0.2em',
-              }}
-              onFocus={e => e.target.style.borderColor = '#00E5D1'}
-              onBlur={e => e.target.style.borderColor = 'rgba(0,229,209,0.3)'}
-            />
+            <div className="flex flex-col gap-3">
+              <input
+                value={code}
+                onChange={e => setCode(e.target.value.toUpperCase())}
+                onKeyDown={e => e.key === 'Enter' && joinRoom()}
+                placeholder="CODE DE LA SALLE"
+                maxLength={8}
+                className="w-full px-4 py-3 rounded-xl font-mono text-lg font-black tracking-widest uppercase outline-none transition-all text-center"
+                style={{
+                  background: 'rgba(255,255,255,0.07)',
+                  border: '1.5px solid rgba(0,229,209,0.3)',
+                  color: '#00E5D1',
+                  letterSpacing: '0.2em',
+                }}
+                onFocus={e => e.target.style.borderColor = '#00E5D1'}
+                onBlur={e => e.target.style.borderColor = 'rgba(0,229,209,0.3)'}
+              />
+              {/* Bouton scanner QR */}
+              <button
+                onClick={() => setShowScanner(true)}
+                className="flex items-center justify-center gap-2.5 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90"
+                style={{
+                  background: 'rgba(0,229,209,0.07)',
+                  border: '1.5px solid rgba(0,229,209,0.25)',
+                  color: '#00E5D1',
+                }}>
+                {/* Icône QR code minimaliste */}
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                  <rect x="3" y="3" width="2" height="2" fill="currentColor"/>
+                  <rect x="11" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                  <rect x="13" y="3" width="2" height="2" fill="currentColor"/>
+                  <rect x="1" y="11" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                  <rect x="3" y="13" width="2" height="2" fill="currentColor"/>
+                  <rect x="11" y="11" width="2" height="2" fill="currentColor"/>
+                  <rect x="15" y="11" width="2" height="2" fill="currentColor"/>
+                  <rect x="11" y="15" width="2" height="2" fill="currentColor"/>
+                  <rect x="15" y="15" width="2" height="2" fill="currentColor"/>
+                  <rect x="13" y="13" width="2" height="2" fill="currentColor"/>
+                </svg>
+                Scanner un QR code
+              </button>
+            </div>
           )}
 
           {err && (
