@@ -71,7 +71,8 @@ export default function ProfilePage() {
           router.push('/login');
           return;
         }
-        if (user.email === 'antoine.gegedu27@gmail.com') setIsAdmin(true);
+        const ADMIN_EMAILS = ['antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr'];
+        if (ADMIN_EMAILS.includes(user.email ?? '')) setIsAdmin(true);
 
         // Charger le profil
         const { data: prof } = await supabase

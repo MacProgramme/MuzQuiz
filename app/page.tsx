@@ -24,19 +24,13 @@ export default function Home() {
   const [publicScreen, setPublicScreen] = useState(false);
 
   useEffect(() => {
-    // Une seule source de vérité : onAuthStateChange.
-    // Il fire INITIAL_SESSION immédiatement depuis le cache — pas de double requête.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const user = session?.user;
-      const loggedIn = !!(user && !user.is_anonymous);
-      setIsLoggedIn(loggedIn);
-
-      if (loggedIn && user) {
-        setProfileLoading(true);
+    const loadProfile = async (userId: string) => {
+      setProfileLoading(true);
+      try {
         const { data: profile } = await supabase
           .from('profiles')
           .select('nickname, subscription_tier')
-          .eq('id', user.id)
+          .eq('id', userId)
           .single();
         if (profile?.nickname) setNickname(profile.nickname);
         const tier = (profile?.subscription_tier as SubscriptionTier) ?? 'free';
@@ -46,11 +40,27 @@ export default function Home() {
           const { data: packs } = await supabase
             .from('question_packs')
             .select('*')
-            .eq('owner_id', user.id)
+            .eq('owner_id', userId)
             .order('created_at', { ascending: false });
           if (packs) setMyPacks(packs as QuestionPack[]);
         }
+      } catch (e) {
+        console.error('Erreur chargement profil:', e);
+      } finally {
         setProfileLoading(false);
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // TOKEN_REFRESHED = simple renouvellement JWT en arrière-plan, pas besoin de recharger
+      if (event === 'TOKEN_REFRESHED') return;
+
+      const user = session?.user;
+      const loggedIn = !!(user && !user.is_anonymous);
+      setIsLoggedIn(loggedIn);
+
+      if (loggedIn && user) {
+        loadProfile(user.id);
       } else {
         setNickname('');
         setUserTier('free');
@@ -58,6 +68,7 @@ export default function Home() {
         setProfileLoading(false);
       }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
