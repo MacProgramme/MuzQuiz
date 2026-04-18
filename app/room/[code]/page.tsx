@@ -170,21 +170,33 @@ export default function RoomPage() {
     }
   }, [players, room?.status, myPlayer?.is_host]);
 
-  // Auto-fermeture : si l'hôte quitte la page et que la salle n'est pas terminée → la fermer
+  // Auto-fermeture : si l'hôte quitte la page (navigation) → fermer la salle
+  // Mais PAS sur F5/refresh — on distingue grâce à sessionStorage
   useEffect(() => {
-    const closeRoomIfHost = () => {
-      const r = roomRef.current;
-      const p = myPlayerRef.current;
-      if (p?.is_host && r && r.status !== 'finished') {
-        supabase.from('rooms').update({ status: 'finished' }).eq('id', r.id);
-      }
+    // Nettoyer le flag de rechargement au montage (on vient de recharger → salle toujours ouverte)
+    sessionStorage.removeItem('muz_reloading');
+
+    const handleBeforeUnload = () => {
+      // F5 ou fermeture d'onglet : marquer pour que le cleanup ne ferme pas la salle
+      sessionStorage.setItem('muz_reloading', '1');
     };
 
-    // Fermer aussi quand l'onglet/fenêtre se ferme (beforeunload)
-    window.addEventListener('beforeunload', closeRoomIfHost);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
-      window.removeEventListener('beforeunload', closeRoomIfHost);
-      closeRoomIfHost(); // aussi au démontage React (navigation)
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+
+      const isReloading = sessionStorage.getItem('muz_reloading') === '1';
+      if (!isReloading) {
+        // Vraie navigation côté client (Link, router.push) → fermer la salle
+        const r = roomRef.current;
+        const p = myPlayerRef.current;
+        if (p?.is_host && r && r.status !== 'finished') {
+          supabase.from('rooms').update({ status: 'finished' }).eq('id', r.id);
+        }
+      }
+      // Sur F5/fermeture : la salle reste ouverte, l'hôte peut revenir
+      // Les salles orphelines sont nettoyées depuis la page profil
     };
   }, []); // uniquement au démontage
 

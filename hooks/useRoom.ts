@@ -139,7 +139,10 @@ export function useRoom(code: string, nickname: string) {
     if (!room || !myPlayer || qcmAnswers.some(a => a.player_id === myPlayer.id)) return;
     // En mode buzz, seul le joueur buzzé peut répondre
     if (room.mode === 'buzz' && buzz?.player_id !== myPlayer.id) return;
-    const questions = room.mode === 'qcm' ? QCM_QUESTIONS : BUZZ_QUESTIONS;
+    // Utiliser les questions custom si un pack est sélectionné
+    const questions = room.pack_id
+      ? customQuestions
+      : room.mode === 'qcm' ? QCM_QUESTIONS : BUZZ_QUESTIONS;
     const currentQ = questions[room.current_question];
     if (!currentQ) return;
 
