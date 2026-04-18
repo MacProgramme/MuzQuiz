@@ -55,8 +55,8 @@ export function useRoom(code: string, nickname: string) {
     }
     setRoom(roomData);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    let userId = user?.id;
+    const { data: { session } } = await supabase.auth.getSession();
+    let userId = session?.user?.id;
     if (!userId) {
       const { data: anonData } = await supabase.auth.signInAnonymously();
       userId = anonData.user?.id;

@@ -59,7 +59,8 @@ export default function QuestionsPage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user || user.is_anonymous) { router.push('/login'); return; }
       setUserId(user.id);
 
