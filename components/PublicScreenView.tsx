@@ -4,9 +4,23 @@
 import { useEffect, useState } from 'react';
 import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion } from '@/types';
 
-const COLORS = ['#EF4444', '#3B82F6', '#EAB308', '#22C55E'];
-const SHAPES = ['▲', '◆', '●', '■'];
+const COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B'];
 const LABELS = ['A', 'B', 'C', 'D'];
+
+/* Moustache SVG — identique à PhoneControllerView */
+function MustacheIcon({ color = '#fff', size = 48 }: { color?: string; size?: number }) {
+  return (
+    <svg
+      viewBox="0 0 1280 640"
+      style={{ width: size, height: size * 0.5, flexShrink: 0, filter: `drop-shadow(0 0 8px ${color}99)` }}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g transform="translate(0,640) scale(0.1,-0.1)" fill={color} stroke="none">
+        <path d="M5078 4980 c-350 -37 -700 -176 -1079 -431 -212 -142 -402 -292 -804 -634 -426 -362 -624 -510 -885 -657 -301 -171 -525 -263 -788 -325 -100 -23 -139 -27 -262 -27 -124 0 -154 3 -204 22 -89 33 -137 65 -199 132 -97 104 -150 250 -151 410 -1 116 23 178 91 241 79 72 155 100 443 162 132 28 199 56 246 104 63 63 41 97 -104 158 -158 66 -295 85 -442 61 -288 -47 -514 -194 -699 -452 -254 -356 -307 -752 -151 -1116 295 -687 1406 -1140 2966 -1209 818 -36 1849 104 2378 322 193 79 297 142 532 321 76 58 233 136 309 153 84 20 192 23 224 6 13 -7 62 -41 110 -76 806 -589 2529 -867 4021 -649 664 97 1218 291 1600 562 118 83 298 262 368 364 237 347 265 713 82 1078 -96 191 -259 388 -429 516 -97 74 -276 165 -366 188 -194 49 -363 16 -487 -94 -52 -46 -108 -124 -108 -152 0 -40 130 -81 426 -137 166 -31 240 -59 302 -115 100 -91 119 -254 46 -399 -30 -58 -144 -180 -241 -258 -208 -165 -447 -201 -728 -107 -97 32 -275 122 -376 190 -119 80 -514 380 -1009 767 -212 166 -456 352 -542 414 -513 365 -931 561 -1363 638 -112 20 -162 23 -360 23 -175 0 -253 -4 -325 -18 -230 -42 -451 -114 -659 -213 -152 -73 -166 -73 -301 0 -203 109 -468 198 -672 226 -114 16 -311 21 -410 11z"/>
+      </g>
+    </svg>
+  );
+}
 
 interface Props {
   room: Room;
@@ -184,7 +198,7 @@ export function PublicScreenView({
             MUZQUIZ
           </span>
           <span className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
-            Question {(room.current_question ?? 0) + 1} · {answeredCount}/{players.length} ont répondu
+            Question {(room.current_question ?? 0) + 1} · {answeredCount}/{players.filter(p => !p.is_host).length} ont répondu
           </span>
           <div className="flex gap-2">
             {room.is_paused ? (
@@ -237,12 +251,13 @@ export function PublicScreenView({
             return (
               <div key={i} className="flex items-center gap-5 rounded-2xl px-8 py-6 transition-all"
                 style={{
-                  background: isCorrect ? '#22C55E' : isWrong ? 'rgba(255,255,255,0.04)' : COLORS[i] + 'cc',
-                  opacity: isWrong ? 0.4 : 1,
-                  border: `3px solid ${isCorrect ? '#16A34A' : 'transparent'}`,
+                  background: isCorrect ? 'rgba(0,229,209,0.25)' : isWrong ? 'rgba(255,255,255,0.04)' : COLORS[i] + 'cc',
+                  opacity: isWrong ? 0.35 : 1,
+                  border: `3px solid ${isCorrect ? '#00E5D1' : 'transparent'}`,
+                  boxShadow: isCorrect ? '0 0 30px rgba(0,229,209,0.4)' : 'none',
                   minHeight: '110px',
                 }}>
-                <span style={{ fontSize: '2.5rem', color: 'white' }}>{SHAPES[i]}</span>
+                <MustacheIcon color={isCorrect ? '#00E5D1' : 'white'} size={56} />
                 <span className="flex-1 font-black text-white" style={{ fontSize: '1.4rem', lineHeight: 1.2 }}>
                   {choice}
                 </span>
@@ -324,11 +339,12 @@ export function PublicScreenView({
                   return (
                     <div key={i} className="flex items-center gap-4 px-6 py-4 rounded-2xl font-bold text-white"
                       style={{
-                        background: isCorrect ? '#22C55E' : isWrong ? '#EF4444' : isChosen ? COLORS[i] : COLORS[i] + '66',
+                        background: isCorrect ? 'rgba(0,229,209,0.25)' : isWrong ? 'rgba(255,0,170,0.2)' : isChosen ? COLORS[i] : COLORS[i] + '66',
                         fontSize: '1.2rem',
-                        border: isChosen ? '3px solid white' : '3px solid transparent',
+                        border: isChosen ? '3px solid white' : isCorrect ? '3px solid #00E5D1' : '3px solid transparent',
+                        boxShadow: isCorrect ? '0 0 20px rgba(0,229,209,0.4)' : 'none',
                       }}>
-                      <span style={{ fontSize: '1.5rem' }}>{SHAPES[i]}</span>
+                      <MustacheIcon color={isCorrect ? '#00E5D1' : 'white'} size={40} />
                       <span>{choice}</span>
                     </div>
                   );

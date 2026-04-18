@@ -140,7 +140,9 @@ export default function RoomPage() {
   // Auto-révéler QCM quand tous les joueurs ont répondu
   useEffect(() => {
     if (!room || room.mode !== 'qcm' || !myPlayer?.is_host || qcmRevealed) return;
-    if (qcmAnswers.length >= players.length && players.length > 0) {
+    // En mode écran public, l'hôte ne joue pas — on l'exclut du décompte
+    const activePlayers = room.public_screen ? players.filter(p => !p.is_host) : players;
+    if (activePlayers.length > 0 && qcmAnswers.length >= activePlayers.length) {
       revealQCMAndNext();
     }
   }, [qcmAnswers, players, room, myPlayer, qcmRevealed]);

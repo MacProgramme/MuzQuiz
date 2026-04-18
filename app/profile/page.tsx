@@ -148,7 +148,15 @@ export default function ProfilePage() {
               .from('room_players')
               .select('id', { count: 'exact', head: true })
               .eq('room_id', room.id);
-            hostedEntries.push({ ...room, player_count: count ?? 0 });
+            const playerCount = count ?? 0;
+
+            // Auto-fermeture des salles fantômes (non terminées avec ≤1 joueur = seulement l'hôte ou personne)
+            if (room.status !== 'finished' && playerCount <= 1) {
+              await supabase.from('rooms').update({ status: 'finished' }).eq('id', room.id);
+              hostedEntries.push({ ...room, status: 'finished', player_count: playerCount });
+            } else {
+              hostedEntries.push({ ...room, player_count: playerCount });
+            }
           }
           setHostedRooms(hostedEntries);
         }
