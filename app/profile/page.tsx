@@ -320,10 +320,20 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 </div>
-                {/* Abonnement actuel — lecture seule */}
+                {/* Abonnement */}
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1rem' }}>
-                  <p className="text-xs font-bold uppercase tracking-widest mb-3"
-                    style={{ color: 'rgba(240,244,255,0.35)' }}>Abonnement</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-bold uppercase tracking-widest"
+                      style={{ color: 'rgba(240,244,255,0.35)' }}>Abonnement</p>
+                    {isAdmin && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                        style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
+                        🔐 Admin
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Tier actuel */}
                   {(() => {
                     const info = TIER_INFO[profile.subscription_tier];
                     return (
@@ -343,7 +353,41 @@ export default function ProfilePage() {
                       </div>
                     );
                   })()}
-                  {profile.subscription_tier === 'free' && (
+
+                  {/* Switcher admin — visible uniquement pour les admins */}
+                  {isAdmin && (
+                    <div className="mt-3">
+                      <p className="text-xs font-bold mb-2" style={{ color: 'rgba(255,0,170,0.6)' }}>
+                        🔧 Changer le tier (test admin)
+                      </p>
+                      <div className="flex gap-2">
+                        {(['free', 'pro', 'premium'] as SubscriptionTier[]).map(tier => {
+                          const info = TIER_INFO[tier];
+                          const isActive = profile.subscription_tier === tier;
+                          return (
+                            <button
+                              key={tier}
+                              onClick={async () => {
+                                await supabase.from('profiles').update({ subscription_tier: tier }).eq('id', profile.id);
+                                setProfile(p => p ? { ...p, subscription_tier: tier } : p);
+                              }}
+                              className="flex-1 py-2 rounded-xl text-xs font-black transition-all hover:opacity-90"
+                              style={{
+                                background: isActive ? info.color : info.bg,
+                                color: isActive ? '#0D1B3E' : info.color,
+                                border: `1.5px solid ${info.color}88`,
+                                opacity: isActive ? 1 : 0.7,
+                              }}>
+                              {info.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Lien upgrade pour les non-admins en gratuit */}
+                  {!isAdmin && profile.subscription_tier === 'free' && (
                     <Link href="/pricing"
                       className="flex items-center justify-center gap-2 mt-3 py-2.5 rounded-xl font-black text-sm transition-all hover:opacity-90"
                       style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)' }}>
