@@ -1,7 +1,7 @@
 // app/profile/page.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { SubscriptionTier, TIER_LIMITS } from '@/types';
@@ -11,8 +11,112 @@ interface Profile {
   id: string;
   nickname: string;
   avatar_color: string;
+  avatar_url: string | null;
   subscription_tier: SubscriptionTier;
   created_at: string;
+}
+
+// ===== Color Picker =====
+function hsvToHex(h: number, s: number, v: number): string {
+  s /= 100; v /= 100;
+  const c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; }
+  else if (h < 120) { r = x; g = c; }
+  else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; }
+  else if (h < 300) { r = x; b = c; }
+  else { r = c; b = x; }
+  return '#' + [r + m, g + m, b + m].map(n => Math.round(n * 255).toString(16).padStart(2, '0')).join('');
+}
+
+function hexToHsv(hex: string): [number, number, number] {
+  const safe = /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : '#8B5CF6';
+  const r = parseInt(safe.slice(1, 3), 16) / 255;
+  const g = parseInt(safe.slice(3, 5), 16) / 255;
+  const b = parseInt(safe.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let h = 0;
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+  }
+  return [h, max === 0 ? 0 : Math.round((d / max) * 100), Math.round(max * 100)];
+}
+
+function ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
+  const [hsv, setHsv] = useState<[number, number, number]>(() => hexToHsv(value));
+  const [h, s, v] = hsv;
+  const boxRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
+  const currentColor = useMemo(() => hsvToHex(h, s, v), [h, s, v]);
+  const hueColor = useMemo(() => hsvToHex(h, 100, 100), [h]);
+
+  useEffect(() => { onChange(currentColor); }, [currentColor]);
+
+  const pickFromEvent = useCallback((clientX: number, clientY: number) => {
+    if (!boxRef.current) return;
+    const rect = boxRef.current.getBoundingClientRect();
+    const newS = Math.max(0, Math.min(100, Math.round(((clientX - rect.left) / rect.width) * 100)));
+    const newV = Math.max(0, Math.min(100, Math.round((1 - (clientY - rect.top) / rect.height) * 100)));
+    setHsv(([ph]) => [ph, newS, newV]);
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Gradient 2D saturation/valeur */}
+      <div
+        ref={boxRef}
+        onMouseDown={e => { dragging.current = true; pickFromEvent(e.clientX, e.clientY); }}
+        onMouseMove={e => { if (dragging.current) pickFromEvent(e.clientX, e.clientY); }}
+        onMouseUp={() => { dragging.current = false; }}
+        onMouseLeave={() => { dragging.current = false; }}
+        onTouchStart={e => { dragging.current = true; pickFromEvent(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }}
+        onTouchMove={e => { if (dragging.current) pickFromEvent(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }}
+        onTouchEnd={() => { dragging.current = false; }}
+        style={{
+          position: 'relative', width: '100%', height: '160px', borderRadius: '12px',
+          background: `linear-gradient(to bottom, transparent, #000), linear-gradient(to right, #fff, ${hueColor})`,
+          cursor: 'crosshair', userSelect: 'none', touchAction: 'none', flexShrink: 0,
+        }}
+      >
+        {/* Curseur */}
+        <div style={{
+          position: 'absolute', left: `${s}%`, top: `${100 - v}%`,
+          transform: 'translate(-50%, -50%)',
+          width: 18, height: 18, borderRadius: '50%',
+          border: '2.5px solid white', background: currentColor,
+          boxShadow: '0 0 0 1.5px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.4)',
+          pointerEvents: 'none',
+        }} />
+      </div>
+
+      {/* Slider teinte */}
+      <input
+        type="range" min="0" max="360" value={h}
+        onChange={e => setHsv([Number(e.target.value), s, v])}
+        className="muz-hue-slider"
+        style={{ width: '100%', height: '14px' }}
+      />
+
+      {/* Aperçu + hex */}
+      <div className="flex items-center gap-3">
+        <div style={{
+          width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+          background: currentColor,
+          border: '2px solid rgba(255,255,255,0.15)',
+          boxShadow: `0 0 14px ${currentColor}99`,
+        }} />
+        <span className="font-mono text-sm font-black" style={{ color: '#F0F4FF' }}>
+          {currentColor.toUpperCase()}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 const TIER_INFO: Record<SubscriptionTier, { label: string; color: string; bg: string; price: string; perks: string[] }> = {
@@ -60,7 +164,10 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [editNickname, setEditNickname] = useState('');
   const [editColor, setEditColor] = useState('');
+  const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -169,14 +276,32 @@ export default function ProfilePage() {
     load();
   }, []);
 
+  const uploadAvatar = async (file: File) => {
+    if (!profile) return;
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg';
+      const path = `${profile.id}/avatar.${ext}`;
+      const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+      if (error) { console.error('Upload error:', error); return; }
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+      // Ajouter un timestamp pour forcer le refresh du cache navigateur
+      const urlWithCache = `${publicUrl}?t=${Date.now()}`;
+      setEditAvatarUrl(urlWithCache);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const saveProfile = async () => {
     if (!profile || !editNickname.trim()) return;
     setSaving(true);
     await supabase.from('profiles').update({
       nickname: editNickname.trim(),
       avatar_color: editColor,
+      avatar_url: editAvatarUrl,
     }).eq('id', profile.id);
-    setProfile(p => p ? { ...p, nickname: editNickname.trim(), avatar_color: editColor } : p);
+    setProfile(p => p ? { ...p, nickname: editNickname.trim(), avatar_color: editColor, avatar_url: editAvatarUrl } : p);
     setSaving(false);
     setEditing(false);
   };
@@ -247,13 +372,16 @@ export default function ProfilePage() {
 
         {/* Avatar + nom */}
         <div className="flex items-center gap-5 mb-8">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center font-black text-3xl flex-shrink-0"
-            style={{
-              background: profile.avatar_color,
-              color: '#0D1B3E',
-              boxShadow: `0 0 30px ${profile.avatar_color}66`,
-            }}>
-            {initial}
+          <div className="w-20 h-20 rounded-full flex-shrink-0 overflow-hidden"
+            style={{ boxShadow: `0 0 30px ${profile.avatar_color}66` }}>
+            {profile.avatar_url ? (
+              <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center font-black text-3xl"
+                style={{ background: profile.avatar_color, color: '#0D1B3E' }}>
+                {initial}
+              </div>
+            )}
           </div>
           <div>
             <h1 className="text-2xl font-black" style={{ color: '#F0F4FF' }}>{profile.nickname}</h1>
@@ -410,22 +538,69 @@ export default function ProfilePage() {
                 )}
 
                 <button
-                  onClick={() => { setEditing(true); setEditNickname(profile.nickname); setEditColor(profile.avatar_color); }}
+                  onClick={() => { setEditing(true); setEditNickname(profile.nickname); setEditColor(profile.avatar_color); setEditAvatarUrl(profile.avatar_url ?? null); }}
                   className="muz-btn-pink py-3 rounded-xl font-black text-sm">
                   Modifier le profil →
                 </button>
               </div>
             ) : (
               <div className="flex flex-col gap-4">
-                {/* Aperçu */}
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center font-black text-lg flex-shrink-0"
-                    style={{ background: editColor, color: '#0D1B3E', boxShadow: `0 0 16px ${editColor}66` }}>
-                    {editNickname[0]?.toUpperCase() ?? '?'}
+                {/* Aperçu avatar + upload photo */}
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-16 h-16 rounded-full overflow-hidden"
+                      style={{ boxShadow: `0 0 16px ${editColor}66` }}>
+                      {editAvatarUrl ? (
+                        <img src={editAvatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center font-black text-xl"
+                          style={{ background: editColor, color: '#0D1B3E' }}>
+                          {editNickname[0]?.toUpperCase() ?? '?'}
+                        </div>
+                      )}
+                    </div>
+                    {/* Bouton modifier photo */}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                      style={{ background: '#FF00AA', border: '2px solid #0D1B3E' }}
+                      title="Changer la photo">
+                      {uploadingAvatar ? (
+                        <div className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin"
+                          style={{ borderColor: 'white', borderTopColor: 'transparent' }} />
+                      ) : (
+                        <span style={{ fontSize: '0.65rem' }}>📷</span>
+                      )}
+                    </button>
                   </div>
-                  <p className="font-bold" style={{ color: '#F0F4FF' }}>{editNickname || '…'}</p>
+                  <div className="flex flex-col gap-1">
+                    <p className="font-bold text-sm" style={{ color: '#F0F4FF' }}>{editNickname || '…'}</p>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-xs font-bold transition-all hover:opacity-80"
+                      style={{ color: '#FF00AA' }}>
+                      Changer la photo →
+                    </button>
+                    {editAvatarUrl && (
+                      <button
+                        onClick={() => setEditAvatarUrl(null)}
+                        className="text-xs transition-all hover:opacity-80"
+                        style={{ color: 'rgba(240,244,255,0.35)' }}>
+                        Supprimer la photo
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); e.target.value = ''; }}
+                  />
                 </div>
 
+                {/* Pseudo */}
                 <input
                   value={editNickname}
                   onChange={e => setEditNickname(e.target.value)}
@@ -439,21 +614,11 @@ export default function ProfilePage() {
                   }}
                 />
 
+                {/* Color picker complet */}
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest mb-2"
-                    style={{ color: 'rgba(240,244,255,0.35)' }}>Couleur</p>
-                  <div className="flex gap-2">
-                    {AVATAR_COLORS.map(c => (
-                      <button key={c} onClick={() => setEditColor(c)}
-                        className="w-8 h-8 rounded-full transition-all"
-                        style={{
-                          background: c,
-                          border: editColor === c ? '3px solid white' : '2px solid transparent',
-                          transform: editColor === c ? 'scale(1.2)' : 'scale(1)',
-                          boxShadow: editColor === c ? `0 0 10px ${c}` : 'none',
-                        }} />
-                    ))}
-                  </div>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-3"
+                    style={{ color: 'rgba(240,244,255,0.35)' }}>Couleur du cadre</p>
+                  <ColorPicker value={editColor} onChange={setEditColor} />
                 </div>
 
                 <div className="flex gap-3">

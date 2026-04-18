@@ -1,7 +1,7 @@
 // app/room/[code]/page.tsx
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useRoom } from '@/hooks/useRoom';
@@ -16,6 +16,41 @@ import { PublicScreenView } from '@/components/PublicScreenView';
 import { PhoneControllerView } from '@/components/PhoneControllerView';
 import { BUZZ_QUESTIONS, QCM_QUESTIONS, FREE_QUESTION_LIMIT } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player } from '@/types';
+
+// --- Confettis lors de la révélation ---
+const CONFETTI_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#FF6B6B', '#4ECDC4', '#FFE66D'];
+function Confetti({ active }: { active: boolean }) {
+  const pieces = useMemo(() => Array.from({ length: 60 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+    delay: Math.random() * 0.8,
+    size: Math.random() * 9 + 5,
+    isCircle: Math.random() > 0.4,
+  })), []);
+
+  if (!active) return null;
+  return (
+    <div className="fixed inset-0 pointer-events-none z-30 overflow-hidden">
+      {pieces.map(p => (
+        <div
+          key={p.id}
+          className="muz-confetti"
+          style={{
+            left: `${p.x}%`,
+            top: '-12px',
+            width: p.size,
+            height: p.size,
+            background: p.color,
+            borderRadius: p.isCircle ? '50%' : '2px',
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${1.8 + Math.random() * 0.8}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 // --- Composant countdown animé (5 secondes) ---
 function RevealCountdown({ players, correctPlayerIds }: { players: Player[]; correctPlayerIds: string[] }) {
@@ -372,6 +407,9 @@ export default function RoomPage() {
   // --- Interface de jeu ---
   return (
     <div className="flex flex-col min-h-screen" style={{ background: '#0D1B3E' }}>
+
+      {/* Confettis lors de la révélation */}
+      <Confetti active={qcmRevealed} />
 
       {/* Bandeau PAUSE visible pour tous */}
       {room.is_paused && (
