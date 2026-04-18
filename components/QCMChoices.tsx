@@ -88,7 +88,7 @@ export function QCMChoices({
             key={i}
             onClick={() => !revealed && selectedIndex === null && onChoose(i)}
             disabled={selectedIndex !== null || revealed || disabledForNonBuzzer}
-            className={`relative flex items-center gap-3 p-4 rounded-2xl font-bold text-left transition-all duration-200
+            className={`relative flex items-center gap-3 p-4 rounded-2xl font-bold text-left transition-all duration-200 overflow-hidden
               ${!revealed && selectedIndex === null ? 'hover:scale-[1.03] active:scale-95' : ''}
             `}
             style={{
@@ -118,14 +118,23 @@ export function QCMChoices({
               {LABELS[i]}
             </span>
 
-            <span className="text-sm leading-tight flex-1">{choice}</span>
+            {/* Texte avec padding droit pour laisser place à la moustache */}
+            <span className="text-sm leading-tight flex-1" style={{ paddingRight: isCorrect ? '3rem' : '0' }}>
+              {choice}
+            </span>
 
-            {/* Moustache animée pour la bonne réponse */}
-            {isCorrect && <MustacheIcon color="#00E5D1" size={48} />}
+            {/* Moustache en overlay absolu — ne coupe jamais le texte sur mobile */}
+            {isCorrect && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <MustacheIcon color="#00E5D1" size={44} />
+              </div>
+            )}
 
             {/* Croix discrète pour la mauvaise réponse */}
             {isWrong && (
-              <span className="ml-auto text-lg opacity-40" style={{ color: '#FF00AA' }}>✗</span>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <span className="text-lg opacity-40" style={{ color: '#FF00AA' }}>✗</span>
+              </div>
             )}
           </button>
         );

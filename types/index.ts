@@ -13,6 +13,7 @@ export interface Room {
   timer_duration: number;
   max_players: number;
   sound_enabled: boolean;
+  is_paused: boolean;
   created_at: string;
 }
 

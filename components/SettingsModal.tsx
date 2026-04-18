@@ -5,7 +5,6 @@ import React from 'react';
 
 interface Settings {
   timer_duration: number;
-  max_players: number;
   sound_enabled: boolean;
 }
 
@@ -16,7 +15,6 @@ interface Props {
 }
 
 const TIMER_OPTIONS = [10, 20, 30, 60];
-const PLAYER_OPTIONS = [2, 4, 6, 8];
 
 export function SettingsModal({ settings, onSave, onClose }: Props) {
   const [local, setLocal] = React.useState<Settings>(settings);
@@ -54,29 +52,6 @@ export function SettingsModal({ settings, onSave, onClose }: Props) {
                   boxShadow: local.timer_duration === t ? '0 4px 12px rgba(255,0,170,0.3)' : 'none',
                 }}>
                 {t}s
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Max joueurs */}
-        <div className="mb-5">
-          <label className="text-xs font-bold uppercase tracking-widest block mb-3"
-            style={{ color: 'rgba(240,244,255,0.4)' }}>
-            👥 Joueurs maximum
-          </label>
-          <div className="flex gap-2">
-            {PLAYER_OPTIONS.map(n => (
-              <button key={n}
-                onClick={() => setLocal(l => ({ ...l, max_players: n }))}
-                className="flex-1 py-2 rounded-xl text-sm font-bold transition-all"
-                style={{
-                  background: local.max_players === n ? '#8B5CF6' : 'rgba(255,255,255,0.06)',
-                  color: local.max_players === n ? 'white' : 'rgba(240,244,255,0.5)',
-                  border: local.max_players === n ? 'none' : '1px solid rgba(139,92,246,0.2)',
-                  boxShadow: local.max_players === n ? '0 4px 12px rgba(139,92,246,0.3)' : 'none',
-                }}>
-                {n}
               </button>
             ))}
           </div>

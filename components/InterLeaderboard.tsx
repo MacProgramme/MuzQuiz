@@ -28,7 +28,7 @@ function RankArrow({ diff }: { diff: number }) {
   return <span style={{ color: 'rgba(240,244,255,0.3)', fontSize: '0.85rem' }}>—</span>;
 }
 
-const COUNTDOWN_DURATION = 10;
+const COUNTDOWN_DURATION = 5;
 
 export function InterLeaderboard({ players, correctPlayerIds, visible }: Props) {
   const [ranked, setRanked] = useState<RankedPlayer[]>([]);

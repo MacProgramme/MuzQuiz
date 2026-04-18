@@ -18,8 +18,19 @@ export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setIsLoggedIn(!!(data.user && !data.user.is_anonymous));
+    supabase.auth.getUser().then(async ({ data }) => {
+      const user = data.user;
+      const loggedIn = !!(user && !user.is_anonymous);
+      setIsLoggedIn(loggedIn);
+      if (loggedIn && user) {
+        // Pré-remplir le pseudo depuis le profil
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nickname')
+          .eq('id', user.id)
+          .single();
+        if (profile?.nickname) setNickname(profile.nickname);
+      }
     });
   }, []);
 
@@ -41,7 +52,7 @@ export default function Home() {
     const roomCode = genCode();
     const { data: room, error } = await supabase
       .from('rooms')
-      .insert({ code: roomCode, host_id: userId, mode, timer_duration: 20, max_players: 8, sound_enabled: true })
+      .insert({ code: roomCode, host_id: userId, mode, timer_duration: 20, max_players: 100, sound_enabled: true })
       .select('*')
       .single();
 
@@ -128,22 +139,32 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col gap-4">
-          {/* Input pseudo */}
-          <input
-            value={nickname}
-            onChange={e => setNickname(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && (tab === 'create' ? createRoom() : joinRoom())}
-            placeholder="Ton pseudo"
-            maxLength={16}
-            className="w-full px-4 py-3 rounded-xl font-medium outline-none transition-all"
-            style={{
-              background: 'rgba(255,255,255,0.07)',
-              border: '1.5px solid rgba(139,92,246,0.3)',
-              color: '#F0F4FF',
-            }}
-            onFocus={e => e.target.style.borderColor = '#FF00AA'}
-            onBlur={e => e.target.style.borderColor = 'rgba(139,92,246,0.3)'}
-          />
+          {/* Input pseudo — verrouillé si connecté avec un compte */}
+          <div className="relative">
+            <input
+              value={nickname}
+              onChange={e => !isLoggedIn && setNickname(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && (tab === 'create' ? createRoom() : joinRoom())}
+              placeholder="Ton pseudo"
+              maxLength={16}
+              readOnly={isLoggedIn}
+              className="w-full px-4 py-3 rounded-xl font-medium outline-none transition-all"
+              style={{
+                background: isLoggedIn ? 'rgba(139,92,246,0.08)' : 'rgba(255,255,255,0.07)',
+                border: `1.5px solid ${isLoggedIn ? 'rgba(139,92,246,0.4)' : 'rgba(139,92,246,0.3)'}`,
+                color: '#F0F4FF',
+                cursor: isLoggedIn ? 'default' : 'text',
+              }}
+              onFocus={e => { if (!isLoggedIn) e.target.style.borderColor = '#FF00AA'; }}
+              onBlur={e => { if (!isLoggedIn) e.target.style.borderColor = 'rgba(139,92,246,0.3)'; }}
+            />
+            {isLoggedIn && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}>
+                compte
+              </span>
+            )}
+          </div>
 
           {/* Mode de jeu (créer) */}
           {tab === 'create' && (

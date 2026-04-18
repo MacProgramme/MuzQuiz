@@ -159,12 +159,12 @@ export function useRoom(code: string, nickname: string) {
       if (p) await supabase.from('room_players').update({ score: p.score + 100 }).eq('id', ans.player_id);
     }
 
-    // Après 15s (5s reveal + 10s classement) : question suivante
+    // Après 10s (5s reveal + 5s classement) : question suivante
     setTimeout(async () => {
       await nextQuestion(room);
       setQcmRevealed(false);
       setQcmAnswers([]);
-    }, 15000);
+    }, 10000);
   }, [room, myPlayer, qcmAnswers]);
 
   const nextQuestion = async (currentRoom: Room) => {
@@ -176,10 +176,25 @@ export function useRoom(code: string, nickname: string) {
 
   const startGame = useCallback(async () => {
     if (!room || !myPlayer?.is_host) return;
-    await supabase.from('rooms').update({ status: 'playing', current_question: 0 }).eq('id', room.id);
+    await supabase.from('rooms').update({ status: 'playing', current_question: 0, is_paused: false }).eq('id', room.id);
   }, [room, myPlayer]);
 
-  const saveSettings = useCallback(async (settings: { timer_duration: number; max_players: number; sound_enabled: boolean }) => {
+  const pauseGame = useCallback(async () => {
+    if (!room || !myPlayer?.is_host) return;
+    await supabase.from('rooms').update({ is_paused: true }).eq('id', room.id);
+  }, [room, myPlayer]);
+
+  const resumeGame = useCallback(async () => {
+    if (!room || !myPlayer?.is_host) return;
+    await supabase.from('rooms').update({ is_paused: false }).eq('id', room.id);
+  }, [room, myPlayer]);
+
+  const endGame = useCallback(async () => {
+    if (!room || !myPlayer?.is_host) return;
+    await supabase.from('rooms').update({ status: 'finished', is_paused: false }).eq('id', room.id);
+  }, [room, myPlayer]);
+
+  const saveSettings = useCallback(async (settings: { timer_duration: number; sound_enabled: boolean }) => {
     if (!room || !myPlayer?.is_host) return;
     await supabase.from('rooms').update(settings).eq('id', room.id);
     setRoom(r => r ? { ...r, ...settings } : r);
@@ -194,6 +209,7 @@ export function useRoom(code: string, nickname: string) {
     pressBuzzer, judgeAnswer,
     submitQCMAnswer, revealQCMAndNext,
     startGame, saveSettings,
+    pauseGame, resumeGame, endGame,
     setRoom, setPlayers,
   };
 }

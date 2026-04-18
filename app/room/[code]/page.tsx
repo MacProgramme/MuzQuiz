@@ -1,7 +1,8 @@
 // app/room/[code]/page.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useRoom } from '@/hooks/useRoom';
 import { useRealtime } from '@/hooks/useRealtime';
@@ -84,6 +85,11 @@ export default function RoomPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showHostMenu, setShowHostMenu] = useState(false);
+
+  // Refs pour l'auto-fermeture (évite les stale closures dans le cleanup)
+  const roomRef = useRef<typeof room>(null);
+  const myPlayerRef = useRef<typeof myPlayer>(null);
 
   const {
     room, players, myPlayer, buzz, setBuzz,
@@ -91,6 +97,7 @@ export default function RoomPage() {
     loading, error,
     pressBuzzer, submitQCMAnswer, revealQCMAndNext,
     startGame, saveSettings,
+    pauseGame, resumeGame, endGame,
     setRoom, setPlayers,
   } = useRoom(code, nickname);
 
@@ -140,6 +147,21 @@ export default function RoomPage() {
       revealQCMAndNext();
     }
   }, [qcmAnswers, room, buzz, myPlayer, qcmRevealed]);
+
+  // Garder les refs à jour pour le cleanup
+  useEffect(() => { roomRef.current = room; }, [room]);
+  useEffect(() => { myPlayerRef.current = myPlayer; }, [myPlayer]);
+
+  // Auto-fermeture : si l'hôte quitte la page et que la salle n'est pas terminée → la fermer
+  useEffect(() => {
+    return () => {
+      const r = roomRef.current;
+      const p = myPlayerRef.current;
+      if (p?.is_host && r && r.status !== 'finished') {
+        supabase.from('rooms').update({ status: 'finished' }).eq('id', r.id);
+      }
+    };
+  }, []); // uniquement au démontage
 
   // --- Chargement ---
   if (loading) return (
@@ -194,7 +216,7 @@ export default function RoomPage() {
 
         <div className="muz-card w-full max-w-md p-5">
           <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'rgba(240,244,255,0.4)' }}>
-            Joueurs ({players.length}/{room.max_players})
+            Joueurs ({players.length})
           </p>
           <div className="flex flex-col gap-2">
             {players.map(p => (
@@ -265,6 +287,60 @@ export default function RoomPage() {
   return (
     <div className="flex flex-col min-h-screen" style={{ background: '#0D1B3E' }}>
 
+      {/* Bandeau PAUSE visible pour tous */}
+      {room.is_paused && (
+        <div className="fixed inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">
+          <div className="px-10 py-5 rounded-2xl text-center muz-pop"
+            style={{ background: 'rgba(13,27,62,0.95)', border: '2px solid rgba(245,158,11,0.5)', backdropFilter: 'blur(8px)' }}>
+            <div className="text-5xl mb-2">⏸</div>
+            <p className="text-2xl font-black" style={{ color: '#F59E0B' }}>Partie en pause</p>
+            {!myPlayer.is_host && (
+              <p className="text-sm mt-1" style={{ color: 'rgba(240,244,255,0.5)' }}>
+                En attente de l'hôte…
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Menu hôte flottant */}
+      {myPlayer.is_host && (
+        <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2">
+          {showHostMenu && (
+            <div className="flex flex-col gap-2 muz-pop mb-1">
+              {room.is_paused ? (
+                <button onClick={() => { resumeGame(); setShowHostMenu(false); }}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm"
+                  style={{ background: '#00E5D1', color: '#0D1B3E', boxShadow: '0 4px 16px rgba(0,229,209,0.4)' }}>
+                  ▶ Reprendre
+                </button>
+              ) : (
+                <button onClick={() => { pauseGame(); setShowHostMenu(false); }}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm"
+                  style={{ background: '#F59E0B', color: '#0D1B3E', boxShadow: '0 4px 16px rgba(245,158,11,0.4)' }}>
+                  ⏸ Mettre en pause
+                </button>
+              )}
+              <button onClick={() => { endGame(); setShowHostMenu(false); }}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm"
+                style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.4)' }}>
+                🚪 Terminer la partie
+              </button>
+            </div>
+          )}
+          <button onClick={() => setShowHostMenu(m => !m)}
+            className="w-12 h-12 rounded-full flex items-center justify-center font-black text-xl transition-all"
+            style={{
+              background: showHostMenu ? '#FF00AA' : 'rgba(255,0,170,0.2)',
+              border: '2px solid rgba(255,0,170,0.5)',
+              boxShadow: '0 4px 16px rgba(255,0,170,0.3)',
+              color: showHostMenu ? 'white' : '#FF00AA',
+            }}>
+            {showHostMenu ? '✕' : '⚙'}
+          </button>
+        </div>
+      )}
+
       {/* Classement inter-question */}
       <InterLeaderboard
         players={players}
@@ -283,9 +359,9 @@ export default function RoomPage() {
           </span>
         </div>
         <Timer key={timerKey} duration={room.timer_duration}
-          running={qcmRevealed ? false : room.mode === 'buzz' ? !buzz : !myQCMAnswer}
+          running={room.is_paused ? false : qcmRevealed ? false : room.mode === 'buzz' ? !buzz : !myQCMAnswer}
           onExpire={() => {
-            if (myPlayer.is_host && !qcmRevealed) revealQCMAndNext();
+            if (myPlayer.is_host && !qcmRevealed && !room.is_paused) revealQCMAndNext();
           }} />
         <span className="text-xs font-bold px-2 py-1 rounded-full"
           style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}>
