@@ -3,9 +3,24 @@
 
 import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion } from '@/types';
 
-const COLORS = ['#EF4444', '#3B82F6', '#EAB308', '#22C55E'];
-const SHAPES = ['▲', '◆', '●', '■'];
+const COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B'];
 const LABELS = ['A', 'B', 'C', 'D'];
+
+// Moustache SVG — même style que QCMChoices.tsx
+function MustacheIcon({ color = '#fff', size = 36, animate = false }: { color?: string; size?: number; animate?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 1280 640"
+      className={animate ? 'muz-mustache-anim' : ''}
+      style={{ width: size, height: size * 0.5, flexShrink: 0, filter: `drop-shadow(0 0 8px ${color}99)` }}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g transform="translate(0,640) scale(0.1,-0.1)" fill={color} stroke="none">
+        <path d="M5078 4980 c-350 -37 -700 -176 -1079 -431 -212 -142 -402 -292 -804 -634 -426 -362 -624 -510 -885 -657 -301 -171 -525 -263 -788 -325 -100 -23 -139 -27 -262 -27 -124 0 -154 3 -204 22 -89 33 -137 65 -199 132 -97 104 -150 250 -151 410 -1 116 23 178 91 241 79 72 155 100 443 162 132 28 199 56 246 104 63 63 41 97 -104 158 -158 66 -295 85 -442 61 -288 -47 -514 -194 -699 -452 -254 -356 -307 -752 -151 -1116 295 -687 1406 -1140 2966 -1209 818 -36 1849 104 2378 322 193 79 297 142 532 321 76 58 233 136 309 153 84 20 192 23 224 6 13 -7 62 -41 110 -76 806 -589 2529 -867 4021 -649 664 97 1218 291 1600 562 118 83 298 262 368 364 237 347 265 713 82 1078 -96 191 -259 388 -429 516 -97 74 -276 165 -366 188 -194 49 -363 16 -487 -94 -52 -46 -108 -124 -108 -152 0 -40 130 -81 426 -137 166 -31 240 -59 302 -115 100 -91 119 -254 46 -399 -30 -58 -144 -180 -241 -258 -208 -165 -447 -201 -728 -107 -97 32 -275 122 -376 190 -119 80 -514 380 -1009 767 -212 166 -456 352 -542 414 -513 365 -931 561 -1363 638 -112 20 -162 23 -360 23 -175 0 -253 -4 -325 -18 -230 -42 -451 -114 -659 -213 -152 -73 -166 -73 -301 0 -203 109 -468 198 -672 226 -114 16 -311 21 -410 11z"/>
+      </g>
+    </svg>
+  );
+}
 
 interface Props {
   room: Room;
@@ -121,11 +136,26 @@ export function PhoneControllerView({
           </div>
 
           {answered ? (
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <div className="text-6xl mb-4">{qcmRevealed ? (myAnswer?.is_correct ? '✅' : '❌') : '✅'}</div>
-              <p className="text-xl font-black" style={{ color: '#F0F4FF' }}>
-                {qcmRevealed ? (myAnswer?.is_correct ? 'Bonne réponse !' : 'Pas tout à fait…') : 'Réponse envoyée !'}
-              </p>
+            <div className="flex-1 flex flex-col items-center justify-center gap-4">
+              {qcmRevealed && myAnswer?.is_correct ? (
+                <>
+                  <MustacheIcon color="#00E5D1" size={80} animate />
+                  <p className="text-2xl font-black" style={{ color: '#00E5D1' }}>Bonne réponse !</p>
+                  <p className="font-black text-xl" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts</p>
+                </>
+              ) : qcmRevealed ? (
+                <>
+                  <span className="text-7xl">❌</span>
+                  <p className="text-2xl font-black" style={{ color: '#FF00AA' }}>Pas tout à fait…</p>
+                  <p className="font-black text-xl" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts</p>
+                </>
+              ) : (
+                <>
+                  <MustacheIcon color="#8B5CF6" size={64} animate />
+                  <p className="text-xl font-black" style={{ color: '#F0F4FF' }}>Réponse envoyée !</p>
+                  <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>En attente…</p>
+                </>
+              )}
             </div>
           ) : (
             <>
@@ -136,13 +166,14 @@ export function PhoneControllerView({
                 {currentQuestion.choices.map((choice, i) => (
                   <button key={i}
                     onClick={() => submitQCMAnswer(i)}
-                    className="flex flex-col items-center justify-center gap-2 rounded-2xl p-4 font-black text-white active:scale-95 transition-all"
+                    className="flex flex-col items-center justify-center gap-3 rounded-2xl p-4 font-black text-white active:scale-95 transition-all"
                     style={{
-                      background: COLORS[i],
+                      background: `linear-gradient(135deg, ${COLORS[i]}cc, ${COLORS[i]})`,
                       minHeight: '120px',
-                      boxShadow: `0 4px 20px ${COLORS[i]}44`,
+                      boxShadow: `0 4px 24px ${COLORS[i]}55`,
                     }}>
-                    <span className="text-2xl">{SHAPES[i]}</span>
+                    <MustacheIcon color="white" size={44} />
+                    <span className="text-xs font-black uppercase tracking-wider opacity-80">{LABELS[i]}</span>
                     <span className="text-sm text-center leading-tight">{choice}</span>
                   </button>
                 ))}
@@ -184,12 +215,19 @@ export function PhoneControllerView({
   // Déjà répondu + révélé
   if (qcmRevealed && answered) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8"
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 gap-4"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-        <div className="text-7xl mb-4">{myAnswer.is_correct ? '✅' : '❌'}</div>
-        <h1 className="text-2xl font-black text-center mb-3" style={{ color: '#F0F4FF' }}>
-          {myAnswer.is_correct ? 'Bonne réponse !' : 'Pas tout à fait…'}
-        </h1>
+        {myAnswer.is_correct ? (
+          <>
+            <MustacheIcon color="#00E5D1" size={100} animate />
+            <h1 className="text-3xl font-black" style={{ color: '#00E5D1' }}>Bonne réponse !</h1>
+          </>
+        ) : (
+          <>
+            <span className="text-7xl">❌</span>
+            <h1 className="text-2xl font-black" style={{ color: '#FF00AA' }}>Pas tout à fait…</h1>
+          </>
+        )}
         <p className="font-black text-2xl" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts</p>
       </div>
     );
@@ -198,16 +236,16 @@ export function PhoneControllerView({
   // Réponse envoyée, en attente de la révélation
   if (answered) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8"
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 gap-4"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-        <div className="text-7xl mb-4">✅</div>
-        <h1 className="text-xl font-black mb-2" style={{ color: '#F0F4FF' }}>Réponse enregistrée !</h1>
+        <MustacheIcon color="#8B5CF6" size={80} animate />
+        <h1 className="text-xl font-black" style={{ color: '#F0F4FF' }}>Réponse enregistrée !</h1>
         <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>En attente des autres joueurs…</p>
       </div>
     );
   }
 
-  // Pas encore répondu → 4 gros boutons
+  // Pas encore répondu → 4 gros boutons avec moustaches
   return (
     <div className="min-h-screen flex flex-col p-4"
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
@@ -226,18 +264,19 @@ export function PhoneControllerView({
         Choisissez votre réponse
       </p>
 
-      {/* 2×2 grille de boutons */}
+      {/* 2×2 grille de boutons avec moustaches */}
       <div className="grid grid-cols-2 gap-4 flex-1">
         {currentQuestion?.choices.map((choice, i) => (
           <button key={i}
             onClick={() => submitQCMAnswer(i)}
             className="flex flex-col items-center justify-center gap-2 rounded-2xl p-4 font-black text-white active:scale-95 transition-all"
             style={{
-              background: COLORS[i],
+              background: `linear-gradient(135deg, ${COLORS[i]}cc, ${COLORS[i]})`,
               minHeight: '130px',
-              boxShadow: `0 4px 20px ${COLORS[i]}44`,
+              boxShadow: `0 4px 24px ${COLORS[i]}55`,
             }}>
-            <span className="text-3xl">{SHAPES[i]}</span>
+            <MustacheIcon color="white" size={48} />
+            <span className="text-xs font-black uppercase tracking-wider opacity-70">{LABELS[i]}</span>
             <span className="text-sm text-center leading-tight">{choice}</span>
           </button>
         ))}

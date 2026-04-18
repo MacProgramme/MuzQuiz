@@ -157,6 +157,17 @@ export default function RoomPage() {
   useEffect(() => { roomRef.current = room; }, [room]);
   useEffect(() => { myPlayerRef.current = myPlayer; }, [myPlayer]);
 
+  // Auto-fermeture si la salle d'attente est vide (seulement l'hôte) pendant 10s
+  useEffect(() => {
+    if (!myPlayer?.is_host || !room || room.status !== 'waiting') return;
+    if (players.length <= 1) {
+      const t = setTimeout(() => {
+        supabase.from('rooms').update({ status: 'finished' }).eq('id', room.id);
+      }, 10000);
+      return () => clearTimeout(t);
+    }
+  }, [players, room?.status, myPlayer?.is_host]);
+
   // Auto-fermeture : si l'hôte quitte la page et que la salle n'est pas terminée → la fermer
   useEffect(() => {
     const closeRoomIfHost = () => {
@@ -288,14 +299,22 @@ export default function RoomPage() {
         </div>
 
         {myPlayer.is_host ? (
-          <div className="flex gap-3">
-            <button onClick={() => setShowSettings(true)}
-              className="w-14 h-14 rounded-xl text-xl font-bold transition-all hover:scale-105"
-              style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#8B5CF6' }}>
-              ⚙️
-            </button>
-            <button onClick={startGame} className="muz-btn-pink px-8 py-4 rounded-xl text-base font-black">
-              Lancer la partie ({players.length} joueur{players.length > 1 ? 's' : ''}) →
+          <div className="flex flex-col items-center gap-3 w-full max-w-md">
+            <div className="flex gap-3 w-full">
+              <button onClick={() => setShowSettings(true)}
+                className="w-14 h-14 rounded-xl text-xl font-bold transition-all hover:scale-105 flex-shrink-0"
+                style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#8B5CF6' }}>
+                ⚙️
+              </button>
+              <button onClick={startGame} className="muz-btn-pink flex-1 py-4 rounded-xl text-base font-black">
+                Lancer ({players.length} joueur{players.length > 1 ? 's' : ''}) →
+              </button>
+            </div>
+            <button
+              onClick={() => { if (confirm('Fermer la salle ?')) endGame(); }}
+              className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80"
+              style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.6)', border: '1px solid rgba(255,0,170,0.2)' }}>
+              🚪 Fermer la salle
             </button>
           </div>
         ) : (

@@ -7,8 +7,8 @@ import { supabase } from '@/lib/supabase';
 import { SubscriptionTier, TIER_LIMITS } from '@/types';
 import Link from 'next/link';
 
-// Email de l'administrateur — seul toi peux accéder à cette page
-const ADMIN_EMAIL = 'antoine.gegedu27@gmail.com';
+// Emails des administrateurs — seuls eux peuvent accéder à cette page
+const ADMIN_EMAILS = ['antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr'];
 
 interface UserProfile {
   id: string;
@@ -37,8 +37,8 @@ export default function AdminPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
 
-      // Vérifier que c'est bien l'admin
-      if (!user || user.email !== ADMIN_EMAIL) {
+      // Vérifier que c'est bien un admin
+      if (!user || !ADMIN_EMAILS.includes(user.email ?? '')) {
         router.push('/');
         return;
       }

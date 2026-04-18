@@ -311,43 +311,36 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 </div>
-                {/* Abonnement actuel */}
+                {/* Abonnement actuel — lecture seule */}
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '1rem' }}>
                   <p className="text-xs font-bold uppercase tracking-widest mb-3"
                     style={{ color: 'rgba(240,244,255,0.35)' }}>Abonnement</p>
-                  <div className="flex flex-col gap-2">
-                    {(Object.entries(TIER_INFO) as [SubscriptionTier, typeof TIER_INFO['free']][]).map(([key, info]) => (
-                      <button key={key}
-                        onClick={async () => {
-                          await supabase.from('profiles').update({ subscription_tier: key }).eq('id', profile.id);
-                          setProfile(p => p ? { ...p, subscription_tier: key } : p);
-                        }}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all"
-                        style={{
-                          background: profile.subscription_tier === key ? info.bg : 'rgba(255,255,255,0.03)',
-                          border: `1.5px solid ${profile.subscription_tier === key ? info.color + '66' : 'rgba(255,255,255,0.07)'}`,
-                        }}>
+                  {(() => {
+                    const info = TIER_INFO[profile.subscription_tier];
+                    return (
+                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                        style={{ background: info.bg, border: `1.5px solid ${info.color}66` }}>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-black text-sm" style={{ color: info.color }}>{info.label}</span>
                             <span className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.35)' }}>{info.price}/mois</span>
+                            <span className="text-xs font-black px-2 py-0.5 rounded-full"
+                              style={{ background: info.color + '22', color: info.color }}>Actif</span>
                           </div>
-                          <p className="text-xs mt-0.5" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                            {info.perks[info.perks.length - 1]}
+                          <p className="text-xs mt-1" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                            {info.perks.join(' · ')}
                           </p>
                         </div>
-                        {profile.subscription_tier === key && (
-                          <span className="text-xs font-black px-2 py-1 rounded-full flex-shrink-0"
-                            style={{ background: info.color + '22', color: info.color }}>
-                            Actif
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs mt-2 text-center" style={{ color: 'rgba(240,244,255,0.25)' }}>
-                    Mode test — le paiement Stripe sera ajouté prochainement
-                  </p>
+                      </div>
+                    );
+                  })()}
+                  {profile.subscription_tier === 'free' && (
+                    <Link href="/pricing"
+                      className="flex items-center justify-center gap-2 mt-3 py-2.5 rounded-xl font-black text-sm transition-all hover:opacity-90"
+                      style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)' }}>
+                      ⬆ Passer Pro ou Premium →
+                    </Link>
+                  )}
                 </div>
 
                 {/* Lien vers les packs */}

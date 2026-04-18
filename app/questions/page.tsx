@@ -66,8 +66,14 @@ export default function QuestionsPage() {
 
       const { data: profile } = await supabase.from('profiles').select('subscription_tier').eq('id', user.id).single();
       const userTier = (profile?.subscription_tier as SubscriptionTier) ?? 'free';
-      setTier(userTier);
 
+      // Les gratuits n'ont pas accès aux questions personnalisées
+      if (!TIER_LIMITS[userTier].canCreate) {
+        router.replace('/pricing');
+        return;
+      }
+
+      setTier(userTier);
       await loadPacks(user.id);
       setLoading(false);
     };
@@ -111,6 +117,8 @@ export default function QuestionsPage() {
   // === CRUD PACKS ===
   const createPack = async () => {
     if (!packName.trim() || !userId) return;
+    if (!limits.canCreate) return; // Sécurité : gratuit bloqué
+    if (limits.maxPacks !== Infinity && packs.length >= limits.maxPacks) return; // Pro : max 5 packs
     setPackSaving(true);
     const { data } = await supabase.from('question_packs').insert({
       owner_id: userId,
@@ -148,6 +156,9 @@ export default function QuestionsPage() {
 
   const saveQuestion = async () => {
     if (!selectedPack || !userId || !qText.trim() || qChoices.some(c => !c.trim())) return;
+    if (!limits.canCreate) return; // Sécurité : gratuit bloqué
+    // Pro : max 30 questions par pack (sauf si on modifie une question existante)
+    if (!editingQ && limits.maxQuestionsPerPack !== Infinity && questions.length >= limits.maxQuestionsPerPack) return;
     setQSaving(true);
     const payload = {
       pack_id: selectedPack.id,
