@@ -50,20 +50,20 @@ export function PhoneControllerView({
   /* ---- ATTENTE ---- */
   if (room.status === 'waiting') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8"
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 muz-fade-in"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-        <div className="mb-4"><MuzquizLogo width={80} showText={false} /></div>
-        <h1 className="text-2xl font-black mb-2 text-center" style={{ color: '#F0F4FF' }}>
+        <div className="mb-5 muz-shake"><MuzquizLogo width={88} showText={false} /></div>
+        <h1 className="text-2xl font-black mb-2 text-center muz-fade-in-1" style={{ color: '#F0F4FF' }}>
           Prêt à jouer !
         </h1>
-        <p className="text-lg font-black mb-1" style={{ color: '#8B5CF6' }}>{myPlayer.nickname}</p>
-        <p className="text-sm text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>
+        <p className="text-lg font-black mb-1 muz-fade-in-2" style={{ color: '#8B5CF6' }}>{myPlayer.nickname}</p>
+        <p className="text-sm text-center muz-fade-in-3" style={{ color: 'rgba(240,244,255,0.4)' }}>
           En attente que l'hôte lance la partie…
         </p>
-        <div className="mt-8 flex items-center gap-2">
+        <div className="mt-10 flex items-center gap-3 muz-fade-in-4">
           {['#FF00AA', '#8B5CF6', '#00E5D1'].map((c, i) => (
-            <div key={i} className="w-2.5 h-2.5 rounded-full animate-bounce"
-              style={{ background: c, animationDelay: `${i * 150}ms` }} />
+            <div key={i} className="w-3 h-3 rounded-full animate-bounce"
+              style={{ background: c, animationDelay: `${i * 180}ms`, boxShadow: `0 0 10px ${c}88` }} />
           ))}
         </div>
       </div>

@@ -197,7 +197,7 @@ export default function QuestionsPage() {
   const tc = TIER_COLORS[tier];
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
+    <div className="min-h-screen muz-fade-in" style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4"

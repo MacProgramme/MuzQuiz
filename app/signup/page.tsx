@@ -75,7 +75,7 @@ export default function SignupPage() {
   const initial = nickname.trim() ? nickname.trim()[0].toUpperCase() : '?';
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6"
+    <main className="min-h-screen flex flex-col items-center justify-center p-6 muz-fade-in"
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
 
       {/* Logo */}

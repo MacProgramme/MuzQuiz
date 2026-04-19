@@ -171,7 +171,7 @@ export default function Home() {
       </div>
 
       {/* Contenu centré */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 muz-fade-in">
 
       {/* Logo */}
       <div className="flex flex-col items-center mb-3">

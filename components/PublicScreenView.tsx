@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
+import { RoomQRCode } from '@/components/RoomQRCode';
 
 const COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B'];
 const LABELS = ['A', 'B', 'C', 'D'];
@@ -79,26 +80,42 @@ export function PublicScreenView({
   /* ===== SALLE D'ATTENTE ===== */
   if (room.status === 'waiting') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center"
+      <div className="min-h-screen flex flex-col items-center justify-center muz-fade-in"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
         <MuzquizLogo width={200} textSize="3.5rem" animate />
         <p className="text-lg mb-10" style={{ color: 'rgba(240,244,255,0.4)' }}>
           {room.mode === 'qcm' ? 'Quiz Blind Test' : 'Buzz Quiz'} · Mode écran public
         </p>
 
-        {/* Grand code salle */}
-        <div className="px-16 py-8 rounded-3xl mb-6"
-          style={{ background: 'rgba(0,229,209,0.06)', border: '2px solid rgba(0,229,209,0.3)', boxShadow: '0 0 60px rgba(0,229,209,0.1)' }}>
-          <p className="text-sm font-black uppercase tracking-widest text-center mb-2" style={{ color: 'rgba(0,229,209,0.6)' }}>
-            CODE DE LA SALLE
-          </p>
-          <p className="font-black font-mono tracking-[0.3em]" style={{ fontSize: '5rem', color: '#00E5D1', lineHeight: 1 }}>
-            {room.code}
-          </p>
+        {/* Code + QR côte à côte */}
+        <div className="flex items-center gap-8 mb-10">
+          {/* Grand code salle */}
+          <div className="px-14 py-7 rounded-3xl muz-code-pulse"
+            style={{ background: 'rgba(0,229,209,0.06)', border: '2px solid rgba(0,229,209,0.3)' }}>
+            <p className="text-sm font-black uppercase tracking-widest text-center mb-2" style={{ color: 'rgba(0,229,209,0.6)' }}>
+              CODE DE LA SALLE
+            </p>
+            <p className="font-black font-mono tracking-[0.3em]" style={{ fontSize: '4.5rem', color: '#00E5D1', lineHeight: 1 }}>
+              {room.code}
+            </p>
+            <p className="text-sm text-center mt-3" style={{ color: 'rgba(240,244,255,0.35)' }}>
+              muzquiz.app
+            </p>
+          </div>
+
+          {/* Séparateur */}
+          <div style={{ color: 'rgba(240,244,255,0.15)', fontSize: '1.5rem', fontWeight: 900 }}>ou</div>
+
+          {/* QR code */}
+          <div className="flex flex-col items-center gap-3 muz-zoom-in" style={{ animationDelay: '0.15s' }}>
+            <div className="rounded-2xl p-3" style={{ background: '#F0F4FF' }}>
+              <RoomQRCode code={room.code} size={160} />
+            </div>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(0,229,209,0.6)' }}>
+              Scanner avec l'appareil photo
+            </p>
+          </div>
         </div>
-        <p className="text-base mb-12" style={{ color: 'rgba(240,244,255,0.4)' }}>
-          Rejoignez sur <strong style={{ color: '#F0F4FF' }}>muzquiz.app</strong> avec ce code
-        </p>
 
         {/* Liste des joueurs (hôte exclu — il n'est pas un joueur) */}
         <div className="flex flex-wrap gap-3 justify-center max-w-3xl mb-10 px-8">

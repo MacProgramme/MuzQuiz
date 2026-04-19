@@ -51,33 +51,47 @@ export function MuzquizLogo({
     </svg>
   );
 
+  /* Texte MUZQUIZ en SVG natif — réutilise le gradient #muz-logo-grad défini dans layout.tsx */
+  const wordmark = showText ? (
+    <svg
+      viewBox="0 0 300 52"
+      role="img"
+      aria-label="MUZQUIZ"
+      style={{
+        display: 'block',
+        height: textSize,
+        width: 'auto',
+        overflow: 'visible',
+      }}
+    >
+      <text
+        x="150"
+        y="42"
+        textAnchor="middle"
+        fill={color || 'url(#muz-logo-grad)'}
+        fontFamily="'Black Han Sans', var(--font-black-han), sans-serif"
+        fontSize="46"
+        fontWeight="400"
+        letterSpacing="4"
+      >
+        MUZQUIZ
+      </text>
+    </svg>
+  ) : null;
+
   if (horizontal) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
         {moustache}
-        {showText && (
-          <span
-            className="muz-logo font-black"
-            style={{ fontFamily: 'var(--font-black-han)', fontSize: textSize, lineHeight: 1 }}
-          >
-            MUZQUIZ
-          </span>
-        )}
+        {wordmark}
       </div>
     );
   }
 
   return (
-    <div className={`flex flex-col items-center ${className}`}>
+    <div className={`flex flex-col items-center ${className}`} style={{ gap: '2px' }}>
       {moustache}
-      {showText && (
-        <span
-          className="muz-logo font-black"
-          style={{ fontFamily: 'var(--font-black-han)', fontSize: textSize, lineHeight: 1.1, marginTop: '-2px' }}
-        >
-          MUZQUIZ
-        </span>
-      )}
+      {wordmark}
     </div>
   );
 }

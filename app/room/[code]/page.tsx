@@ -311,7 +311,7 @@ export default function RoomPage() {
     const modeLabel = room.mode === 'qcm' ? 'Quiz Blind Test' : 'Buzz Quiz';
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6"
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6 muz-fade-in"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
 
         {showSettings && myPlayer.is_host && (
