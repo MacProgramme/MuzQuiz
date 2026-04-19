@@ -51,47 +51,37 @@ export function MuzquizLogo({
     </svg>
   );
 
-  /* Texte MUZQUIZ en SVG natif — réutilise le gradient #muz-logo-grad défini dans layout.tsx */
-  const wordmark = showText ? (
-    <svg
-      viewBox="0 0 300 52"
-      role="img"
-      aria-label="MUZQUIZ"
-      style={{
-        display: 'block',
-        height: textSize,
-        width: 'auto',
-        overflow: 'visible',
-      }}
-    >
-      <text
-        x="150"
-        y="42"
-        textAnchor="middle"
-        fill={color || 'url(#muz-logo-grad)'}
-        fontFamily="'Black Han Sans', var(--font-black-han), sans-serif"
-        fontSize="46"
-        fontWeight="400"
-        letterSpacing="4"
-      >
-        MUZQUIZ
-      </text>
-    </svg>
-  ) : null;
+  /* ── Logo complet (moustache + MUZQUIZ) : utilise le fichier SVG officiel ── */
+  if (showText && !color) {
+    // Le SVG est 276×84 → ratio 3.286. On interprète `width` comme la largeur totale du logo.
+    // Pour les petits logos (navbar), on s'assure d'un minimum lisible.
+    const svgW = Math.max(width, 100);
+    return (
+      <div className={`flex items-center justify-center ${className}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo-muzquiz.svg"
+          alt="MUZQUIZ"
+          className={animate ? 'muz-shake' : ''}
+          style={{ width: svgW, height: 'auto', display: 'block' }}
+          draggable={false}
+        />
+      </div>
+    );
+  }
 
+  /* ── Moustache seule (icône, boutons de mode, etc.) ── */
   if (horizontal) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
         {moustache}
-        {wordmark}
       </div>
     );
   }
 
   return (
-    <div className={`flex flex-col items-center ${className}`} style={{ gap: '2px' }}>
+    <div className={`flex items-center justify-center ${className}`}>
       {moustache}
-      {wordmark}
     </div>
   );
 }

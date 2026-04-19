@@ -380,7 +380,11 @@ export default function RoomPage() {
               </button>
             </div>
             <button
-              onClick={() => { if (confirm('Fermer la salle ?')) endGame(); }}
+              onClick={async () => {
+                if (!confirm('Fermer la salle ?')) return;
+                await endGame();
+                router.push('/');
+              }}
               className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80"
               style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.6)', border: '1px solid rgba(255,0,170,0.2)' }}>
               Fermer la salle
