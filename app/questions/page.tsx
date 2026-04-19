@@ -1,7 +1,7 @@
 // app/questions/page.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { QuestionPack, CustomQuestion, SubscriptionTier, TIER_LIMITS } from '@/types';
@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 type View = 'packs' | 'questions';
+type AddMode = 'manual' | 'csv' | 'ai';
 
 const MODE_LABEL: Record<string, string> = { qcm: 'Quiz Blind Test', buzz: 'Buzz Quiz' };
 const LABELS = ['A', 'B', 'C', 'D'];
@@ -18,7 +19,7 @@ const TIER_COLORS: Record<SubscriptionTier, { bg: string; text: string; label: s
   premium: { bg: 'rgba(245,158,11,0.12)',   text: '#F59E0B',              label: 'Premium' },
 };
 
-function inputStyle(focused: boolean) {
+function inputStyle(focused = false): React.CSSProperties {
   return {
     background: 'rgba(255,255,255,0.06)',
     border: `1.5px solid ${focused ? '#8B5CF6' : 'rgba(139,92,246,0.25)'}`,
@@ -28,9 +29,67 @@ function inputStyle(focused: boolean) {
     width: '100%',
     outline: 'none',
     fontSize: '0.875rem',
-  } as React.CSSProperties;
+  };
 }
 
+// ─── CSV parsing ─────────────────────────────────────────────────────────────
+interface ParsedQuestion {
+  question: string;
+  choice_a: string;
+  choice_b: string;
+  choice_c: string;
+  choice_d: string;
+  correct_index: 0 | 1 | 2 | 3;
+  _selected: boolean;
+}
+
+function parseCSV(text: string): ParsedQuestion[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+
+  // Détecter le séparateur (virgule ou point-virgule)
+  const sep = lines[0].includes(';') ? ';' : ',';
+  const header = lines[0].split(sep).map(h => h.trim().toLowerCase().replace(/^["']|["']$/g, ''));
+
+  const idx = {
+    q: header.findIndex(h => ['question', 'q'].includes(h)),
+    a: header.findIndex(h => ['choix_a', 'choice_a', 'a', 'reponse_a'].includes(h)),
+    b: header.findIndex(h => ['choix_b', 'choice_b', 'b', 'reponse_b'].includes(h)),
+    c: header.findIndex(h => ['choix_c', 'choice_c', 'c', 'reponse_c'].includes(h)),
+    d: header.findIndex(h => ['choix_d', 'choice_d', 'd', 'reponse_d'].includes(h)),
+    correct: header.findIndex(h => ['correct', 'correct_index', 'bonne_reponse', 'answer'].includes(h)),
+  };
+
+  // Fallback : ordre positionnel si les colonnes ne sont pas trouvées
+  if (idx.q < 0) idx.q = 0;
+  if (idx.a < 0) idx.a = 1;
+  if (idx.b < 0) idx.b = 2;
+  if (idx.c < 0) idx.c = 3;
+  if (idx.d < 0) idx.d = 4;
+  if (idx.correct < 0) idx.correct = 5;
+
+  return lines.slice(1).map(line => {
+    const cols = line.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
+    const raw = cols[idx.correct] ?? '0';
+    // Accepte "0"/"1"/"2"/"3" ou "A"/"B"/"C"/"D"
+    let ci: 0|1|2|3 = 0;
+    if (['a', '0'].includes(raw.toLowerCase())) ci = 0;
+    else if (['b', '1'].includes(raw.toLowerCase())) ci = 1;
+    else if (['c', '2'].includes(raw.toLowerCase())) ci = 2;
+    else if (['d', '3'].includes(raw.toLowerCase())) ci = 3;
+    return {
+      question: cols[idx.q] ?? '',
+      choice_a: cols[idx.a] ?? '',
+      choice_b: cols[idx.b] ?? '',
+      choice_c: cols[idx.c] ?? '',
+      choice_d: cols[idx.d] ?? '',
+      correct_index: ci,
+      _selected: true,
+    };
+  }).filter(q => q.question.trim() && q.choice_a.trim());
+}
+
+// ─── Composant principal ─────────────────────────────────────────────────────
 export default function QuestionsPage() {
   const router = useRouter();
   const [tier, setTier] = useState<SubscriptionTier>('free');
@@ -41,6 +100,9 @@ export default function QuestionsPage() {
   const [view, setView] = useState<View>('packs');
   const [loading, setLoading] = useState(true);
 
+  // Mode d'ajout de questions
+  const [addMode, setAddMode] = useState<AddMode | null>(null);
+
   // Formulaire pack
   const [showPackForm, setShowPackForm] = useState(false);
   const [packName, setPackName] = useState('');
@@ -48,13 +110,26 @@ export default function QuestionsPage() {
   const [packMode, setPackMode] = useState<'qcm' | 'buzz'>('qcm');
   const [packSaving, setPackSaving] = useState(false);
 
-  // Formulaire question
-  const [showQForm, setShowQForm] = useState(false);
+  // Formulaire question manuelle
   const [editingQ, setEditingQ] = useState<CustomQuestion | null>(null);
   const [qText, setQText] = useState('');
   const [qChoices, setQChoices] = useState(['', '', '', '']);
   const [qCorrect, setQCorrect] = useState<0|1|2|3>(0);
   const [qSaving, setQSaving] = useState(false);
+
+  // Import CSV
+  const csvInputRef = useRef<HTMLInputElement>(null);
+  const [csvPreview, setCsvPreview] = useState<ParsedQuestion[]>([]);
+  const [csvError, setCsvError] = useState('');
+  const [csvImporting, setCsvImporting] = useState(false);
+
+  // Génération IA
+  const [aiTheme, setAiTheme] = useState('');
+  const [aiCount, setAiCount] = useState(10);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiPreview, setAiPreview] = useState<ParsedQuestion[]>([]);
+  const [aiError, setAiError] = useState('');
+  const [aiImporting, setAiImporting] = useState(false);
 
   const limits = TIER_LIMITS[tier];
 
@@ -68,11 +143,7 @@ export default function QuestionsPage() {
       const { data: profile } = await supabase.from('profiles').select('subscription_tier').eq('id', user.id).single();
       const userTier = (profile?.subscription_tier as SubscriptionTier) ?? 'free';
 
-      // Les gratuits n'ont pas accès aux questions personnalisées
-      if (!TIER_LIMITS[userTier].canCreate) {
-        router.replace('/pricing');
-        return;
-      }
+      if (!TIER_LIMITS[userTier].canCreate) { router.replace('/pricing'); return; }
 
       setTier(userTier);
       await loadPacks(user.id);
@@ -87,51 +158,35 @@ export default function QuestionsPage() {
       .select('*')
       .eq('owner_id', uid)
       .order('created_at', { ascending: false });
-
     if (!data) return;
-
     const withCounts = await Promise.all(data.map(async (p) => {
-      const { count } = await supabase
-        .from('custom_questions')
-        .select('id', { count: 'exact', head: true })
-        .eq('pack_id', p.id);
+      const { count } = await supabase.from('custom_questions').select('id', { count: 'exact', head: true }).eq('pack_id', p.id);
       return { ...p, question_count: count ?? 0 };
     }));
     setPacks(withCounts as any);
   };
 
   const loadQuestions = async (packId: string) => {
-    const { data } = await supabase
-      .from('custom_questions')
-      .select('*')
-      .eq('pack_id', packId)
-      .order('created_at', { ascending: true });
+    const { data } = await supabase.from('custom_questions').select('*').eq('pack_id', packId).order('created_at', { ascending: true });
     if (data) setQuestions(data as CustomQuestion[]);
   };
 
   const openPack = async (pack: QuestionPack) => {
     setSelectedPack(pack);
     await loadQuestions(pack.id);
+    setAddMode(null);
     setView('questions');
   };
 
   // === CRUD PACKS ===
   const createPack = async () => {
     if (!packName.trim() || !userId) return;
-    if (!limits.canCreate) return; // Sécurité : gratuit bloqué
-    if (limits.maxPacks !== Infinity && packs.length >= limits.maxPacks) return; // Pro : max 5 packs
+    if (limits.maxPacks !== Infinity && packs.length >= limits.maxPacks) return;
     setPackSaving(true);
     const { data } = await supabase.from('question_packs').insert({
-      owner_id: userId,
-      name: packName.trim(),
-      description: packDesc.trim(),
-      mode: packMode,
+      owner_id: userId, name: packName.trim(), description: packDesc.trim(), mode: packMode,
     }).select('*').single();
-    if (data) {
-      await loadPacks(userId);
-      setShowPackForm(false);
-      setPackName(''); setPackDesc(''); setPackMode('qcm');
-    }
+    if (data) { await loadPacks(userId); setShowPackForm(false); setPackName(''); setPackDesc(''); setPackMode('qcm'); }
     setPackSaving(false);
   };
 
@@ -141,7 +196,7 @@ export default function QuestionsPage() {
     if (userId) await loadPacks(userId);
   };
 
-  // === CRUD QUESTIONS ===
+  // === MANUEL ===
   const openQForm = (q?: CustomQuestion) => {
     if (q) {
       setEditingQ(q);
@@ -152,32 +207,24 @@ export default function QuestionsPage() {
       setEditingQ(null);
       setQText(''); setQChoices(['', '', '', '']); setQCorrect(0);
     }
-    setShowQForm(true);
+    setAddMode('manual');
   };
 
   const saveQuestion = async () => {
     if (!selectedPack || !userId || !qText.trim() || qChoices.some(c => !c.trim())) return;
-    if (!limits.canCreate) return; // Sécurité : gratuit bloqué
-    // Pro : max 30 questions par pack (sauf si on modifie une question existante)
     if (!editingQ && limits.maxQuestionsPerPack !== Infinity && questions.length >= limits.maxQuestionsPerPack) return;
     setQSaving(true);
     const payload = {
-      pack_id: selectedPack.id,
-      owner_id: userId,
+      pack_id: selectedPack.id, owner_id: userId,
       question: qText.trim(),
-      choice_a: qChoices[0].trim(),
-      choice_b: qChoices[1].trim(),
-      choice_c: qChoices[2].trim(),
-      choice_d: qChoices[3].trim(),
+      choice_a: qChoices[0].trim(), choice_b: qChoices[1].trim(),
+      choice_c: qChoices[2].trim(), choice_d: qChoices[3].trim(),
       correct_index: qCorrect,
     };
-    if (editingQ) {
-      await supabase.from('custom_questions').update(payload).eq('id', editingQ.id);
-    } else {
-      await supabase.from('custom_questions').insert(payload);
-    }
+    if (editingQ) await supabase.from('custom_questions').update(payload).eq('id', editingQ.id);
+    else await supabase.from('custom_questions').insert(payload);
     await loadQuestions(selectedPack.id);
-    setShowQForm(false);
+    setAddMode(null);
     setQSaving(false);
   };
 
@@ -185,6 +232,83 @@ export default function QuestionsPage() {
     if (!confirm('Supprimer cette question ?')) return;
     await supabase.from('custom_questions').delete().eq('id', qId);
     if (selectedPack) await loadQuestions(selectedPack.id);
+  };
+
+  // === CSV IMPORT ===
+  const handleCSVFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCsvError('');
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const parsed = parseCSV(text);
+      if (parsed.length === 0) {
+        setCsvError('Aucune question valide trouvée. Vérifie le format du fichier.');
+      } else {
+        setCsvPreview(parsed);
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+
+  const importCSV = async () => {
+    if (!selectedPack || !userId || csvPreview.length === 0) return;
+    const toImport = csvPreview.filter(q => q._selected);
+    if (toImport.length === 0) return;
+    setCsvImporting(true);
+    const payload = toImport.map(q => ({
+      pack_id: selectedPack.id, owner_id: userId,
+      question: q.question, choice_a: q.choice_a, choice_b: q.choice_b,
+      choice_c: q.choice_c, choice_d: q.choice_d, correct_index: q.correct_index,
+    }));
+    await supabase.from('custom_questions').insert(payload);
+    await loadQuestions(selectedPack.id);
+    setCsvPreview([]); setCsvError('');
+    if (csvInputRef.current) csvInputRef.current.value = '';
+    setAddMode(null);
+    setCsvImporting(false);
+  };
+
+  // === IA ===
+  const generateAI = async () => {
+    if (!aiTheme.trim() || !selectedPack) return;
+    setAiGenerating(true);
+    setAiError('');
+    setAiPreview([]);
+    try {
+      const res = await fetch('/api/generate-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: aiTheme.trim(), count: aiCount, mode: selectedPack.mode }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setAiError(data.error ?? 'Erreur inconnue');
+      } else {
+        setAiPreview((data.questions ?? []).map((q: any) => ({ ...q, _selected: true })));
+      }
+    } catch (e: any) {
+      setAiError(e.message ?? 'Erreur réseau');
+    }
+    setAiGenerating(false);
+  };
+
+  const importAI = async () => {
+    if (!selectedPack || !userId || aiPreview.length === 0) return;
+    const toImport = aiPreview.filter(q => q._selected);
+    if (toImport.length === 0) return;
+    setAiImporting(true);
+    const payload = toImport.map(q => ({
+      pack_id: selectedPack.id, owner_id: userId,
+      question: q.question, choice_a: q.choice_a, choice_b: q.choice_b,
+      choice_c: q.choice_c, choice_d: q.choice_d, correct_index: q.correct_index,
+    }));
+    await supabase.from('custom_questions').insert(payload);
+    await loadQuestions(selectedPack.id);
+    setAiPreview([]); setAiTheme('');
+    setAddMode(null);
+    setAiImporting(false);
   };
 
   if (loading) return (
@@ -195,31 +319,28 @@ export default function QuestionsPage() {
   );
 
   const tc = TIER_COLORS[tier];
+  const canAddMore = limits.maxQuestionsPerPack === Infinity || questions.length < limits.maxQuestionsPerPack;
 
+  // ─── Rendu ──────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen muz-fade-in" style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4"
-        style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
+      <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
         <div className="flex items-center gap-3">
           {view === 'questions' ? (
-            <button onClick={() => setView('packs')}
+            <button onClick={() => { setView('packs'); setAddMode(null); setAiPreview([]); setCsvPreview([]); }}
               className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
               style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.6)' }}>
               ← Packs
             </button>
           ) : (
-            <Link href="/">
-              <MuzquizLogo width={50} textSize="1rem" horizontal />
-            </Link>
+            <Link href="/"><MuzquizLogo width={50} textSize="1rem" horizontal /></Link>
           )}
           <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
             {view === 'packs' ? 'Mes packs' : selectedPack?.name}
           </span>
         </div>
-
-        {/* Badge tier */}
         <span className="text-xs font-black px-3 py-1.5 rounded-full"
           style={{ background: tc.bg, color: tc.text, border: `1px solid ${tc.text}44` }}>
           {tc.label}
@@ -231,7 +352,6 @@ export default function QuestionsPage() {
         {/* ===== VUE PACKS ===== */}
         {view === 'packs' && (
           <>
-            {/* Bloc accès restreint pour le tier gratuit */}
             {!limits.canCreate && (
               <div className="muz-card p-6 mb-6 text-center"
                 style={{ border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.06)' }}>
@@ -246,34 +366,30 @@ export default function QuestionsPage() {
               </div>
             )}
 
-            {/* Barre limite */}
             {limits.canCreate && (
               <div className="flex items-center justify-between mb-5 px-1">
                 <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
                   <span style={{ color: '#F0F4FF', fontWeight: 700 }}>{packs.length}</span>
-                  {limits.maxPacks === Infinity ? '' : ` / ${limits.maxPacks}`} pack{packs.length !== 1 ? 's' : ''}
+                  {limits.maxPacks !== Infinity ? ` / ${limits.maxPacks}` : ''} pack{packs.length !== 1 ? 's' : ''}
                 </p>
                 {(limits.maxPacks === Infinity || packs.length < limits.maxPacks) && (
-                  <button onClick={() => setShowPackForm(true)}
-                    className="muz-btn-pink px-4 py-2 rounded-xl font-black text-sm">
+                  <button onClick={() => setShowPackForm(true)} className="muz-btn-pink px-4 py-2 rounded-xl font-black text-sm">
                     + Nouveau pack
                   </button>
                 )}
               </div>
             )}
 
-            {/* Formulaire nouveau pack */}
             {showPackForm && (
               <div className="muz-card p-5 mb-4 muz-pop">
                 <h3 className="font-black mb-4" style={{ color: '#F0F4FF' }}>Nouveau pack</h3>
                 <div className="flex flex-col gap-3">
                   <input value={packName} onChange={e => setPackName(e.target.value)}
-                    placeholder="Nom du pack (ex: Cinéma années 80)" style={inputStyle(false)} />
+                    placeholder="Nom du pack (ex: Cinéma années 80)" style={inputStyle()} />
                   <input value={packDesc} onChange={e => setPackDesc(e.target.value)}
-                    placeholder="Description (optionnel)" style={inputStyle(false)} />
+                    placeholder="Description (optionnel)" style={inputStyle()} />
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest mb-2"
-                      style={{ color: 'rgba(240,244,255,0.35)' }}>Mode de jeu</p>
+                    <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>Mode de jeu</p>
                     <div className="flex gap-2">
                       {(['qcm', 'buzz'] as const).map(m => (
                         <button key={m} onClick={() => setPackMode(m)}
@@ -303,7 +419,6 @@ export default function QuestionsPage() {
               </div>
             )}
 
-            {/* Liste des packs */}
             {packs.length === 0 && limits.canCreate && !showPackForm && (
               <div className="muz-card p-8 text-center">
                 <div className="flex justify-center mb-3"><MuzquizLogo width={60} showText={false} /></div>
@@ -314,8 +429,7 @@ export default function QuestionsPage() {
 
             <div className="flex flex-col gap-3">
               {packs.map(pack => (
-                <div key={pack.id} className="muz-card muz-card-lift p-4 flex items-center gap-4 cursor-pointer"
-                  onClick={() => openPack(pack)}>
+                <div key={pack.id} className="muz-card muz-card-lift p-4 flex items-center gap-4 cursor-pointer" onClick={() => openPack(pack)}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-black text-base" style={{ color: '#F0F4FF' }}>{pack.name}</span>
@@ -324,9 +438,7 @@ export default function QuestionsPage() {
                         {MODE_LABEL[pack.mode]}
                       </span>
                     </div>
-                    {pack.description && (
-                      <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(240,244,255,0.4)' }}>{pack.description}</p>
-                    )}
+                    {pack.description && <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(240,244,255,0.4)' }}>{pack.description}</p>}
                     <p className="text-xs mt-1 font-bold" style={{ color: 'rgba(240,244,255,0.35)' }}>
                       {pack.question_count} question{pack.question_count !== 1 ? 's' : ''}
                     </p>
@@ -334,9 +446,7 @@ export default function QuestionsPage() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button onClick={e => { e.stopPropagation(); deletePack(pack.id); }}
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black transition-all hover:scale-110"
-                      style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}>
-                      ×
-                    </button>
+                      style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}>×</button>
                     <span style={{ color: 'rgba(240,244,255,0.3)', fontSize: '1.2rem' }}>›</span>
                   </div>
                 </div>
@@ -348,34 +458,57 @@ export default function QuestionsPage() {
         {/* ===== VUE QUESTIONS ===== */}
         {view === 'questions' && selectedPack && (
           <>
-            <div className="flex items-center justify-between mb-5 px-1">
+            {/* Compteur + 3 boutons d'ajout */}
+            <div className="flex items-center justify-between mb-4 px-1">
               <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
                 <span style={{ color: '#F0F4FF', fontWeight: 700 }}>{questions.length}</span>
                 {limits.maxQuestionsPerPack !== Infinity ? ` / ${limits.maxQuestionsPerPack}` : ''} question{questions.length !== 1 ? 's' : ''}
               </p>
-              {(limits.maxQuestionsPerPack === Infinity || questions.length < limits.maxQuestionsPerPack) && (
-                <button onClick={() => openQForm()}
-                  className="muz-btn-pink px-4 py-2 rounded-xl font-black text-sm">
-                  + Question
-                </button>
-              )}
             </div>
 
-            {/* Formulaire question */}
-            {showQForm && (
+            {/* 3 boutons mode d'ajout */}
+            {canAddMore && addMode === null && (
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                <button onClick={() => { openQForm(); }}
+                  className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02]"
+                  style={{ background: 'rgba(255,0,170,0.1)', border: '1.5px solid rgba(255,0,170,0.3)' }}>
+                  <span className="text-2xl">✏️</span>
+                  <span className="text-xs font-black" style={{ color: '#FF00AA' }}>Manuel</span>
+                  <span className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>Question par question</span>
+                </button>
+                <button onClick={() => { setAddMode('csv'); setCsvPreview([]); setCsvError(''); }}
+                  className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02]"
+                  style={{ background: 'rgba(0,229,209,0.08)', border: '1.5px solid rgba(0,229,209,0.25)' }}>
+                  <span className="text-2xl">📄</span>
+                  <span className="text-xs font-black" style={{ color: '#00E5D1' }}>Importer CSV</span>
+                  <span className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>Depuis Excel</span>
+                </button>
+                <button onClick={() => { setAddMode('ai'); setAiPreview([]); setAiError(''); }}
+                  className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02]"
+                  style={{ background: 'rgba(139,92,246,0.12)', border: '1.5px solid rgba(139,92,246,0.35)' }}>
+                  <span className="text-2xl">✨</span>
+                  <span className="text-xs font-black" style={{ color: '#8B5CF6' }}>Générer par IA</span>
+                  <span className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>Tape un thème</span>
+                </button>
+              </div>
+            )}
+
+            {/* ── PANNEAU MANUEL ─────────────────────────────────────────── */}
+            {addMode === 'manual' && (
               <div className="muz-card p-5 mb-4 muz-pop">
-                <h3 className="font-black mb-4" style={{ color: '#F0F4FF' }}>
-                  {editingQ ? 'Modifier la question' : 'Nouvelle question'}
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-black" style={{ color: '#F0F4FF' }}>
+                    {editingQ ? 'Modifier la question' : 'Nouvelle question'}
+                  </h3>
+                  <button onClick={() => setAddMode(null)} style={{ color: 'rgba(240,244,255,0.4)', fontSize: '1.2rem' }}>×</button>
+                </div>
                 <div className="flex flex-col gap-3">
                   <textarea value={qText} onChange={e => setQText(e.target.value)}
-                    placeholder="La question..."
-                    rows={2}
-                    style={{ ...inputStyle(false), resize: 'none' }} />
-
-                  <p className="text-xs font-bold uppercase tracking-widest"
-                    style={{ color: 'rgba(240,244,255,0.35)' }}>Réponses (clique sur la lettre pour marquer comme correcte)</p>
-
+                    placeholder="La question..." rows={2}
+                    style={{ ...inputStyle(), resize: 'none' }} />
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                    Réponses (clique sur la lettre pour marquer comme correcte)
+                  </p>
                   {qChoices.map((c, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <button onClick={() => setQCorrect(i as 0|1|2|3)}
@@ -390,12 +523,11 @@ export default function QuestionsPage() {
                       </button>
                       <input value={c} onChange={e => setQChoices(prev => prev.map((x, j) => j === i ? e.target.value : x))}
                         placeholder={`Réponse ${LABELS[i]}`}
-                        style={{ ...inputStyle(false), flex: 1 }} />
+                        style={{ ...inputStyle(), flex: 1 }} />
                     </div>
                   ))}
-
                   <div className="flex gap-2 mt-1">
-                    <button onClick={() => setShowQForm(false)}
+                    <button onClick={() => setAddMode(null)}
                       className="flex-1 py-2.5 rounded-xl text-sm font-bold"
                       style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.5)' }}>
                       Annuler
@@ -410,12 +542,215 @@ export default function QuestionsPage() {
               </div>
             )}
 
-            {/* Liste questions */}
-            {questions.length === 0 && !showQForm && (
+            {/* ── PANNEAU CSV ─────────────────────────────────────────────── */}
+            {addMode === 'csv' && (
+              <div className="muz-card p-5 mb-4 muz-pop">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-black" style={{ color: '#F0F4FF' }}>Importer depuis un CSV</h3>
+                  <button onClick={() => { setAddMode(null); setCsvPreview([]); }} style={{ color: 'rgba(240,244,255,0.4)', fontSize: '1.2rem' }}>×</button>
+                </div>
+
+                {csvPreview.length === 0 ? (
+                  <>
+                    {/* Zone de dépôt */}
+                    <button onClick={() => csvInputRef.current?.click()}
+                      className="w-full py-8 rounded-2xl flex flex-col items-center gap-3 transition-all hover:opacity-90"
+                      style={{ background: 'rgba(0,229,209,0.05)', border: '2px dashed rgba(0,229,209,0.3)' }}>
+                      <span className="text-3xl">📄</span>
+                      <span className="font-bold text-sm" style={{ color: '#00E5D1' }}>Cliquer pour choisir un fichier .csv</span>
+                      <span className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                        Colonnes : question, choix_a, choix_b, choix_c, choix_d, correct (0-3)
+                      </span>
+                    </button>
+                    <input ref={csvInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleCSVFile} />
+
+                    {/* Modèle CSV à télécharger */}
+                    <button
+                      onClick={() => {
+                        const csv = 'question,choix_a,choix_b,choix_c,choix_d,correct\nQuelle est la capitale de la France?,Paris,Lyon,Marseille,Nice,0\nEn quelle année a été fondée Apple?,1976,1984,1992,2001,0';
+                        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a'); a.href = url; a.download = 'modele_questions.csv'; a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="w-full mt-3 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-80"
+                      style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(240,244,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      ↓ Télécharger un modèle CSV
+                    </button>
+
+                    {csvError && <p className="text-sm font-bold mt-3 text-center" style={{ color: '#FF00AA' }}>{csvError}</p>}
+                  </>
+                ) : (
+                  <>
+                    {/* Aperçu + sélection */}
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-bold" style={{ color: '#00E5D1' }}>
+                        {csvPreview.filter(q => q._selected).length} / {csvPreview.length} questions sélectionnées
+                      </p>
+                      <button onClick={() => setCsvPreview(prev => prev.map(q => ({ ...q, _selected: !prev.every(p => p._selected) })))}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg"
+                        style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.5)' }}>
+                        {csvPreview.every(q => q._selected) ? 'Tout désélectionner' : 'Tout sélectionner'}
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1 mb-4">
+                      {csvPreview.map((q, i) => (
+                        <button key={i} onClick={() => setCsvPreview(prev => prev.map((x, j) => j === i ? { ...x, _selected: !x._selected } : x))}
+                          className="flex items-start gap-3 p-3 rounded-xl text-left transition-all"
+                          style={{
+                            background: q._selected ? 'rgba(0,229,209,0.08)' : 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${q._selected ? 'rgba(0,229,209,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                          }}>
+                          <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5"
+                            style={{ background: q._selected ? '#00E5D1' : 'rgba(255,255,255,0.08)', color: '#0D1B3E' }}>
+                            {q._selected && <span className="text-xs font-black">✓</span>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold truncate" style={{ color: '#F0F4FF' }}>{q.question}</p>
+                            <p className="text-xs mt-0.5 truncate" style={{ color: '#00E5D1' }}>
+                              ✓ {[q.choice_a, q.choice_b, q.choice_c, q.choice_d][q.correct_index]}
+                            </p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setCsvPreview([]); if (csvInputRef.current) csvInputRef.current.value = ''; }}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                        style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.5)' }}>
+                        ← Changer de fichier
+                      </button>
+                      <button onClick={importCSV} disabled={csvPreview.filter(q => q._selected).length === 0 || csvImporting}
+                        className="flex-1 muz-btn-cyan py-2.5 rounded-xl font-black text-sm disabled:opacity-50">
+                        {csvImporting ? '...' : `Importer ${csvPreview.filter(q => q._selected).length} questions →`}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── PANNEAU IA ──────────────────────────────────────────────── */}
+            {addMode === 'ai' && (
+              <div className="muz-card p-5 mb-4 muz-pop">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-black" style={{ color: '#F0F4FF' }}>Générer par IA ✨</h3>
+                  <button onClick={() => { setAddMode(null); setAiPreview([]); }} style={{ color: 'rgba(240,244,255,0.4)', fontSize: '1.2rem' }}>×</button>
+                </div>
+
+                {aiPreview.length === 0 ? (
+                  <>
+                    <div className="flex flex-col gap-3">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>Thème ou sujet</p>
+                        <input value={aiTheme} onChange={e => setAiTheme(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && generateAI()}
+                          placeholder="ex: Cinéma des années 90, Géographie européenne, Marvel…"
+                          style={inputStyle()} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>Nombre de questions</p>
+                        <div className="flex gap-2">
+                          {[5, 10, 15, 20].map(n => (
+                            <button key={n} onClick={() => setAiCount(n)}
+                              className="flex-1 py-2 rounded-xl text-sm font-bold transition-all"
+                              style={{
+                                background: aiCount === n ? '#8B5CF6' : 'rgba(255,255,255,0.06)',
+                                color: aiCount === n ? 'white' : 'rgba(240,244,255,0.5)',
+                                border: `1px solid ${aiCount === n ? 'transparent' : 'rgba(255,255,255,0.08)'}`,
+                              }}>
+                              {n}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {aiError && (
+                      <div className="mt-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(255,0,170,0.08)', border: '1px solid rgba(255,0,170,0.3)' }}>
+                        <p className="text-sm font-bold" style={{ color: '#FF00AA' }}>{aiError}</p>
+                      </div>
+                    )}
+
+                    <button onClick={generateAI} disabled={!aiTheme.trim() || aiGenerating}
+                      className="w-full mt-4 py-3 rounded-xl font-black text-sm disabled:opacity-50 transition-all"
+                      style={{ background: aiGenerating ? 'rgba(139,92,246,0.3)' : '#8B5CF6', color: 'white' }}>
+                      {aiGenerating ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'white', borderTopColor: 'transparent' }} />
+                          Génération en cours…
+                        </span>
+                      ) : `✨ Générer ${aiCount} questions`}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {/* Aperçu questions générées */}
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-bold" style={{ color: '#8B5CF6' }}>
+                        {aiPreview.filter(q => q._selected).length} / {aiPreview.length} questions sélectionnées
+                      </p>
+                      <button onClick={() => setAiPreview(prev => prev.map(q => ({ ...q, _selected: !prev.every(p => p._selected) })))}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg"
+                        style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.5)' }}>
+                        {aiPreview.every(q => q._selected) ? 'Tout désélectionner' : 'Tout sélectionner'}
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-2 max-h-72 overflow-y-auto pr-1 mb-4">
+                      {aiPreview.map((q, i) => (
+                        <button key={i} onClick={() => setAiPreview(prev => prev.map((x, j) => j === i ? { ...x, _selected: !x._selected } : x))}
+                          className="flex items-start gap-3 p-3 rounded-xl text-left transition-all"
+                          style={{
+                            background: q._selected ? 'rgba(139,92,246,0.1)' : 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${q._selected ? 'rgba(139,92,246,0.35)' : 'rgba(255,255,255,0.06)'}`,
+                          }}>
+                          <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5"
+                            style={{ background: q._selected ? '#8B5CF6' : 'rgba(255,255,255,0.08)', color: 'white' }}>
+                            {q._selected && <span className="text-xs font-black">✓</span>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold" style={{ color: '#F0F4FF', whiteSpace: 'normal' }}>{q.question}</p>
+                            <div className="grid grid-cols-2 gap-1 mt-1.5">
+                              {[q.choice_a, q.choice_b, q.choice_c, q.choice_d].map((c, ci) => (
+                                <span key={ci} className="text-xs px-1.5 py-0.5 rounded truncate"
+                                  style={{
+                                    background: q.correct_index === ci ? 'rgba(0,229,209,0.12)' : 'rgba(255,255,255,0.04)',
+                                    color: q.correct_index === ci ? '#00E5D1' : 'rgba(240,244,255,0.4)',
+                                    border: `1px solid ${q.correct_index === ci ? 'rgba(0,229,209,0.2)' : 'transparent'}`,
+                                  }}>
+                                  {LABELS[ci]}. {c}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setAiPreview([]); setAiError(''); }}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                        style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.5)' }}>
+                        ← Regénérer
+                      </button>
+                      <button onClick={importAI} disabled={aiPreview.filter(q => q._selected).length === 0 || aiImporting}
+                        className="flex-1 py-2.5 rounded-xl font-black text-sm disabled:opacity-50"
+                        style={{ background: '#8B5CF6', color: 'white' }}>
+                        {aiImporting ? '...' : `Ajouter ${aiPreview.filter(q => q._selected).length} questions →`}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Liste des questions */}
+            {questions.length === 0 && addMode === null && (
               <div className="muz-card p-8 text-center">
                 <div className="flex justify-center mb-3"><MuzquizLogo width={60} showText={false} /></div>
                 <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>Aucune question</p>
-                <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>Ajoute ta première question !</p>
+                <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                  Choisis comment ajouter des questions ci-dessus.
+                </p>
               </div>
             )}
 

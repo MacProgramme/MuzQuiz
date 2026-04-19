@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { GameMode, QuestionPack, SubscriptionTier, TIER_LIMITS, MODE_DISPLAY } from '@/types';
+import { GameMode, SubscriptionTier, TIER_LIMITS } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { QRScanner } from '@/components/QRScanner';
@@ -20,9 +20,6 @@ export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [userTier, setUserTier] = useState<SubscriptionTier>('free');
-  const [myPacks, setMyPacks] = useState<QuestionPack[]>([]);
-  const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
-  const [useCustom, setUseCustom] = useState(false);
   const [publicScreen, setPublicScreen] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
 
@@ -50,15 +47,6 @@ export default function Home() {
         if (profile?.nickname) setNickname(profile.nickname);
         const tier = (profile?.subscription_tier as SubscriptionTier) ?? 'free';
         setUserTier(tier);
-
-        if (TIER_LIMITS[tier].canCreate) {
-          const { data: packs } = await supabase
-            .from('question_packs')
-            .select('*')
-            .eq('owner_id', userId)
-            .order('created_at', { ascending: false });
-          if (packs) setMyPacks(packs as QuestionPack[]);
-        }
       } catch (e) {
         console.error('Erreur chargement profil:', e);
       } finally {
@@ -79,7 +67,6 @@ export default function Home() {
       } else {
         setNickname('');
         setUserTier('free');
-        setMyPacks([]);
         setProfileLoading(false);
       }
     });
@@ -109,7 +96,7 @@ export default function Home() {
       const roomCode = genCode();
       const { data: room, error } = await supabase
         .from('rooms')
-        .insert({ code: roomCode, host_id: userId, mode, timer_duration: 20, max_players: 100, sound_enabled: true, pack_id: (useCustom && selectedPackId) ? selectedPackId : null, public_screen: publicScreen })
+        .insert({ code: roomCode, host_id: userId, mode, timer_duration: 20, max_players: 100, sound_enabled: true, pack_id: null, public_screen: publicScreen })
         .select('*')
         .single();
 
@@ -297,50 +284,6 @@ export default function Home() {
                   style={{ left: publicScreen ? '1.5rem' : '2px' }} />
               </div>
             </button>
-          )}
-
-          {/* Sélection pack (créer, Pro/Premium) */}
-          {tab === 'create' && TIER_LIMITS[userTier].canCreate && myPacks.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
-                  Questions
-                </p>
-                <Link href="/questions" className="text-xs font-bold" style={{ color: '#8B5CF6' }}>
-                  Gérer mes packs →
-                </Link>
-              </div>
-              <div className="flex flex-col gap-2">
-                <button onClick={() => setUseCustom(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left"
-                  style={{
-                    background: !useCustom ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.04)',
-                    border: !useCustom ? '1.5px solid rgba(139,92,246,0.4)' : '1.5px solid rgba(255,255,255,0.08)',
-                  }}>
-                  <MuzquizLogo width={22} showText={false} />
-                  <span className="text-sm font-bold" style={{ color: '#F0F4FF' }}>Questions MUZQUIZ (défaut)</span>
-                </button>
-                {myPacks.map(pack => (
-                  <button key={pack.id}
-                    onClick={() => { setUseCustom(true); setSelectedPackId(pack.id); setMode(pack.mode); }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left"
-                    style={{
-                      background: useCustom && selectedPackId === pack.id ? 'rgba(255,0,170,0.1)' : 'rgba(255,255,255,0.04)',
-                      border: useCustom && selectedPackId === pack.id ? '1.5px solid rgba(255,0,170,0.4)' : '1.5px solid rgba(255,255,255,0.08)',
-                    }}>
-                    <MuzquizLogo width={22} showText={false} />
-                    <div>
-                      <p className="text-sm font-bold" style={{ color: useCustom && selectedPackId === pack.id ? '#FF00AA' : '#F0F4FF' }}>
-                        {pack.name}
-                      </p>
-                      <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                        {pack.mode === 'qcm' ? 'Quiz Blind Test' : 'Buzz Quiz'}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
           )}
 
           {/* Input code (rejoindre) */}

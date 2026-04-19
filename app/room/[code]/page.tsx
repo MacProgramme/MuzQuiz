@@ -18,6 +18,7 @@ import { BUZZ_QUESTIONS, QCM_QUESTIONS, FREE_QUESTION_LIMIT } from '@/lib/questi
 import { Buzz, QCMAnswer, Player, isBuzzMechanic } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
+import Link from 'next/link';
 
 // --- Confettis lors de la révélation ---
 const CONFETTI_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#FF6B6B', '#4ECDC4', '#FFE66D'];
@@ -131,6 +132,8 @@ export default function RoomPage() {
   const [timerKey, setTimerKey] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showHostMenu, setShowHostMenu] = useState(false);
+  // Packs de l'hôte — pour la sélection en salle d'attente
+  const [hostPacks, setHostPacks] = useState<{ id: string; name: string; mode: string; question_count: number }[]>([]);
 
   // Refs pour l'auto-fermeture (évite les stale closures dans le cleanup)
   const roomRef = useRef<typeof room>(null);
@@ -163,6 +166,36 @@ export default function RoomPage() {
     router.push('/');
   };
   const isFreeLimit = room ? room.current_question >= FREE_QUESTION_LIMIT : false;
+
+  // Charger les packs de l'hôte quand on est en salle d'attente
+  useEffect(() => {
+    if (!myPlayer?.is_host || !room || room.status !== 'waiting') return;
+    const loadHostPacks = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      const { data } = await supabase
+        .from('question_packs')
+        .select('id, name, mode')
+        .eq('owner_id', session.user.id)
+        .order('created_at', { ascending: false });
+      if (!data) return;
+      const withCounts = await Promise.all(data.map(async (p) => {
+        const { count } = await supabase.from('custom_questions').select('id', { count: 'exact', head: true }).eq('pack_id', p.id);
+        return { ...p, question_count: count ?? 0 };
+      }));
+      setHostPacks(withCounts);
+    };
+    loadHostPacks();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myPlayer?.is_host, room?.status]);
+
+  // Sélectionner un pack (hôte) — met à jour pack_id ET mode en DB
+  const selectPack = async (packId: string | null, packMode?: string) => {
+    if (!room) return;
+    const updates: any = { pack_id: packId };
+    if (packId && packMode) updates.mode = packMode;
+    await supabase.from('rooms').update(updates).eq('id', room.id);
+  };
 
   useRealtime({
     roomId: room?.id ?? '',
@@ -395,6 +428,58 @@ export default function RoomPage() {
 
         {myPlayer.is_host ? (
           <div className="flex flex-col items-center gap-3 w-full max-w-md">
+
+            {/* Sélection du pack de questions */}
+            {hostPacks.length > 0 && (
+              <div className="muz-card w-full p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                    Questions
+                  </p>
+                  <Link href="/questions" className="text-xs font-bold" style={{ color: '#8B5CF6' }}>
+                    Gérer mes packs →
+                  </Link>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => selectPack(null)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left"
+                    style={{
+                      background: !room.pack_id ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.04)',
+                      border: `1.5px solid ${!room.pack_id ? 'rgba(139,92,246,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                    }}>
+                    <MuzquizLogo width={20} showText={false} />
+                    <span className="text-sm font-bold" style={{ color: !room.pack_id ? '#8B5CF6' : '#F0F4FF' }}>
+                      Questions MUZQUIZ (défaut)
+                    </span>
+                  </button>
+                  {hostPacks.map(pack => (
+                    <button key={pack.id}
+                      onClick={() => selectPack(pack.id, pack.mode)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left"
+                      style={{
+                        background: room.pack_id === pack.id ? 'rgba(255,0,170,0.1)' : 'rgba(255,255,255,0.04)',
+                        border: `1.5px solid ${room.pack_id === pack.id ? 'rgba(255,0,170,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                      }}>
+                      <MuzquizLogo width={20} showText={false} color={room.pack_id === pack.id ? '#FF00AA' : undefined} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#FF00AA' : '#F0F4FF' }}>
+                          {pack.name}
+                        </p>
+                        <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                          {pack.question_count} question{pack.question_count !== 1 ? 's' : ''} · {pack.mode === 'qcm' ? 'Quiz' : 'Buzz'}
+                        </p>
+                      </div>
+                      {room.pack_id === pack.id && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-black flex-shrink-0"
+                          style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA' }}>✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-3 w-full">
               <button onClick={() => setShowSettings(true)}
                 className="w-14 h-14 rounded-xl text-xl font-bold transition-all hover:scale-105 flex-shrink-0"

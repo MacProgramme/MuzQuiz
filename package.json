@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
     "@supabase/ssr": "^0.4.0",
     "@supabase/supabase-js": "^2.44.0",
     "@types/qrcode": "^1.5.6",
