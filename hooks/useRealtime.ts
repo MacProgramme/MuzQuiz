@@ -12,7 +12,7 @@ interface Props {
   onBuzz: (buzz: Buzz) => void;
   onQCMAnswer: (answer: QCMAnswer) => void;
   onNextQuestion: () => void;
-  onQCMReveal?: () => void;
+  onQCMReveal?: (earned: Record<string, number>) => void;
   onShowLeaderboard?: () => void;
 }
 
@@ -56,8 +56,8 @@ export function useRealtime({ roomId, onRoomUpdate, onPlayersUpdate, onBuzz, onQ
     // Canal séparé pour recevoir les broadcasts (révélation QCM + classement)
     const bcChannel = supabase
       .channel(`muz-bc-${roomId}`)
-      .on('broadcast', { event: 'qcm_reveal' }, () => {
-        onQCMReveal?.();
+      .on('broadcast', { event: 'qcm_reveal' }, ({ payload }) => {
+        onQCMReveal?.(payload?.earned ?? {});
       })
       .on('broadcast', { event: 'show_leaderboard' }, () => {
         onShowLeaderboard?.();

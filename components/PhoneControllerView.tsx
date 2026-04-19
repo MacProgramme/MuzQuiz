@@ -1,7 +1,7 @@
 // components/PhoneControllerView.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion, isBuzzMechanic } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
@@ -39,11 +39,25 @@ interface Props {
 }
 
 // Preview animé du score potentiel en temps réel
-export function ScorePreview({ questionStartedAt, timerDuration }: { questionStartedAt: number; timerDuration: number }) {
+export function ScorePreview({ questionStartedAt, timerDuration, isPaused = false }: { questionStartedAt: number; timerDuration: number; isPaused?: boolean }) {
   const [pts, setPts] = useState(100);
+  // Garder en mémoire le temps écoulé quand on met en pause
+  const pausedElapsedRef = useRef<number | null>(null);
 
   useEffect(() => {
     const totalMs = timerDuration * 1000;
+
+    if (isPaused) {
+      // Figer la valeur courante — ne plus la mettre à jour
+      if (pausedElapsedRef.current === null) {
+        pausedElapsedRef.current = Math.max(0, Date.now() - questionStartedAt);
+      }
+      return;
+    }
+
+    // Reprendre : oublier l'instant de pause
+    pausedElapsedRef.current = null;
+
     const tick = () => {
       const elapsed = Math.max(0, Date.now() - questionStartedAt);
       const ratio = Math.min(1, elapsed / totalMs);
@@ -52,7 +66,7 @@ export function ScorePreview({ questionStartedAt, timerDuration }: { questionSta
     tick();
     const id = setInterval(tick, 250);
     return () => clearInterval(id);
-  }, [questionStartedAt, timerDuration]);
+  }, [questionStartedAt, timerDuration, isPaused]);
 
   // Couleur glisse du cyan (100 pts) au magenta (20 pts)
   const ratio = (100 - pts) / 80;
@@ -244,7 +258,7 @@ export function PhoneControllerView({
         </button>
         {questionStartedAt !== undefined && (
           <div className="mt-6">
-            <ScorePreview questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} />
+            <ScorePreview questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
           </div>
         )}
       </div>

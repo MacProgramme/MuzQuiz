@@ -143,7 +143,7 @@ export default function RoomPage() {
   const {
     room, players, myPlayer, buzz, setBuzz,
     qcmAnswers, setQcmAnswers, qcmRevealed, setQcmRevealed,
-    earnedThisRound,
+    earnedThisRound, setEarnedThisRound,
     customQuestions,
     loading, error,
     pressBuzzer, submitQCMAnswer, revealQCMAndNext,
@@ -188,7 +188,11 @@ export default function RoomPage() {
       return [...prev, a];
     }),
     onNextQuestion: () => { setBuzz(null); setQcmAnswers([]); },
-    onQCMReveal: () => setQcmRevealed(true),
+    onQCMReveal: (earned) => {
+      setQcmRevealed(true);
+      // Synchroniser les points pour les clients non-hôtes
+      setEarnedThisRound(earned);
+    },
   });
 
   // Afficher le classement 5s après la révélation (tous les clients, y compris l'hôte)
@@ -638,7 +642,7 @@ export default function RoomPage() {
                   {answeredCount} / {players.length} joueur{players.length > 1 ? 's' : ''} ont répondu
                 </div>
                 {!myQCMAnswer && (
-                  <ScorePreview questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} />
+                  <ScorePreview questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
                 )}
               </>
             )}

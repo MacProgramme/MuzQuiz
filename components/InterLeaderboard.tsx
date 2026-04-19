@@ -47,7 +47,7 @@ export function InterLeaderboard({ players, correctPlayerIds, visible, pointsEar
     }));
     setRanked(result);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, players, JSON.stringify(pointsEarned)]);
+  }, [visible, players, JSON.stringify(pointsEarned), JSON.stringify(correctPlayerIds)]);
 
   // Countdown 5 → 0
   useEffect(() => {

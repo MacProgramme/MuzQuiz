@@ -26,6 +26,12 @@ export function useRoom(code: string, nickname: string) {
   // Garde pour éviter la double-exécution de revealQCMAndNext
   const isRevealingRef = useRef(false);
 
+  // Effacer earnedThisRound dès que la question change
+  useEffect(() => {
+    if (room?.current_question === undefined) return;
+    setEarnedThisRound({});
+  }, [room?.current_question]);
+
   useEffect(() => {
     if (!code || !nickname) return;
     initRoom();
@@ -33,16 +39,22 @@ export function useRoom(code: string, nickname: string) {
   }, [code, nickname]);
 
   // Créer le canal broadcast dès qu'on a l'id de la salle
+  // Ce canal sert à la fois à envoyer (hôte) et à recevoir (non-hôtes) les données de révélation
   useEffect(() => {
     if (!room?.id) return;
-    // Nom différent de useRealtime pour éviter les conflits
-    const ch = supabase.channel(`muz-bc-${room.id}`);
+    const ch = supabase
+      .channel(`muz-bc-${room.id}`)
+      .on('broadcast', { event: 'qcm_reveal' }, ({ payload }) => {
+        // Les non-hôtes reçoivent les points gagnés via le broadcast
+        setEarnedThisRound(payload?.earned ?? {});
+      });
     ch.subscribe();
     broadcastChannelRef.current = ch;
     return () => {
       supabase.removeChannel(ch);
       broadcastChannelRef.current = null;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.id]);
 
   const initRoom = async () => {
@@ -155,6 +167,8 @@ export function useRoom(code: string, nickname: string) {
   // === QCM MODE ===
   const submitQCMAnswer = useCallback(async (answerIndex: number) => {
     if (!room || !myPlayer || qcmAnswers.some(a => a.player_id === myPlayer.id)) return;
+    // Bloquer les réponses pendant la pause
+    if (room.is_paused) return;
     // En mode buzz, seul le joueur buzzé peut répondre
     if (isBuzzMechanic(room.mode as GameMode) && buzz?.player_id !== myPlayer.id) return;
     // Utiliser les questions custom si un pack est sélectionné
@@ -188,24 +202,25 @@ export function useRoom(code: string, nickname: string) {
     // Révéler localement
     setQcmRevealed(true);
 
-    // Broadcaster la révélation à tous les autres joueurs
-    broadcastChannelRef.current?.send({
-      type: 'broadcast',
-      event: 'qcm_reveal',
-      payload: {},
-    });
-
     // Calculer les points UNE SEULE FOIS maintenant (avant toute MAJ DB)
     const correctAnswers = qcmAnswers.filter(a => a.is_correct);
     const totalMs = room.timer_duration * 1000;
     const earned: Record<string, number> = {};
     for (const ans of correctAnswers) {
-      const elapsedMs = new Date(ans.answered_at).getTime() - questionStartedAtRef.current;
+      const rawElapsed = new Date(ans.answered_at).getTime() - questionStartedAtRef.current;
+      const elapsedMs = isNaN(rawElapsed) ? totalMs / 2 : rawElapsed;
       const ratio = Math.max(0, Math.min(1, elapsedMs / totalMs));
       earned[ans.player_id] = Math.max(20, Math.round(100 - 80 * ratio));
     }
-    // Stocker le snapshot — stable jusqu'à la prochaine question
+    // Stocker le snapshot IMMÉDIATEMENT — avant tout await
     setEarnedThisRound(earned);
+
+    // Broadcaster la révélation + les points à tous les autres joueurs
+    broadcastChannelRef.current?.send({
+      type: 'broadcast',
+      event: 'qcm_reveal',
+      payload: { earned },
+    });
 
     // Attribuer les points en DB
     for (const ans of correctAnswers) {
@@ -216,11 +231,11 @@ export function useRoom(code: string, nickname: string) {
     }
 
     // Après 10s (5s reveal + 5s classement) : question suivante
+    // earnedThisRound sera effacé automatiquement par l'useEffect sur current_question
     setTimeout(async () => {
       await nextQuestion(room);
       setQcmRevealed(false);
       setQcmAnswers([]);
-      setEarnedThisRound({});
       isRevealingRef.current = false;
     }, 10000);
   }, [room, myPlayer, qcmAnswers]);
@@ -269,7 +284,7 @@ export function useRoom(code: string, nickname: string) {
     buzz, setBuzz,
     qcmAnswers, setQcmAnswers,
     qcmRevealed, setQcmRevealed,
-    earnedThisRound,
+    earnedThisRound, setEarnedThisRound,
     customQuestions,
     loading, error,
     pressBuzzer, judgeAnswer,
