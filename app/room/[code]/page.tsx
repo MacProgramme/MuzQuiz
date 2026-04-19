@@ -184,7 +184,7 @@ export default function RoomPage() {
 
   // Auto-révéler QCM quand tous les joueurs ont répondu
   useEffect(() => {
-    if (!room || room.mode !== 'qcm' || !myPlayer?.is_host || qcmRevealed) return;
+    if (!room || isBuzzMechanic(room.mode) || !myPlayer?.is_host || qcmRevealed) return;
     // En mode écran public, l'hôte ne joue pas — on l'exclut du décompte
     const activePlayers = room.public_screen ? players.filter(p => !p.is_host) : players;
     if (activePlayers.length > 0 && qcmAnswers.length >= activePlayers.length) {
@@ -194,7 +194,7 @@ export default function RoomPage() {
 
   // Auto-révéler Buzz Quiz quand le joueur buzzé a répondu
   useEffect(() => {
-    if (!room || room.mode !== 'buzz' || !buzz || !myPlayer?.is_host || qcmRevealed) return;
+    if (!room || !isBuzzMechanic(room.mode) || !buzz || !myPlayer?.is_host || qcmRevealed) return;
     if (qcmAnswers.length >= 1) {
       revealQCMAndNext();
     }
