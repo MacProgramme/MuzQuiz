@@ -13,6 +13,8 @@ export function useRoom(code: string, nickname: string) {
   const [buzz, setBuzz] = useState<Buzz | null>(null);
   const [qcmAnswers, setQcmAnswers] = useState<QCMAnswer[]>([]);
   const [qcmRevealed, setQcmRevealed] = useState(false);
+  // Points gagnés cette question — calculés UNE SEULE FOIS au moment de la révélation
+  const [earnedThisRound, setEarnedThisRound] = useState<Record<string, number>>({});
   const [customQuestions, setCustomQuestions] = useState<(BuzzQuestion | QCMQuestion)[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -193,17 +195,23 @@ export function useRoom(code: string, nickname: string) {
       payload: {},
     });
 
-    // Attribuer les points pour les bonnes réponses (scoring progressif)
+    // Calculer les points UNE SEULE FOIS maintenant (avant toute MAJ DB)
     const correctAnswers = qcmAnswers.filter(a => a.is_correct);
+    const totalMs = room.timer_duration * 1000;
+    const earned: Record<string, number> = {};
+    for (const ans of correctAnswers) {
+      const elapsedMs = new Date(ans.answered_at).getTime() - questionStartedAtRef.current;
+      const ratio = Math.max(0, Math.min(1, elapsedMs / totalMs));
+      earned[ans.player_id] = Math.max(20, Math.round(100 - 80 * ratio));
+    }
+    // Stocker le snapshot — stable jusqu'à la prochaine question
+    setEarnedThisRound(earned);
+
+    // Attribuer les points en DB
     for (const ans of correctAnswers) {
       const { data: p } = await supabase.from('room_players').select('score').eq('id', ans.player_id).single();
       if (p) {
-        const elapsedMs = new Date(ans.answered_at).getTime() - questionStartedAtRef.current;
-        const totalMs = room.timer_duration * 1000;
-        const ratio = Math.max(0, Math.min(1, elapsedMs / totalMs));
-        // Plus rapide = plus de points : 100 → 20
-        const points = Math.max(20, Math.round(100 - 80 * ratio));
-        await supabase.from('room_players').update({ score: p.score + points }).eq('id', ans.player_id);
+        await supabase.from('room_players').update({ score: p.score + (earned[ans.player_id] ?? 0) }).eq('id', ans.player_id);
       }
     }
 
@@ -212,6 +220,7 @@ export function useRoom(code: string, nickname: string) {
       await nextQuestion(room);
       setQcmRevealed(false);
       setQcmAnswers([]);
+      setEarnedThisRound({});
       isRevealingRef.current = false;
     }, 10000);
   }, [room, myPlayer, qcmAnswers]);
@@ -260,6 +269,7 @@ export function useRoom(code: string, nickname: string) {
     buzz, setBuzz,
     qcmAnswers, setQcmAnswers,
     qcmRevealed, setQcmRevealed,
+    earnedThisRound,
     customQuestions,
     loading, error,
     pressBuzzer, judgeAnswer,

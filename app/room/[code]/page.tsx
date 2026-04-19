@@ -143,6 +143,7 @@ export default function RoomPage() {
   const {
     room, players, myPlayer, buzz, setBuzz,
     qcmAnswers, setQcmAnswers, qcmRevealed, setQcmRevealed,
+    earnedThisRound,
     customQuestions,
     loading, error,
     pressBuzzer, submitQCMAnswer, revealQCMAndNext,
@@ -286,18 +287,7 @@ export default function RoomPage() {
   const currentQForPublic = questions[room.current_question] ?? null;
   const correctPlayerIdsForPublic = qcmAnswers.filter(a => a.is_correct).map(a => a.player_id);
 
-  // Calcul des vrais points gagnés à la révélation (scoring progressif)
-  const computePointsEarned = (): Record<string, number> => {
-    const result: Record<string, number> = {};
-    const totalMs = room.timer_duration * 1000;
-    for (const ans of qcmAnswers.filter(a => a.is_correct)) {
-      const answeredTs = ans.answered_at ? new Date(ans.answered_at).getTime() : 0;
-      const elapsed = Math.max(0, answeredTs - questionStartedAt);
-      const ratio = Math.min(1, elapsed / totalMs);
-      result[ans.player_id] = Math.max(20, Math.round(100 - 80 * ratio));
-    }
-    return result;
-  };
+  // earnedThisRound est calculé une seule fois dans useRoom au moment de la révélation
 
   // --- MODE ÉCRAN PUBLIC ---
   if (room.public_screen) {
@@ -498,7 +488,7 @@ export default function RoomPage() {
         players={players}
         correctPlayerIds={correctPlayerIds}
         visible={showLeaderboard}
-        pointsEarned={computePointsEarned()}
+        pointsEarned={earnedThisRound}
       />
 
       {/* Header */}
@@ -633,7 +623,7 @@ export default function RoomPage() {
                   revealed={true}
                   disabledForNonBuzzer={false}
                 />
-                <RevealCountdown players={players} correctPlayerIds={correctPlayerIds} pointsEarned={computePointsEarned()} />
+                <RevealCountdown players={players} correctPlayerIds={correctPlayerIds} pointsEarned={earnedThisRound} />
               </>
             )}
           </>
@@ -670,7 +660,7 @@ export default function RoomPage() {
             )}
 
             {qcmRevealed && (
-              <RevealCountdown players={players} correctPlayerIds={correctPlayerIds} pointsEarned={computePointsEarned()} />
+              <RevealCountdown players={players} correctPlayerIds={correctPlayerIds} pointsEarned={earnedThisRound} />
             )}
           </>
         )}
