@@ -14,6 +14,7 @@ interface Props {
   players: Player[];
   correctPlayerIds: string[];
   visible: boolean;
+  pointsEarned?: Record<string, number>;
 }
 
 function RankArrow({ diff }: { diff: number }) {
@@ -25,27 +26,27 @@ function RankArrow({ diff }: { diff: number }) {
 const COUNTDOWN_DURATION = 5;
 const MEDALS = ['🥇', '🥈', '🥉'];
 
-export function InterLeaderboard({ players, correctPlayerIds, visible }: Props) {
+export function InterLeaderboard({ players, correctPlayerIds, visible, pointsEarned = {} }: Props) {
   const [ranked, setRanked] = useState<RankedPlayer[]>([]);
   const [count, setCount] = useState(COUNTDOWN_DURATION);
 
-  // Calculer le classement quand visible
+  // Calculer le classement quand visible (ou quand les scores changent)
   useEffect(() => {
     if (!visible) return;
     const sorted = [...players].sort((a, b) => b.score - a.score);
-    const prevScores = players.map(p => ({
-      ...p,
-      prevScore: correctPlayerIds.includes(p.id) ? p.score - 100 : p.score,
-    }));
+    const prevScores = players.map(p => {
+      const earned = correctPlayerIds.includes(p.id) ? (pointsEarned[p.id] ?? 0) : 0;
+      return { ...p, prevScore: p.score - earned };
+    });
     const prevSorted = [...prevScores].sort((a, b) => b.prevScore - a.prevScore);
     const result: RankedPlayer[] = sorted.map((p, idx) => ({
       ...p,
       rank: idx + 1,
       prevRank: prevSorted.findIndex(pp => pp.id === p.id) + 1,
-      delta: correctPlayerIds.includes(p.id) ? 100 : 0,
+      delta: correctPlayerIds.includes(p.id) ? (pointsEarned[p.id] ?? 0) : 0,
     }));
     setRanked(result);
-  }, [visible]);
+  }, [visible, players]);
 
   // Countdown 5 → 0
   useEffect(() => {

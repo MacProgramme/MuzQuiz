@@ -39,7 +39,7 @@ interface Props {
 }
 
 // Preview animé du score potentiel en temps réel
-function ScorePreview({ questionStartedAt, timerDuration }: { questionStartedAt: number; timerDuration: number }) {
+export function ScorePreview({ questionStartedAt, timerDuration }: { questionStartedAt: number; timerDuration: number }) {
   const [pts, setPts] = useState(100);
 
   useEffect(() => {

@@ -13,7 +13,7 @@ import { Scoreboard } from '@/components/Scoreboard';
 import { SettingsModal } from '@/components/SettingsModal';
 import { InterLeaderboard } from '@/components/InterLeaderboard';
 import { PublicScreenView } from '@/components/PublicScreenView';
-import { PhoneControllerView } from '@/components/PhoneControllerView';
+import { PhoneControllerView, ScorePreview } from '@/components/PhoneControllerView';
 import { BUZZ_QUESTIONS, QCM_QUESTIONS, FREE_QUESTION_LIMIT } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player, isBuzzMechanic } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
@@ -498,6 +498,7 @@ export default function RoomPage() {
         players={players}
         correctPlayerIds={correctPlayerIds}
         visible={showLeaderboard}
+        pointsEarned={computePointsEarned()}
       />
 
       {/* Header */}
@@ -642,9 +643,14 @@ export default function RoomPage() {
         {!isBuzzMechanic(room.mode) && 'choices' in currentQ && (
           <>
             {!qcmRevealed && (
-              <div className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
-                {answeredCount} / {players.length} joueur{players.length > 1 ? 's' : ''} ont répondu
-              </div>
+              <>
+                <div className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                  {answeredCount} / {players.length} joueur{players.length > 1 ? 's' : ''} ont répondu
+                </div>
+                {!myQCMAnswer && (
+                  <ScorePreview questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} />
+                )}
+              </>
             )}
 
             <QCMChoices

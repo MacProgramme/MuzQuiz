@@ -21,6 +21,8 @@ export function useRoom(code: string, nickname: string) {
   const broadcastChannelRef = useRef<any>(null);
   // Timestamp de début de la question courante (pour le scoring progressif)
   const questionStartedAtRef = useRef<number>(Date.now());
+  // Garde pour éviter la double-exécution de revealQCMAndNext
+  const isRevealingRef = useRef(false);
 
   useEffect(() => {
     if (!code || !nickname) return;
@@ -178,7 +180,8 @@ export function useRoom(code: string, nickname: string) {
   }, [room, myPlayer, qcmAnswers, buzz]);
 
   const revealQCMAndNext = useCallback(async () => {
-    if (!room || !myPlayer?.is_host) return;
+    if (!room || !myPlayer?.is_host || isRevealingRef.current) return;
+    isRevealingRef.current = true;
 
     // Révéler localement
     setQcmRevealed(true);
@@ -209,6 +212,7 @@ export function useRoom(code: string, nickname: string) {
       await nextQuestion(room);
       setQcmRevealed(false);
       setQcmAnswers([]);
+      isRevealingRef.current = false;
     }, 10000);
   }, [room, myPlayer, qcmAnswers]);
 
@@ -225,6 +229,8 @@ export function useRoom(code: string, nickname: string) {
 
   const startGame = useCallback(async () => {
     if (!room || !myPlayer?.is_host) return;
+    questionStartedAtRef.current = Date.now();
+    isRevealingRef.current = false;
     await supabase.from('rooms').update({ status: 'playing', current_question: 0, is_paused: false }).eq('id', room.id);
   }, [room, myPlayer]);
 
