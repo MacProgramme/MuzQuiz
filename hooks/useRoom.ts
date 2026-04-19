@@ -169,6 +169,7 @@ export function useRoom(code: string, nickname: string) {
         question_index: room.current_question,
         answer_index: answerIndex,
         is_correct: isCorrect,
+        answered_at: new Date().toISOString(),
       })
       .select('*')
       .single();

@@ -56,7 +56,11 @@ function Confetti({ active }: { active: boolean }) {
 }
 
 // --- Composant countdown animé (5 secondes) ---
-function RevealCountdown({ players, correctPlayerIds }: { players: Player[]; correctPlayerIds: string[] }) {
+function RevealCountdown({ players, correctPlayerIds, pointsEarned = {} }: {
+  players: Player[];
+  correctPlayerIds: string[];
+  pointsEarned?: Record<string, number>;
+}) {
   const [count, setCount] = useState(5);
   const r = 26;
   const circ = 2 * Math.PI * r;
@@ -75,6 +79,7 @@ function RevealCountdown({ players, correctPlayerIds }: { players: Player[]; cor
       <div className="flex flex-wrap justify-center gap-3">
         {players.map(p => {
           const correct = correctPlayerIds.includes(p.id);
+          const pts = pointsEarned[p.id];
           return (
             <div key={p.id} className="relative flex flex-col items-center px-3 py-2 rounded-xl"
               style={{
@@ -84,10 +89,10 @@ function RevealCountdown({ players, correctPlayerIds }: { players: Player[]; cor
               <span className="text-xs font-bold" style={{ color: correct ? '#00E5D1' : 'rgba(240,244,255,0.4)' }}>
                 {p.nickname}
               </span>
-              {correct && (
+              {correct && pts !== undefined && (
                 <span className="muz-score-float absolute -top-4 font-black text-sm"
                   style={{ color: '#00E5D1', textShadow: '0 0 10px rgba(0,229,209,0.8)' }}>
-                  +100
+                  +{pts}
                 </span>
               )}
             </div>
@@ -130,6 +135,10 @@ export default function RoomPage() {
   // Refs pour l'auto-fermeture (évite les stale closures dans le cleanup)
   const roomRef = useRef<typeof room>(null);
   const myPlayerRef = useRef<typeof myPlayer>(null);
+  // Ref pour détecter les vrais changements de question dans onRoomUpdate
+  const prevQuestionRef = useRef<number | undefined>(undefined);
+  // Timestamp du début de la question courante (mis à jour pour tous les clients)
+  const [questionStartedAt, setQuestionStartedAt] = useState<number>(Date.now());
 
   const {
     room, players, myPlayer, buzz, setBuzz,
@@ -158,11 +167,17 @@ export default function RoomPage() {
     roomId: room?.id ?? '',
     onRoomUpdate: (r) => {
       setRoom(r);
-      setBuzz(null);
-      setQcmAnswers([]);
-      setQcmRevealed(false);
-      setShowLeaderboard(false);
-      setTimerKey(k => k + 1);
+      // Réinitialiser l'état de jeu UNIQUEMENT quand la question change
+      // (pas sur is_paused, score, ou autres champs de la salle)
+      if (prevQuestionRef.current !== r.current_question) {
+        prevQuestionRef.current = r.current_question;
+        setQuestionStartedAt(Date.now());
+        setBuzz(null);
+        setQcmAnswers([]);
+        setQcmRevealed(false);
+        setShowLeaderboard(false);
+        setTimerKey(k => k + 1);
+      }
       if (r.status === 'finished') router.push(`/room/${code}/results`);
     },
     onPlayersUpdate: setPlayers,
@@ -265,8 +280,24 @@ export default function RoomPage() {
 
   if (!room || !myPlayer) return null;
 
+  // Score toujours à jour (players est mis à jour via realtime, myPlayer ne l'est pas)
+  const liveMyPlayer = players.find(p => p.id === myPlayer.id) ?? myPlayer;
+
   const currentQForPublic = questions[room.current_question] ?? null;
   const correctPlayerIdsForPublic = qcmAnswers.filter(a => a.is_correct).map(a => a.player_id);
+
+  // Calcul des vrais points gagnés à la révélation (scoring progressif)
+  const computePointsEarned = (): Record<string, number> => {
+    const result: Record<string, number> = {};
+    const totalMs = room.timer_duration * 1000;
+    for (const ans of qcmAnswers.filter(a => a.is_correct)) {
+      const answeredTs = ans.answered_at ? new Date(ans.answered_at).getTime() : 0;
+      const elapsed = Math.max(0, answeredTs - questionStartedAt);
+      const ratio = Math.min(1, elapsed / totalMs);
+      result[ans.player_id] = Math.max(20, Math.round(100 - 80 * ratio));
+    }
+    return result;
+  };
 
   // --- MODE ÉCRAN PUBLIC ---
   if (room.public_screen) {
@@ -274,7 +305,7 @@ export default function RoomPage() {
       return (
         <PhoneControllerView
           room={room}
-          myPlayer={myPlayer}
+          myPlayer={liveMyPlayer}
           players={players}
           buzz={buzz}
           qcmAnswers={qcmAnswers}
@@ -283,6 +314,7 @@ export default function RoomPage() {
           currentQuestion={currentQForPublic}
           pressBuzzer={pressBuzzer}
           submitQCMAnswer={submitQCMAnswer}
+          questionStartedAt={questionStartedAt}
         />
       );
     }
@@ -600,7 +632,7 @@ export default function RoomPage() {
                   revealed={true}
                   disabledForNonBuzzer={false}
                 />
-                <RevealCountdown players={players} correctPlayerIds={correctPlayerIds} />
+                <RevealCountdown players={players} correctPlayerIds={correctPlayerIds} pointsEarned={computePointsEarned()} />
               </>
             )}
           </>
@@ -632,7 +664,7 @@ export default function RoomPage() {
             )}
 
             {qcmRevealed && (
-              <RevealCountdown players={players} correctPlayerIds={correctPlayerIds} />
+              <RevealCountdown players={players} correctPlayerIds={correctPlayerIds} pointsEarned={computePointsEarned()} />
             )}
           </>
         )}

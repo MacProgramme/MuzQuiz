@@ -1,6 +1,7 @@
 // components/PhoneControllerView.tsx
 "use client";
 
+import { useState, useEffect } from 'react';
 import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion, isBuzzMechanic } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
@@ -34,11 +35,46 @@ interface Props {
   currentQuestion: BuzzQuestion | QCMQuestion | null;
   pressBuzzer: () => void;
   submitQCMAnswer: (index: number) => void;
+  questionStartedAt?: number;
+}
+
+// Preview animé du score potentiel en temps réel
+function ScorePreview({ questionStartedAt, timerDuration }: { questionStartedAt: number; timerDuration: number }) {
+  const [pts, setPts] = useState(100);
+
+  useEffect(() => {
+    const totalMs = timerDuration * 1000;
+    const tick = () => {
+      const elapsed = Math.max(0, Date.now() - questionStartedAt);
+      const ratio = Math.min(1, elapsed / totalMs);
+      setPts(Math.max(20, Math.round(100 - 80 * ratio)));
+    };
+    tick();
+    const id = setInterval(tick, 250);
+    return () => clearInterval(id);
+  }, [questionStartedAt, timerDuration]);
+
+  // Couleur glisse du cyan (100 pts) au magenta (20 pts)
+  const ratio = (100 - pts) / 80;
+  const r = Math.round(0 + 255 * ratio);
+  const g = Math.round(229 - 229 * ratio);
+  const b = Math.round(209 + (170 - 209) * ratio);
+  const color = `rgb(${r},${g},${b})`;
+
+  return (
+    <div className="flex items-center gap-2 px-4 py-2 rounded-full"
+      style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${color}44` }}>
+      <span className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>Si tu réponds maintenant :</span>
+      <span className="text-lg font-black tabular-nums" style={{ color, textShadow: `0 0 12px ${color}88` }}>
+        +{pts} pts
+      </span>
+    </div>
+  );
 }
 
 export function PhoneControllerView({
   room, myPlayer, players, buzz, qcmAnswers, qcmRevealed, showLeaderboard,
-  currentQuestion, pressBuzzer, submitQCMAnswer,
+  currentQuestion, pressBuzzer, submitQCMAnswer, questionStartedAt,
 }: Props) {
   const myAnswer = qcmAnswers.find(a => a.player_id === myPlayer.id);
   const myRank = [...players].sort((a, b) => b.score - a.score)
@@ -206,6 +242,11 @@ export function PhoneControllerView({
           <MuzquizLogo width={56} showText={false} />
           <span className="text-2xl font-black">BUZZ !</span>
         </button>
+        {questionStartedAt !== undefined && (
+          <div className="mt-6">
+            <ScorePreview questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} />
+          </div>
+        )}
       </div>
     );
   }
@@ -260,6 +301,12 @@ export function PhoneControllerView({
           Q{(room.current_question ?? 0) + 1}
         </p>
       </div>
+
+      {questionStartedAt !== undefined && (
+        <div className="mb-3">
+          <ScorePreview questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} />
+        </div>
+      )}
 
       <p className="text-center font-bold mb-5" style={{ color: 'rgba(240,244,255,0.5)' }}>
         Choisissez votre réponse
