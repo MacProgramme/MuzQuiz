@@ -15,7 +15,7 @@ import { InterLeaderboard } from '@/components/InterLeaderboard';
 import { PublicScreenView } from '@/components/PublicScreenView';
 import { PhoneControllerView } from '@/components/PhoneControllerView';
 import { BUZZ_QUESTIONS, QCM_QUESTIONS, FREE_QUESTION_LIMIT } from '@/lib/questions';
-import { Buzz, QCMAnswer, Player } from '@/types';
+import { Buzz, QCMAnswer, Player, isBuzzMechanic } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
 
@@ -308,7 +308,7 @@ export default function RoomPage() {
 
   // --- Salle d'attente ---
   if (room.status === 'waiting') {
-    const modeLabel = room.mode === 'qcm' ? 'Quiz Blind Test' : 'Buzz Quiz';
+    const modeLabel = isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test';
 
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6 muz-fade-in"
@@ -479,7 +479,7 @@ export default function RoomPage() {
             </span>
           </div>
           <Timer key={timerKey} duration={room.timer_duration}
-            running={room.is_paused ? false : qcmRevealed ? false : room.mode === 'buzz' ? !buzz : !myQCMAnswer}
+            running={room.is_paused ? false : qcmRevealed ? false : isBuzzMechanic(room.mode) ? !buzz : !myQCMAnswer}
             onExpire={() => {
               if (myPlayer.is_host && !qcmRevealed && !room.is_paused) revealQCMAndNext();
             }} />
@@ -533,7 +533,7 @@ export default function RoomPage() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
 
         <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.6)' }}>
-          {room.mode === 'buzz' ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
+          {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
 
         {/* Question */}
@@ -542,7 +542,7 @@ export default function RoomPage() {
         </div>
 
         {/* ===== MODE BUZZ QUIZ ===== */}
-        {room.mode === 'buzz' && (
+        {isBuzzMechanic(room.mode) && (
           <>
             {/* Phase 1 : personne n'a buzzé */}
             {!buzz && !qcmRevealed && (
@@ -607,7 +607,7 @@ export default function RoomPage() {
         )}
 
         {/* ===== MODE QUIZ BLIND TEST ===== */}
-        {room.mode === 'qcm' && 'choices' in currentQ && (
+        {!isBuzzMechanic(room.mode) && 'choices' in currentQ && (
           <>
             {!qcmRevealed && (
               <div className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>

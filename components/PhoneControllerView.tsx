@@ -1,7 +1,7 @@
 // components/PhoneControllerView.tsx
 "use client";
 
-import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion } from '@/types';
+import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion, isBuzzMechanic } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 const COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B'];
@@ -104,8 +104,8 @@ export function PhoneControllerView({
     );
   }
 
-  /* ---- MODE BUZZ ---- */
-  if (room.mode === 'buzz') {
+  /* ---- MODE BUZZ / BUZZ_QUIZ / BUZZ_BLIND_TEST ---- */
+  if (isBuzzMechanic(room.mode)) {
     // Quelqu'un d'autre a buzzé
     if (someoneBuzzed && !hasBuzzed) {
       return (

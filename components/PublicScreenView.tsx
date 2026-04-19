@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion } from '@/types';
+import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion, isBuzzMechanic } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
 
@@ -84,7 +84,7 @@ export function PublicScreenView({
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
         <MuzquizLogo width={200} textSize="3.5rem" animate />
         <p className="text-lg mb-10" style={{ color: 'rgba(240,244,255,0.4)' }}>
-          {room.mode === 'qcm' ? 'Quiz Blind Test' : 'Buzz Quiz'} · Mode écran public
+          {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} · Mode écran public
         </p>
 
         {/* Code + QR côte à côte */}
@@ -199,8 +199,8 @@ export function PublicScreenView({
 
   if (!currentQuestion) return null;
 
-  /* ===== MODE QCM — EN JEU ===== */
-  if (room.mode === 'qcm') {
+  /* ===== MODE QCM / QUIZ / BLIND TEST — EN JEU ===== */
+  if (!isBuzzMechanic(room.mode)) {
     const answerCounts = currentQuestion.choices.map((_, i) =>
       qcmAnswers.filter(a => a.answer_index === i).length
     );
@@ -298,8 +298,8 @@ export function PublicScreenView({
     );
   }
 
-  /* ===== MODE BUZZ — EN JEU ===== */
-  if (room.mode === 'buzz') {
+  /* ===== MODE BUZZ / BUZZ_QUIZ / BUZZ_BLIND_TEST — EN JEU ===== */
+  if (isBuzzMechanic(room.mode)) {
     const q = currentQuestion as BuzzQuestion;
     const buzzerAnswer = qcmAnswers.find(a => a.player_id === buzzerPlayer?.id);
     return (
