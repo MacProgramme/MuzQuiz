@@ -1,8 +1,27 @@
 // types/index.ts
 
 export type RoomStatus = 'waiting' | 'playing' | 'finished';
-export type GameMode = 'buzz' | 'qcm';
+// 4 modes + anciens identifiants (backward compat)
+export type GameMode = 'quiz' | 'blind_test' | 'buzz_quiz' | 'buzz_blind_test' | 'qcm' | 'buzz';
 export type SubscriptionTier = 'free' | 'pro' | 'premium';
+
+/** Vrai si le mode utilise la mécanique "buzz d'abord" */
+export const isBuzzMechanic = (mode: GameMode): boolean =>
+  mode === 'buzz_quiz' || mode === 'buzz_blind_test' || mode === 'buzz';
+
+/** Vrai si le mode utilise les questions blind test (musique) */
+export const isBlindTestMode = (mode: GameMode): boolean =>
+  mode === 'blind_test' || mode === 'buzz_blind_test';
+
+/** Label affiché pour chaque mode */
+export const MODE_DISPLAY: Record<GameMode, string> = {
+  quiz:            'Quiz',
+  blind_test:      'Blind Test',
+  buzz_quiz:       'Buzz Quiz',
+  buzz_blind_test: 'Buzz Blind Test',
+  qcm:             'Quiz Blind Test',
+  buzz:            'Buzz Quiz',
+};
 
 export const TIER_LIMITS: Record<SubscriptionTier, { maxPacks: number; maxQuestionsPerPack: number; canCreate: boolean }> = {
   free:    { maxPacks: 0,        maxQuestionsPerPack: 0,        canCreate: false },

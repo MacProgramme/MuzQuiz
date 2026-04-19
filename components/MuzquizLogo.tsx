@@ -15,6 +15,8 @@ interface Props {
   /** Layout horizontal : moustache + texte côte à côte (pour les navbars) */
   horizontal?: boolean;
   className?: string;
+  /** Couleur unie — si fournie, remplace le dégradé (ex: '#FF00AA', '#00E5D1') */
+  color?: string;
 }
 
 export function MuzquizLogo({
@@ -24,7 +26,13 @@ export function MuzquizLogo({
   animate = false,
   horizontal = false,
   className = '',
+  color,
 }: Props) {
+  const fill = color ? color : 'url(#muz-logo-grad)';
+  const glow = color
+    ? `drop-shadow(0 0 8px ${color}99)`
+    : 'drop-shadow(0 0 12px rgba(255,0,170,0.55))';
+
   const moustache = (
     <svg
       viewBox="0 0 1280 640"
@@ -33,11 +41,11 @@ export function MuzquizLogo({
         width,
         height: width * 0.5,
         flexShrink: 0,
-        filter: 'drop-shadow(0 0 12px rgba(255,0,170,0.55))',
+        filter: glow,
       }}
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g transform="translate(0,640) scale(0.1,-0.1)" fill="url(#muz-logo-grad)" stroke="none">
+      <g transform="translate(0,640) scale(0.1,-0.1)" fill={fill} stroke="none">
         <path d={MUSTACHE_PATH} />
       </g>
     </svg>

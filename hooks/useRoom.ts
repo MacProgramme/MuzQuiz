@@ -3,8 +3,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Room, Player, Buzz, QCMAnswer, GameMode, BuzzQuestion, QCMQuestion } from '@/types';
-import { BUZZ_QUESTIONS, QCM_QUESTIONS } from '@/lib/questions';
+import { Room, Player, Buzz, QCMAnswer, GameMode, BuzzQuestion, QCMQuestion, isBuzzMechanic } from '@/types';
+import { BUZZ_QUESTIONS, QCM_QUESTIONS, getQuestionsForMode } from '@/lib/questions';
 
 export function useRoom(code: string, nickname: string) {
   const [room, setRoom] = useState<Room | null>(null);
@@ -19,6 +19,8 @@ export function useRoom(code: string, nickname: string) {
 
   // Canal broadcast pour envoyer la révélation à tous
   const broadcastChannelRef = useRef<any>(null);
+  // Timestamp de début de la question courante (pour le scoring progressif)
+  const questionStartedAtRef = useRef<number>(Date.now());
 
   useEffect(() => {
     if (!code || !nickname) return;
@@ -100,7 +102,7 @@ export function useRoom(code: string, nickname: string) {
         .order('created_at', { ascending: true });
       if (cqs && cqs.length > 0) {
         const formatted = cqs.map((q: any) => ({
-          type: roomData.mode,
+          type: isBuzzMechanic(roomData.mode as GameMode) ? 'buzz' : 'qcm',
           q: q.question,
           choices: [q.choice_a, q.choice_b, q.choice_c, q.choice_d] as [string, string, string, string],
           correct: q.correct_index as 0 | 1 | 2 | 3,
@@ -126,9 +128,21 @@ export function useRoom(code: string, nickname: string) {
 
   const judgeAnswer = useCallback(async (correct: boolean) => {
     if (!room || !buzz || !myPlayer?.is_host) return;
-    if (correct) {
-      const { data: p } = await supabase.from('room_players').select('score').eq('id', buzz.player_id).single();
-      if (p) await supabase.from('room_players').update({ score: p.score + 100 }).eq('id', buzz.player_id);
+    const { data: p } = await supabase.from('room_players').select('score').eq('id', buzz.player_id).single();
+    if (p) {
+      // Scoring progressif basé sur la vitesse du buzz
+      const elapsedMs = new Date(buzz.buzzed_at).getTime() - questionStartedAtRef.current;
+      const totalMs = room.timer_duration * 1000;
+      const ratio = Math.max(0, Math.min(1, elapsedMs / totalMs));
+      if (correct) {
+        // Plus rapide = plus de points (100 → 20)
+        const points = Math.max(20, Math.round(100 - 80 * ratio));
+        await supabase.from('room_players').update({ score: p.score + points }).eq('id', buzz.player_id);
+      } else {
+        // Buzz rapide et faux = plus de pénalité (−50 → −10)
+        const penalty = Math.max(10, Math.round(50 * (1 - ratio)));
+        await supabase.from('room_players').update({ score: Math.max(0, p.score - penalty) }).eq('id', buzz.player_id);
+      }
     }
     await nextQuestion(room);
     setBuzz(null);
@@ -138,11 +152,11 @@ export function useRoom(code: string, nickname: string) {
   const submitQCMAnswer = useCallback(async (answerIndex: number) => {
     if (!room || !myPlayer || qcmAnswers.some(a => a.player_id === myPlayer.id)) return;
     // En mode buzz, seul le joueur buzzé peut répondre
-    if (room.mode === 'buzz' && buzz?.player_id !== myPlayer.id) return;
+    if (isBuzzMechanic(room.mode as GameMode) && buzz?.player_id !== myPlayer.id) return;
     // Utiliser les questions custom si un pack est sélectionné
     const questions = room.pack_id
       ? customQuestions
-      : room.mode === 'qcm' ? QCM_QUESTIONS : BUZZ_QUESTIONS;
+      : getQuestionsForMode(room.mode as GameMode);
     const currentQ = questions[room.current_question];
     if (!currentQ) return;
 
@@ -175,11 +189,18 @@ export function useRoom(code: string, nickname: string) {
       payload: {},
     });
 
-    // Attribuer les points pour les bonnes réponses
+    // Attribuer les points pour les bonnes réponses (scoring progressif)
     const correctAnswers = qcmAnswers.filter(a => a.is_correct);
     for (const ans of correctAnswers) {
       const { data: p } = await supabase.from('room_players').select('score').eq('id', ans.player_id).single();
-      if (p) await supabase.from('room_players').update({ score: p.score + 100 }).eq('id', ans.player_id);
+      if (p) {
+        const elapsedMs = new Date(ans.answered_at).getTime() - questionStartedAtRef.current;
+        const totalMs = room.timer_duration * 1000;
+        const ratio = Math.max(0, Math.min(1, elapsedMs / totalMs));
+        // Plus rapide = plus de points : 100 → 20
+        const points = Math.max(20, Math.round(100 - 80 * ratio));
+        await supabase.from('room_players').update({ score: p.score + points }).eq('id', ans.player_id);
+      }
     }
 
     // Après 10s (5s reveal + 5s classement) : question suivante
@@ -193,9 +214,11 @@ export function useRoom(code: string, nickname: string) {
   const nextQuestion = async (currentRoom: Room) => {
     const questions = currentRoom.pack_id
       ? customQuestions
-      : currentRoom.mode === 'qcm' ? QCM_QUESTIONS : BUZZ_QUESTIONS;
+      : getQuestionsForMode(currentRoom.mode as GameMode);
     const nextQ = currentRoom.current_question + 1;
     const status = nextQ >= questions.length ? 'finished' : 'playing';
+    // Réinitialiser le timer de question dès qu'on passe à la suivante
+    questionStartedAtRef.current = Date.now();
     await supabase.from('rooms').update({ current_question: nextQ, status }).eq('id', currentRoom.id);
   };
 

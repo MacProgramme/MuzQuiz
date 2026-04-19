@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import { Black_Han_Sans, Inter } from 'next/font/google';
 import './globals.css';
+import { FloatingMustaches } from '@/components/FloatingMustaches';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const blackHan = Black_Han_Sans({
@@ -19,6 +20,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={`${inter.variable} ${blackHan.variable}`}>
       <body className={inter.className} style={{ background: '#0D1B3E', minHeight: '100vh' }}>
+        {/* Moustaches flottantes décoratives */}
+        <FloatingMustaches />
         {/* Grain cinématique — toujours au-dessus, jamais bloquant */}
         <div className="muz-grain" aria-hidden="true" />
         {/* Gradient SVG partagé — référencé par id="muz-logo-grad" dans tous les logos */}

@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { GameMode, QuestionPack, SubscriptionTier, TIER_LIMITS } from '@/types';
+import { GameMode, QuestionPack, SubscriptionTier, TIER_LIMITS, MODE_DISPLAY } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { QRScanner } from '@/components/QRScanner';
@@ -231,28 +231,40 @@ export default function Home() {
             )}
           </div>
 
-          {/* Mode de jeu (créer) */}
+          {/* Mode de jeu (créer) — 4 boutons */}
           {tab === 'create' && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.4)' }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(240,244,255,0.4)' }}>
                 Mode de jeu
               </p>
-              <div className="flex gap-3">
-                {[
-                  { value: 'qcm' as GameMode, label: 'Quiz Blind Test', sub: '4 choix simultané' },
-                  { value: 'buzz' as GameMode, label: 'Buzz Quiz', sub: 'Buzz puis 4 choix' },
-                ].map(m => (
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { value: 'quiz'            as GameMode, label: 'Quiz',            sub: '4 choix simultané',  color: '#8B5CF6', mechanic: 'QCM' },
+                  { value: 'blind_test'      as GameMode, label: 'Blind Test',       sub: 'Musique, 4 choix',   color: '#00E5D1', mechanic: 'QCM' },
+                  { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',        sub: 'Buzz puis répondre', color: '#FF00AA', mechanic: 'BUZZ' },
+                  { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test',  sub: 'Musique + buzz',     color: '#F59E0B', mechanic: 'BUZZ' },
+                ] as const).map(m => (
                   <button key={m.value} onClick={() => setMode(m.value)}
-                    className="flex-1 flex flex-col items-center gap-1 py-4 rounded-xl transition-all"
+                    className="flex flex-col items-start gap-1 p-3 rounded-xl transition-all text-left"
                     style={{
-                      border: mode === m.value ? '2px solid #FF00AA' : '2px solid rgba(139,92,246,0.2)',
-                      background: mode === m.value ? 'rgba(255,0,170,0.1)' : 'rgba(255,255,255,0.04)',
+                      border: `2px solid ${mode === m.value ? m.color : 'rgba(139,92,246,0.15)'}`,
+                      background: mode === m.value ? `${m.color}18` : 'rgba(255,255,255,0.03)',
                     }}>
-                    <MuzquizLogo width={32} showText={false} />
-                    <span className="font-black text-sm" style={{ color: mode === m.value ? '#FF00AA' : '#F0F4FF' }}>
+                    <div className="flex items-center gap-1.5 w-full">
+                      <MuzquizLogo width={22} showText={false} color={mode === m.value ? m.color : 'rgba(240,244,255,0.25)'} />
+                      <span className="text-xs font-black px-1.5 py-0.5 rounded-md"
+                        style={{
+                          background: mode === m.value ? `${m.color}25` : 'transparent',
+                          color: mode === m.value ? m.color : 'rgba(240,244,255,0.2)',
+                          fontSize: '0.6rem', letterSpacing: '0.08em',
+                        }}>
+                        {m.mechanic}
+                      </span>
+                    </div>
+                    <span className="font-black text-sm leading-tight" style={{ color: mode === m.value ? m.color : '#F0F4FF' }}>
                       {m.label}
                     </span>
-                    <span className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>{m.sub}</span>
+                    <span className="text-xs" style={{ color: 'rgba(240,244,255,0.3)' }}>{m.sub}</span>
                   </button>
                 ))}
               </div>
