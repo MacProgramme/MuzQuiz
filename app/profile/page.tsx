@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { SubscriptionTier, TIER_LIMITS } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
+import { DailyQuiz } from '@/components/DailyQuiz';
 
 interface Profile {
   id: string;
@@ -312,12 +313,6 @@ export default function ProfilePage() {
     router.push('/');
   };
 
-  // Stats calculées
-  const totalGames = games.length;
-  const wins = games.filter(g => g.rank === 1).length;
-  const totalScore = games.reduce((s, g) => s + g.score, 0);
-  const avgScore = totalGames > 0 ? Math.round(totalScore / totalGames) : 0;
-
   const formatDate = (str: string) => {
     const d = new Date(str);
     return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -390,18 +385,13 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Stats rapides */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[
-            { label: 'Parties', value: totalGames, color: '#8B5CF6' },
-            { label: 'Victoires', value: wins, color: '#F59E0B' },
-            { label: 'Score moy.', value: avgScore, color: '#00E5D1' },
-          ].map(stat => (
-            <div key={stat.label} className="muz-card p-4 text-center">
-              <div className="text-2xl font-black" style={{ color: stat.color }}>{stat.value}</div>
-              <div className="text-xs font-bold mt-1" style={{ color: 'rgba(240,244,255,0.4)' }}>{stat.label}</div>
-            </div>
-          ))}
+        {/* Quiz du Jour (remplace les stats) */}
+        <div className="mb-6">
+          <DailyQuiz
+            userId={profile.id}
+            nickname={profile.nickname}
+            avatarColor={profile.avatar_color}
+          />
         </div>
 
         {/* Tabs */}
