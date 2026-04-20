@@ -1,5 +1,7 @@
 // app/api/daily-quiz/submit/route.ts
 // POST → valide les réponses côté serveur, enregistre le score, retourne les résultats
+export const dynamic = 'force-dynamic';
+
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 

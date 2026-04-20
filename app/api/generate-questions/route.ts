@@ -1,4 +1,6 @@
 // app/api/generate-questions/route.ts
+export const dynamic = 'force-dynamic';
+
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 

@@ -1,5 +1,7 @@
 // app/api/daily-quiz/route.ts
 // GET  → questions du jour (sans correct_index) + statut du joueur connecté
+export const dynamic = 'force-dynamic';
+
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
