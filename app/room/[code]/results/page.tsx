@@ -28,7 +28,7 @@ export default function ResultsPage() {
     const fetchResults = async () => {
       const { data: room } = await supabase
         .from('rooms')
-        .select('id')
+        .select('id, public_screen')
         .eq('code', code.toUpperCase())
         .single();
 
@@ -40,7 +40,13 @@ export default function ResultsPage() {
         .eq('room_id', room.id)
         .order('score', { ascending: false });
 
-      if (data) setPlayers(data);
+      if (data) {
+        // En mode écran public, l'animateur (is_host) n'est pas un joueur → exclu du classement
+        const finalPlayers = room.public_screen
+          ? data.filter((p: any) => !p.is_host)
+          : data;
+        setPlayers(finalPlayers);
+      }
       setLoading(false);
     };
 

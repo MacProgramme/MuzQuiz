@@ -38,6 +38,35 @@ export function useRoom(code: string, nickname: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, nickname]);
 
+  // Recharger les questions custom dès que le pack change (ex: hôte sélectionne un pack en salle d'attente)
+  useEffect(() => {
+    if (!room?.pack_id) {
+      setCustomQuestions([]);
+      return;
+    }
+    const loadCustom = async () => {
+      const { data: cqs } = await supabase
+        .from('custom_questions')
+        .select('*')
+        .eq('pack_id', room.pack_id!)
+        .order('created_at', { ascending: true });
+      if (cqs && cqs.length > 0) {
+        const formatted = cqs.map((q: any) => ({
+          type: isBuzzMechanic(room.mode as GameMode) ? 'buzz' : 'qcm',
+          q: q.question,
+          choices: [q.choice_a, q.choice_b, q.choice_c, q.choice_d] as [string, string, string, string],
+          correct: q.correct_index as 0 | 1 | 2 | 3,
+          a: q.choice_a,
+        }));
+        setCustomQuestions(formatted as any);
+      } else {
+        setCustomQuestions([]);
+      }
+    };
+    loadCustom();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room?.pack_id]);
+
   // Créer le canal broadcast dès qu'on a l'id de la salle
   // Ce canal sert à la fois à envoyer (hôte) et à recevoir (non-hôtes) les données de révélation
   useEffect(() => {

@@ -14,7 +14,7 @@ import { SettingsModal } from '@/components/SettingsModal';
 import { InterLeaderboard } from '@/components/InterLeaderboard';
 import { PublicScreenView } from '@/components/PublicScreenView';
 import { PhoneControllerView, ScorePreview } from '@/components/PhoneControllerView';
-import { BUZZ_QUESTIONS, QCM_QUESTIONS, FREE_QUESTION_LIMIT } from '@/lib/questions';
+import { FREE_QUESTION_LIMIT, getQuestionsForMode } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player, isBuzzMechanic } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
@@ -157,7 +157,7 @@ export default function RoomPage() {
 
   const questions = room?.pack_id
     ? customQuestions
-    : room?.mode === 'qcm' ? QCM_QUESTIONS : BUZZ_QUESTIONS;
+    : getQuestionsForMode(room?.mode ?? 'qcm');
 
   // Quitter la salle (joueur invité uniquement)
   const leaveRoom = async () => {
@@ -356,6 +356,7 @@ export default function RoomPage() {
         qcmRevealed={qcmRevealed}
         showLeaderboard={showLeaderboard}
         timerKey={timerKey}
+        totalQuestions={questions.length}
         startGame={startGame}
         revealQCMAndNext={revealQCMAndNext}
         pauseGame={pauseGame}

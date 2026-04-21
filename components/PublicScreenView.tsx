@@ -9,6 +9,38 @@ import { RoomQRCode } from '@/components/RoomQRCode';
 const COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B'];
 const LABELS = ['A', 'B', 'C', 'D'];
 
+/* ── Confettis ── */
+const CONFETTI_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#FF6B6B', '#4ECDC4', '#FFE66D'];
+const CONFETTI_PIECES = Array.from({ length: 80 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+  delay: (Math.random() * 0.9).toFixed(2),
+  dur: (1.6 + Math.random() * 1).toFixed(2),
+  size: Math.round(Math.random() * 12 + 6),
+  isCircle: Math.random() > 0.4,
+}));
+
+function Confetti({ active }: { active: boolean }) {
+  if (!active) return null;
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {CONFETTI_PIECES.map(p => (
+        <div key={p.id} className="muz-confetti"
+          style={{
+            left: `${p.x}%`, top: '-16px',
+            width: p.size, height: p.size,
+            background: p.color,
+            borderRadius: p.isCircle ? '50%' : '2px',
+            ['--cdel' as any]: `${p.delay}s`,
+            ['--cdur' as any]: `${p.dur}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 /* Moustache SVG — identique à PhoneControllerView */
 function MustacheIcon({ color = '#fff', size = 48 }: { color?: string; size?: number }) {
   return (
@@ -34,6 +66,7 @@ interface Props {
   qcmRevealed: boolean;
   showLeaderboard: boolean;
   timerKey: number;
+  totalQuestions: number;
   startGame: () => void;
   revealQCMAndNext: () => void;
   pauseGame: () => void;
@@ -69,7 +102,7 @@ function BigTimer({ duration, running, onExpire }: { duration: number; running: 
 
 export function PublicScreenView({
   room, players, myPlayer, currentQuestion, buzz, qcmAnswers, qcmRevealed,
-  showLeaderboard, timerKey, startGame, revealQCMAndNext, pauseGame, resumeGame, endGame,
+  showLeaderboard, timerKey, totalQuestions, startGame, revealQCMAndNext, pauseGame, resumeGame, endGame,
 }: Props) {
   // En mode écran public, l'hôte ne joue pas → exclure du classement
   const sorted = [...players].filter(p => !p.is_host).sort((a, b) => b.score - a.score);
@@ -208,13 +241,22 @@ export function PublicScreenView({
       <div className="min-h-screen flex flex-col"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
 
+        {/* Confettis */}
+        <Confetti active={qcmRevealed} />
+
         {/* Barre du haut */}
         <div className="flex items-center justify-between px-8 py-4"
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <MuzquizLogo width={50} textSize="1rem" horizontal />
-          <span className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
-            Question {(room.current_question ?? 0) + 1} · {answeredCount}/{players.filter(p => !p.is_host).length} ont répondu
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="text-base font-bold px-4 py-1.5 rounded-full"
+              style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.3)' }}>
+              Q {(room.current_question ?? 0) + 1} / {totalQuestions}
+            </span>
+            <span className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
+              {answeredCount}/{players.filter(p => !p.is_host).length} ont répondu
+            </span>
+          </div>
           <div className="flex gap-2">
             {room.is_paused ? (
               <button onClick={resumeGame}
@@ -306,12 +348,16 @@ export function PublicScreenView({
       <div className="min-h-screen flex flex-col"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
 
+        {/* Confettis */}
+        <Confetti active={qcmRevealed} />
+
         {/* Barre du haut */}
         <div className="flex items-center justify-between px-8 py-4"
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <MuzquizLogo width={50} textSize="1rem" horizontal />
-          <span className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
-            Question {(room.current_question ?? 0) + 1}
+          <span className="text-base font-bold px-4 py-1.5 rounded-full"
+            style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.3)' }}>
+            Q {(room.current_question ?? 0) + 1} / {totalQuestions}
           </span>
           <div className="flex gap-2">
             {room.is_paused ? (
