@@ -11,7 +11,7 @@ import { MuzquizLogo } from '@/components/MuzquizLogo';
 type View = 'packs' | 'questions';
 type AddMode = 'manual' | 'csv' | 'ai';
 
-const MODE_LABEL: Record<string, string> = { qcm: 'Quiz Blind Test', buzz: 'Buzz Quiz' };
+const MODE_LABEL: Record<string, string> = { qcm: 'Quiz', buzz: 'Blind Test' };
 const LABELS = ['A', 'B', 'C', 'D'];
 const TIER_COLORS: Record<SubscriptionTier, { bg: string; text: string; label: string }> = {
   free:    { bg: 'rgba(255,255,255,0.06)',  text: 'rgba(240,244,255,0.5)', label: 'Gratuit' },
@@ -106,7 +106,6 @@ export default function QuestionsPage() {
   // Formulaire pack
   const [showPackForm, setShowPackForm] = useState(false);
   const [packName, setPackName] = useState('');
-  const [packDesc, setPackDesc] = useState('');
   const [packMode, setPackMode] = useState<'qcm' | 'buzz'>('qcm');
   const [packSaving, setPackSaving] = useState(false);
 
@@ -184,9 +183,9 @@ export default function QuestionsPage() {
     if (limits.maxPacks !== Infinity && packs.length >= limits.maxPacks) return;
     setPackSaving(true);
     const { data } = await supabase.from('question_packs').insert({
-      owner_id: userId, name: packName.trim(), description: packDesc.trim(), mode: packMode,
+      owner_id: userId, name: packName.trim(), mode: packMode,
     }).select('*').single();
-    if (data) { await loadPacks(userId); setShowPackForm(false); setPackName(''); setPackDesc(''); setPackMode('qcm'); }
+    if (data) { await loadPacks(userId); setShowPackForm(false); setPackName(''); setPackMode('qcm'); }
     setPackSaving(false);
   };
 
@@ -235,21 +234,29 @@ export default function QuestionsPage() {
   };
 
   // === CSV IMPORT ===
-  const handleCSVFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCSVFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setCsvError('');
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target?.result as string;
-      const parsed = parseCSV(text);
-      if (parsed.length === 0) {
-        setCsvError('Aucune question valide trouvée. Vérifie le format du fichier.');
-      } else {
-        setCsvPreview(parsed);
-      }
-    };
-    reader.readAsText(file, 'utf-8');
+
+    // Détection automatique de l'encodage : UTF-8 en priorité, sinon Windows-1252 (export Excel)
+    const buffer = await file.arrayBuffer();
+    let text: string;
+    try {
+      const decoder = new TextDecoder('utf-8', { fatal: true });
+      text = decoder.decode(buffer);
+    } catch {
+      // UTF-8 invalide → fichier Excel Windows → on tente Windows-1252
+      const decoder = new TextDecoder('windows-1252');
+      text = decoder.decode(buffer);
+    }
+
+    const parsed = parseCSV(text);
+    if (parsed.length === 0) {
+      setCsvError('Aucune question valide trouvée. Vérifie le format du fichier.');
+    } else {
+      setCsvPreview(parsed);
+    }
   };
 
   const importCSV = async () => {
@@ -386,8 +393,6 @@ export default function QuestionsPage() {
                 <div className="flex flex-col gap-3">
                   <input value={packName} onChange={e => setPackName(e.target.value)}
                     placeholder="Nom du pack (ex: Cinéma années 80)" style={inputStyle()} />
-                  <input value={packDesc} onChange={e => setPackDesc(e.target.value)}
-                    placeholder="Description (optionnel)" style={inputStyle()} />
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>Mode de jeu</p>
                     <div className="flex gap-2">
