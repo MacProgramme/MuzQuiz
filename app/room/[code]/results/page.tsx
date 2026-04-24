@@ -1,7 +1,7 @@
 // app/room/[code]/results/page.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Player } from '@/types';
@@ -14,25 +14,53 @@ const PODIUM_COLORS = [
   { bg: '#F59E0B', text: '#1a1a2e', label: '#B45309', border: 'rgba(245,158,11,0.5)' }, // 1er — or
   { bg: '#CD7C3A', text: '#1a1a2e', label: '#92400E', border: 'rgba(180,83,9,0.4)' }, // 3e — bronze
 ];
-const CROWNS = ['👑', '🥇', '🥈', '🥉'];
 const MEDALS_LIST = ['🥇', '🥈', '🥉'];
+
+interface RoomInfo {
+  id: string;
+  public_screen: boolean;
+  mode: string;
+  pack_id: string | null;
+  host_id: string;
+  replay_code: string | null;
+}
 
 export default function ResultsPage() {
   const { code } = useParams<{ code: string }>();
   const router = useRouter();
   const [players, setPlayers] = useState<Player[]>([]);
+  const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState(false);
+  const [myUserId, setMyUserId] = useState<string | null>(null);
+  const [replaying, setReplaying] = useState(false);
+  const [waitingReplay, setWaitingReplay] = useState(false);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     const fetchResults = async () => {
+      // Récupérer l'utilisateur courant
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id ?? null;
+      setMyUserId(userId);
+
       const { data: room } = await supabase
         .from('rooms')
-        .select('id, public_screen')
+        .select('id, public_screen, mode, pack_id, host_id, replay_code')
         .eq('code', code.toUpperCase())
         .single();
 
       if (!room) { setLoading(false); return; }
+
+      setRoomInfo(room as RoomInfo);
+
+      // Si un replay_code existe déjà (hôte a déjà lancé le replay) → redirect immédiat
+      if (room.replay_code) {
+        const me = players.find(p => p.user_id === userId);
+        const myNickname = me?.nickname ?? 'Joueur';
+        router.push(`/room/${room.replay_code}?nickname=${encodeURIComponent(myNickname)}`);
+        return;
+      }
 
       const { data } = await supabase
         .from('room_players')
@@ -41,16 +69,52 @@ export default function ResultsPage() {
         .order('score', { ascending: false });
 
       if (data) {
-        // En mode écran public, l'animateur (is_host) n'est pas un joueur → exclu du classement
         const finalPlayers = room.public_screen
           ? data.filter((p: any) => !p.is_host)
           : data;
         setPlayers(finalPlayers);
+
+        // Si replay_code déjà là après avoir chargé les players → redirect
+        if (room.replay_code) {
+          const me = finalPlayers.find((p: any) => p.user_id === userId);
+          router.push(`/room/${room.replay_code}?nickname=${encodeURIComponent(me?.nickname ?? 'Joueur')}`);
+          return;
+        }
       }
+
       setLoading(false);
+
+      // Subscribe aux mises à jour de la salle pour détecter un replay
+      const channel = supabase
+        .channel(`results-room-${room.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'rooms',
+          filter: `id=eq.${room.id}`,
+        }, (payload: any) => {
+          if (payload.new?.replay_code) {
+            // Trouver mon nickname dans les players actuels
+            setPlayers(prev => {
+              const me = prev.find(p => p.user_id === userId);
+              const myNickname = me?.nickname ?? 'Joueur';
+              router.push(`/room/${payload.new.replay_code}?nickname=${encodeURIComponent(myNickname)}`);
+              return prev;
+            });
+          }
+        })
+        .subscribe();
+
+      channelRef.current = channel;
     };
 
     fetchResults();
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+    };
   }, [code]);
 
   // Déclenche l'animation d'apparition après le chargement
@@ -61,6 +125,63 @@ export default function ResultsPage() {
     }
   }, [loading, players]);
 
+  const replayGame = async () => {
+    if (!roomInfo || replaying) return;
+    setReplaying(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) { setReplaying(false); return; }
+
+      // Générer un nouveau code
+      const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+      // Créer la nouvelle salle avec les mêmes paramètres
+      const { data: newRoom, error } = await supabase
+        .from('rooms')
+        .insert({
+          code: newCode,
+          host_id: userId,
+          mode: roomInfo.mode,
+          timer_duration: 20,
+          max_players: 100,
+          sound_enabled: true,
+          pack_id: roomInfo.pack_id,
+          public_screen: roomInfo.public_screen,
+        })
+        .select('*')
+        .single();
+
+      if (error || !newRoom) { setReplaying(false); return; }
+
+      // Trouver le nickname de l'hôte
+      const hostPlayer = players.find(p => p.user_id === userId) ??
+                         players.find(p => p.is_host) ??
+                         players[0];
+      const hostNickname = hostPlayer?.nickname ?? 'Hôte';
+
+      // Ajouter l'hôte comme joueur dans la nouvelle salle
+      await supabase.from('room_players').insert({
+        room_id: newRoom.id,
+        user_id: userId,
+        nickname: hostNickname,
+        is_host: true,
+      });
+
+      // Notifier les autres joueurs via replay_code sur l'ancienne salle
+      await supabase
+        .from('rooms')
+        .update({ replay_code: newCode })
+        .eq('id', roomInfo.id);
+
+      // Rediriger l'hôte
+      router.push(`/room/${newCode}?nickname=${encodeURIComponent(hostNickname)}`);
+    } catch {
+      setReplaying(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: '#0D1B3E' }}>
@@ -70,6 +191,7 @@ export default function ResultsPage() {
     );
   }
 
+  const isHost = roomInfo?.host_id === myUserId;
   const top3 = players.slice(0, 3);
   const rest = players.slice(3);
 
@@ -189,6 +311,34 @@ export default function ResultsPage() {
 
       {/* ===== Boutons ===== */}
       <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+
+        {/* Rejouer — visible uniquement pour l'hôte */}
+        {isHost && (
+          <button
+            onClick={replayGame}
+            disabled={replaying}
+            className="w-full py-4 rounded-xl text-lg font-black transition-all disabled:opacity-60"
+            style={{
+              background: 'linear-gradient(135deg, #00E5D1 0%, #8B5CF6 100%)',
+              color: 'white',
+              boxShadow: '0 0 20px rgba(0,229,209,0.25)',
+            }}>
+            {replaying ? 'Création…' : '🔄 Rejouer avec les mêmes joueurs'}
+          </button>
+        )}
+
+        {/* Message d'attente pour les non-hôtes */}
+        {!isHost && waitingReplay && (
+          <div className="w-full py-3 rounded-xl text-sm font-bold text-center"
+            style={{ background: 'rgba(139,92,246,0.1)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.25)' }}>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
+                style={{ borderColor: '#8B5CF6', borderTopColor: 'transparent' }} />
+              En attente du prochain round…
+            </div>
+          </div>
+        )}
+
         <button
           onClick={() => router.push('/')}
           className="muz-btn-pink w-full py-4 rounded-xl text-lg font-black">

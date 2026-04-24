@@ -357,6 +357,8 @@ export default function RoomPage() {
         showLeaderboard={showLeaderboard}
         timerKey={timerKey}
         totalQuestions={questions.length}
+        hostPacks={hostPacks}
+        selectPack={selectPack}
         startGame={startGame}
         revealQCMAndNext={revealQCMAndNext}
         pauseGame={pauseGame}

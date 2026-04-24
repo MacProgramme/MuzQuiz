@@ -163,9 +163,6 @@ export default function Home() {
       {/* Logo */}
       <div className="flex flex-col items-center mb-3">
         <MuzquizLogo width={200} textSize="3.5rem" animate />
-        <p className="text-sm mt-3 font-medium tracking-wide" style={{ color: 'rgba(240,244,255,0.38)', letterSpacing: '0.05em' }}>
-          Quizz musical avec tes potes — le vrai.
-        </p>
       </div>
       {/* Séparateur décoratif */}
       <div className="muz-divider w-48 mb-8" />

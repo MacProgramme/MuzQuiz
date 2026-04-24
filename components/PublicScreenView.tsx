@@ -67,6 +67,8 @@ interface Props {
   showLeaderboard: boolean;
   timerKey: number;
   totalQuestions: number;
+  hostPacks: { id: string; name: string; mode: string; question_count: number }[];
+  selectPack: (packId: string | null, packMode?: string) => Promise<void>;
   startGame: () => void;
   revealQCMAndNext: () => void;
   pauseGame: () => void;
@@ -102,7 +104,8 @@ function BigTimer({ duration, running, onExpire }: { duration: number; running: 
 
 export function PublicScreenView({
   room, players, myPlayer, currentQuestion, buzz, qcmAnswers, qcmRevealed,
-  showLeaderboard, timerKey, totalQuestions, startGame, revealQCMAndNext, pauseGame, resumeGame, endGame,
+  showLeaderboard, timerKey, totalQuestions, hostPacks, selectPack,
+  startGame, revealQCMAndNext, pauseGame, resumeGame, endGame,
 }: Props) {
   // En mode écran public, l'hôte ne joue pas → exclure du classement
   const sorted = [...players].filter(p => !p.is_host).sort((a, b) => b.score - a.score);
@@ -161,6 +164,42 @@ export function PublicScreenView({
             </div>
           ))}
         </div>
+
+        {/* Sélecteur de pack (hôte uniquement) */}
+        {myPlayer.is_host && hostPacks.length > 0 && (
+          <div className="w-full max-w-xl px-4">
+            <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-sm font-black uppercase tracking-widest mb-3 text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                Questions
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <button
+                  onClick={() => selectPack(null)}
+                  className="px-4 py-2 rounded-xl font-bold text-sm transition-all"
+                  style={{
+                    background: !room.pack_id ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.04)',
+                    border: `1.5px solid ${!room.pack_id ? 'rgba(139,92,246,0.6)' : 'rgba(255,255,255,0.1)'}`,
+                    color: !room.pack_id ? '#8B5CF6' : 'rgba(240,244,255,0.5)',
+                  }}>
+                  MUZQUIZ (défaut)
+                </button>
+                {hostPacks.map(pack => (
+                  <button key={pack.id}
+                    onClick={() => selectPack(pack.id, pack.mode)}
+                    className="px-4 py-2 rounded-xl font-bold text-sm transition-all"
+                    style={{
+                      background: room.pack_id === pack.id ? 'rgba(255,0,170,0.15)' : 'rgba(255,255,255,0.04)',
+                      border: `1.5px solid ${room.pack_id === pack.id ? 'rgba(255,0,170,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                      color: room.pack_id === pack.id ? '#FF00AA' : 'rgba(240,244,255,0.5)',
+                    }}>
+                    {pack.name}
+                    <span className="ml-2 opacity-60 text-xs">{pack.question_count}q</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Bouton démarrer (hôte) */}
         {myPlayer.is_host && players.filter(p => !p.is_host).length >= 1 && (
