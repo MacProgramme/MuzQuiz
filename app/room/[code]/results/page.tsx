@@ -7,60 +7,42 @@ import { supabase } from '@/lib/supabase';
 import { Player } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
-const PODIUM_HEIGHTS = [160, 210, 120]; // 2nd, 1st, 3rd (px)
-const PODIUM_ORDER = [1, 0, 2]; // indices dans le tableau players pour l'ordre visuel: gauche=2e, centre=1er, droite=3e
+const PODIUM_HEIGHTS = [160, 210, 120];
+const PODIUM_ORDER = [1, 0, 2];
 const PODIUM_COLORS = [
-  { bg: '#9CA3AF', text: '#1a1a2e', label: '#6B7280', border: 'rgba(156,163,175,0.4)' }, // 2e — argent
-  { bg: '#F59E0B', text: '#1a1a2e', label: '#B45309', border: 'rgba(245,158,11,0.5)' }, // 1er — or
-  { bg: '#CD7C3A', text: '#1a1a2e', label: '#92400E', border: 'rgba(180,83,9,0.4)' }, // 3e — bronze
+  { bg: '#9CA3AF', text: '#1a1a2e', border: 'rgba(156,163,175,0.4)' },
+  { bg: '#F59E0B', text: '#1a1a2e', border: 'rgba(245,158,11,0.5)' },
+  { bg: '#CD7C3A', text: '#1a1a2e', border: 'rgba(180,83,9,0.4)' },
 ];
 const MEDALS_LIST = ['🥇', '🥈', '🥉'];
-
-interface RoomInfo {
-  id: string;
-  public_screen: boolean;
-  mode: string;
-  pack_id: string | null;
-  host_id: string;
-  replay_code: string | null;
-}
 
 export default function ResultsPage() {
   const { code } = useParams<{ code: string }>();
   const router = useRouter();
   const [players, setPlayers] = useState<Player[]>([]);
-  const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null);
+  const [roomInfo, setRoomInfo] = useState<{ id: string; public_screen: boolean; mode: string; pack_id: string | null; host_id: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState(false);
   const [myUserId, setMyUserId] = useState<string | null>(null);
+  const [myNickname, setMyNickname] = useState<string>('Joueur');
   const [replaying, setReplaying] = useState(false);
-  const [waitingReplay, setWaitingReplay] = useState(false);
+  const [replayCode, setReplayCode] = useState<string | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     const fetchResults = async () => {
-      // Récupérer l'utilisateur courant
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id ?? null;
       setMyUserId(userId);
 
       const { data: room } = await supabase
         .from('rooms')
-        .select('id, public_screen, mode, pack_id, host_id, replay_code')
+        .select('id, public_screen, mode, pack_id, host_id')
         .eq('code', code.toUpperCase())
         .single();
 
       if (!room) { setLoading(false); return; }
-
-      setRoomInfo(room as RoomInfo);
-
-      // Si un replay_code existe déjà (hôte a déjà lancé le replay) → redirect immédiat
-      if (room.replay_code) {
-        const me = players.find(p => p.user_id === userId);
-        const myNickname = me?.nickname ?? 'Joueur';
-        router.push(`/room/${room.replay_code}?nickname=${encodeURIComponent(myNickname)}`);
-        return;
-      }
+      setRoomInfo(room as any);
 
       const { data } = await supabase
         .from('room_players')
@@ -74,34 +56,20 @@ export default function ResultsPage() {
           : data;
         setPlayers(finalPlayers);
 
-        // Si replay_code déjà là après avoir chargé les players → redirect
-        if (room.replay_code) {
-          const me = finalPlayers.find((p: any) => p.user_id === userId);
-          router.push(`/room/${room.replay_code}?nickname=${encodeURIComponent(me?.nickname ?? 'Joueur')}`);
-          return;
-        }
+        // Trouver mon nickname
+        const me = finalPlayers.find((p: any) => p.user_id === userId);
+        if (me) setMyNickname(me.nickname);
       }
 
       setLoading(false);
 
-      // Subscribe aux mises à jour de la salle pour détecter un replay
+      // Souscrire au canal broadcast pour recevoir un éventuel signal de replay
       const channel = supabase
-        .channel(`results-room-${room.id}`)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'rooms',
-          filter: `id=eq.${room.id}`,
-        }, (payload: any) => {
-          if (payload.new?.replay_code) {
-            // Trouver mon nickname dans les players actuels
-            setPlayers(prev => {
-              const me = prev.find(p => p.user_id === userId);
-              const myNickname = me?.nickname ?? 'Joueur';
-              router.push(`/room/${payload.new.replay_code}?nickname=${encodeURIComponent(myNickname)}`);
-              return prev;
-            });
-          }
+        .channel(`muz-replay-${room.id}`)
+        .on('broadcast', { event: 'replay' }, ({ payload }: { payload: { code: string } }) => {
+          router.push(`/room/${payload.code}?nickname=${encodeURIComponent(
+            (data ?? []).find((p: any) => p.user_id === userId)?.nickname ?? 'Joueur'
+          )}`);
         })
         .subscribe();
 
@@ -109,15 +77,11 @@ export default function ResultsPage() {
     };
 
     fetchResults();
-
     return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-      }
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
   }, [code]);
 
-  // Déclenche l'animation d'apparition après le chargement
   useEffect(() => {
     if (!loading && players.length > 0) {
       const t = setTimeout(() => setRevealed(true), 200);
@@ -134,10 +98,8 @@ export default function ResultsPage() {
       const userId = session?.user?.id;
       if (!userId) { setReplaying(false); return; }
 
-      // Générer un nouveau code
       const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-      // Créer la nouvelle salle avec les mêmes paramètres
       const { data: newRoom, error } = await supabase
         .from('rooms')
         .insert({
@@ -156,12 +118,11 @@ export default function ResultsPage() {
       if (error || !newRoom) { setReplaying(false); return; }
 
       // Trouver le nickname de l'hôte
-      const hostPlayer = players.find(p => p.user_id === userId) ??
-                         players.find(p => p.is_host) ??
-                         players[0];
-      const hostNickname = hostPlayer?.nickname ?? 'Hôte';
+      const hostNickname = players.find(p => p.user_id === userId)?.nickname
+        ?? players.find(p => p.is_host)?.nickname
+        ?? myNickname;
 
-      // Ajouter l'hôte comme joueur dans la nouvelle salle
+      // Ajouter l'hôte dans la nouvelle salle
       await supabase.from('room_players').insert({
         room_id: newRoom.id,
         user_id: userId,
@@ -169,11 +130,17 @@ export default function ResultsPage() {
         is_host: true,
       });
 
-      // Notifier les autres joueurs via replay_code sur l'ancienne salle
-      await supabase
-        .from('rooms')
-        .update({ replay_code: newCode })
-        .eq('id', roomInfo.id);
+      // Notifier tous les autres joueurs via broadcast sur l'ancien canal
+      if (channelRef.current) {
+        await channelRef.current.send({
+          type: 'broadcast',
+          event: 'replay',
+          payload: { code: newCode },
+        });
+      }
+
+      // Afficher le code pour les joueurs qui ont raté le broadcast
+      setReplayCode(newCode);
 
       // Rediriger l'hôte
       router.push(`/room/${newCode}?nickname=${encodeURIComponent(hostNickname)}`);
@@ -182,14 +149,12 @@ export default function ResultsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen" style={{ background: '#0D1B3E' }}>
-        <div className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
-          style={{ borderColor: '#FF00AA', borderTopColor: 'transparent' }} />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen" style={{ background: '#0D1B3E' }}>
+      <div className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
+        style={{ borderColor: '#FF00AA', borderTopColor: 'transparent' }} />
+    </div>
+  );
 
   const isHost = roomInfo?.host_id === myUserId;
   const top3 = players.slice(0, 3);
@@ -199,7 +164,6 @@ export default function ResultsPage() {
     <div className="min-h-screen flex flex-col items-center p-6 pb-12"
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 60%, #0D1B3E 100%)' }}>
 
-      {/* Logo */}
       <div className="mt-6 mb-4 text-center flex flex-col items-center">
         <MuzquizLogo width={120} textSize="2rem" />
         <p className="text-sm font-bold mt-1" style={{ color: 'rgba(240,244,255,0.4)' }}>
@@ -207,52 +171,30 @@ export default function ResultsPage() {
         </p>
       </div>
 
-      {/* ===== PODIUM ===== */}
+      {/* Podium */}
       <div className="flex items-end justify-center gap-3 mt-8 mb-2 w-full max-w-sm">
         {PODIUM_ORDER.map((playerIdx, visualIdx) => {
           const player = top3[playerIdx];
-          if (!player) return (
-            <div key={`empty-${visualIdx}`} style={{ width: 88 }} />
-          );
-
+          if (!player) return <div key={`empty-${visualIdx}`} style={{ width: 88 }} />;
           const height = PODIUM_HEIGHTS[visualIdx];
           const colors = PODIUM_COLORS[visualIdx];
           const rank = playerIdx + 1;
           const delay = `${visualIdx * 150}ms`;
-
           return (
             <div key={player.id} className="flex flex-col items-center" style={{ width: 96 }}>
-              {/* Couronne / médaille flottante */}
               {revealed && (
-                <div
-                  className="muz-crown text-3xl mb-2"
-                  style={{ animationDelay: `${parseInt(delay) + 300}ms` }}
-                >
+                <div className="muz-crown text-3xl mb-2" style={{ animationDelay: `${parseInt(delay) + 300}ms` }}>
                   {rank === 1 ? '👑' : MEDALS_LIST[rank - 1]}
                 </div>
               )}
-
-              {/* Pseudo */}
-              <div
-                className="text-center mb-2 px-1"
-                style={{
-                  opacity: revealed ? 1 : 0,
-                  transition: `opacity 0.5s ease ${delay}`,
-                }}
-              >
+              <div className="text-center mb-2 px-1" style={{ opacity: revealed ? 1 : 0, transition: `opacity 0.5s ease ${delay}` }}>
                 <p className="font-black text-xs leading-tight truncate w-full text-center"
-                  style={{ color: rank === 1 ? '#F59E0B' : '#F0F4FF' }}>
-                  {player.nickname}
-                </p>
-                <p className="font-bold text-xs mt-0.5"
-                  style={{ color: rank === 1 ? '#F59E0B' : 'rgba(240,244,255,0.5)' }}>
+                  style={{ color: rank === 1 ? '#F59E0B' : '#F0F4FF' }}>{player.nickname}</p>
+                <p className="font-bold text-xs mt-0.5" style={{ color: rank === 1 ? '#F59E0B' : 'rgba(240,244,255,0.5)' }}>
                   {player.score} pts
                 </p>
               </div>
-
-              {/* Colonne du podium */}
-              <div
-                className="muz-podium-rise w-full rounded-t-xl flex items-start justify-center pt-3"
+              <div className="muz-podium-rise w-full rounded-t-xl flex items-start justify-center pt-3"
                 style={{
                   height: revealed ? height : 0,
                   background: `linear-gradient(180deg, ${colors.bg}cc 0%, ${colors.bg}88 100%)`,
@@ -260,92 +202,76 @@ export default function ResultsPage() {
                   borderBottom: 'none',
                   animationDelay: delay,
                   boxShadow: rank === 1 ? '0 0 30px rgba(245,158,11,0.3)' : 'none',
-                }}
-              >
-                <span className="font-black text-2xl" style={{ color: colors.text, opacity: 0.9 }}>
-                  {rank}
-                </span>
+                }}>
+                <span className="font-black text-2xl" style={{ color: colors.text, opacity: 0.9 }}>{rank}</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Ligne de sol */}
       <div className="w-full max-w-sm h-1 rounded-full mb-8"
         style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.4), transparent)' }} />
 
-      {/* ===== Autres joueurs (4e et au-delà) ===== */}
       {rest.length > 0 && (
         <div className="w-full max-w-sm mb-8">
           <p className="text-xs font-bold uppercase tracking-widest mb-3 text-center"
-            style={{ color: 'rgba(240,244,255,0.3)' }}>
-            Autres joueurs
-          </p>
+            style={{ color: 'rgba(240,244,255,0.3)' }}>Autres joueurs</p>
           <div className="flex flex-col gap-2">
             {rest.map((p, i) => (
-              <div
-                key={p.id}
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+              <div key={p.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl"
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  opacity: revealed ? 1 : 0,
-                  transition: `opacity 0.4s ease ${(i + 3) * 100 + 400}ms`,
-                }}
-              >
-                <span className="font-black text-sm w-8 text-center" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                  #{i + 4}
-                </span>
-                <span className="flex-1 font-bold text-sm" style={{ color: '#F0F4FF' }}>
-                  {p.nickname}
-                </span>
-                <span className="font-black text-base" style={{ color: '#8B5CF6' }}>
-                  {p.score} pts
-                </span>
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
+                  opacity: revealed ? 1 : 0, transition: `opacity 0.4s ease ${(i + 3) * 100 + 400}ms`,
+                }}>
+                <span className="font-black text-sm w-8 text-center" style={{ color: 'rgba(240,244,255,0.35)' }}>#{i + 4}</span>
+                <span className="flex-1 font-bold text-sm" style={{ color: '#F0F4FF' }}>{p.nickname}</span>
+                <span className="font-black text-base" style={{ color: '#8B5CF6' }}>{p.score} pts</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* ===== Boutons ===== */}
+      {/* Boutons */}
       <div className="flex flex-col items-center gap-3 w-full max-w-sm">
 
-        {/* Rejouer — visible uniquement pour l'hôte */}
+        {/* Code de la nouvelle salle si déjà créée (fallback pour joueurs lents) */}
+        {replayCode && (
+          <div className="w-full py-3 px-4 rounded-xl text-center"
+            style={{ background: 'rgba(0,229,209,0.08)', border: '1px solid rgba(0,229,209,0.3)' }}>
+            <p className="text-xs font-bold mb-1" style={{ color: 'rgba(0,229,209,0.6)' }}>Nouveau code de salle</p>
+            <p className="font-black font-mono tracking-widest text-2xl" style={{ color: '#00E5D1' }}>{replayCode}</p>
+          </div>
+        )}
+
+        {/* Rejouer — hôte uniquement */}
         {isHost && (
           <button
             onClick={replayGame}
             disabled={replaying}
-            className="w-full py-4 rounded-xl text-lg font-black transition-all disabled:opacity-60"
+            className="w-full py-4 rounded-xl text-base font-black transition-all disabled:opacity-60"
             style={{
               background: 'linear-gradient(135deg, #00E5D1 0%, #8B5CF6 100%)',
               color: 'white',
               boxShadow: '0 0 20px rgba(0,229,209,0.25)',
             }}>
-            {replaying ? 'Création…' : '🔄 Rejouer avec les mêmes joueurs'}
+            {replaying ? 'Création de la salle…' : '🔄 Rejouer avec les mêmes joueurs'}
           </button>
         )}
 
-        {/* Message d'attente pour les non-hôtes */}
-        {!isHost && waitingReplay && (
+        {/* Message attente non-hôte */}
+        {!isHost && !replayCode && (
           <div className="w-full py-3 rounded-xl text-sm font-bold text-center"
-            style={{ background: 'rgba(139,92,246,0.1)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.25)' }}>
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
-                style={{ borderColor: '#8B5CF6', borderTopColor: 'transparent' }} />
-              En attente du prochain round…
-            </div>
+            style={{ background: 'rgba(139,92,246,0.08)', color: 'rgba(139,92,246,0.6)', border: '1px solid rgba(139,92,246,0.2)' }}>
+            En attente d'un nouveau round de l'hôte…
           </div>
         )}
 
-        <button
-          onClick={() => router.push('/')}
-          className="muz-btn-pink w-full py-4 rounded-xl text-lg font-black">
+        <button onClick={() => router.push('/')} className="muz-btn-pink w-full py-4 rounded-xl text-lg font-black">
           Nouvelle partie →
         </button>
-        <button
-          onClick={() => router.push('/')}
+        <button onClick={() => router.push('/')}
           className="text-sm font-bold transition-all hover:opacity-100"
           style={{ color: 'rgba(240,244,255,0.35)' }}>
           Retour à l'accueil

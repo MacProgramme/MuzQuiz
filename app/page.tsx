@@ -8,6 +8,7 @@ import { GameMode, SubscriptionTier, TIER_LIMITS } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { QRScanner } from '@/components/QRScanner';
+import { DailyQuiz } from '@/components/DailyQuiz';
 
 export default function Home() {
   const router = useRouter();
@@ -22,6 +23,9 @@ export default function Home() {
   const [userTier, setUserTier] = useState<SubscriptionTier>('free');
   const [publicScreen, setPublicScreen] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  // Pour le Quiz du Jour
+  const [userId, setUserId] = useState<string | null>(null);
+  const [avatarColor, setAvatarColor] = useState('#8B5CF6');
 
   // Lecture du param ?join=CODE dans l'URL (depuis un QR code scanné nativement)
   useEffect(() => {
@@ -36,17 +40,19 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const loadProfile = async (userId: string) => {
+    const loadProfile = async (uid: string) => {
       setProfileLoading(true);
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('nickname, subscription_tier')
-          .eq('id', userId)
+          .select('nickname, subscription_tier, avatar_color')
+          .eq('id', uid)
           .single();
         if (profile?.nickname) setNickname(profile.nickname);
         const tier = (profile?.subscription_tier as SubscriptionTier) ?? 'free';
         setUserTier(tier);
+        setAvatarColor(profile?.avatar_color ?? '#8B5CF6');
+        setUserId(uid);
       } catch (e) {
         console.error('Erreur chargement profil:', e);
       } finally {
@@ -67,6 +73,8 @@ export default function Home() {
       } else {
         setNickname('');
         setUserTier('free');
+        setUserId(null);
+        setAvatarColor('#8B5CF6');
         setProfileLoading(false);
       }
     });
@@ -351,6 +359,27 @@ export default function Home() {
         style={{ color: 'rgba(139,92,246,0.55)', letterSpacing: '0.08em' }}>
         Formules & abonnements →
       </Link>
+
+      {/* Quiz du Jour — accès rapide (pro & premium uniquement) */}
+      {isLoggedIn && userId && (userTier === 'pro' || userTier === 'premium') && (
+        <div className="w-full max-w-md mt-8">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-base">🧠</span>
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
+              Quiz du Jour
+            </p>
+            <span className="text-xs font-black px-2 py-0.5 rounded-full ml-auto"
+              style={{
+                background: userTier === 'premium' ? 'rgba(245,158,11,0.15)' : 'rgba(139,92,246,0.15)',
+                color: userTier === 'premium' ? '#F59E0B' : '#8B5CF6',
+                border: `1px solid ${userTier === 'premium' ? 'rgba(245,158,11,0.3)' : 'rgba(139,92,246,0.3)'}`,
+              }}>
+              {userTier === 'premium' ? '⭐ Premium' : 'Pro'}
+            </span>
+          </div>
+          <DailyQuiz userId={userId} nickname={nickname} avatarColor={avatarColor} />
+        </div>
+      )}
 
       </div>{/* fin contenu centré */}
     </main>

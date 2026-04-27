@@ -134,6 +134,8 @@ export default function RoomPage() {
   const [showHostMenu, setShowHostMenu] = useState(false);
   // Packs de l'hôte — pour la sélection en salle d'attente
   const [hostPacks, setHostPacks] = useState<{ id: string; name: string; mode: string; question_count: number }[]>([]);
+  const [packDropdownOpen, setPackDropdownOpen] = useState(false);
+  const [packSearch, setPackSearch] = useState('');
 
   // Refs pour l'auto-fermeture (évite les stale closures dans le cleanup)
   const roomRef = useRef<typeof room>(null);
@@ -432,7 +434,7 @@ export default function RoomPage() {
         {myPlayer.is_host ? (
           <div className="flex flex-col items-center gap-3 w-full max-w-md">
 
-            {/* Sélection du pack de questions */}
+            {/* Sélection du pack de questions — dropdown avec recherche */}
             {hostPacks.length > 0 && (
               <div className="muz-card w-full p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -440,46 +442,79 @@ export default function RoomPage() {
                     Questions
                   </p>
                   <Link href="/questions" className="text-xs font-bold" style={{ color: '#8B5CF6' }}>
-                    Gérer mes packs →
+                    Gérer →
                   </Link>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => selectPack(null)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left"
-                    style={{
-                      background: !room.pack_id ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.04)',
-                      border: `1.5px solid ${!room.pack_id ? 'rgba(139,92,246,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                    }}>
-                    <MuzquizLogo width={20} showText={false} />
-                    <span className="text-sm font-bold" style={{ color: !room.pack_id ? '#8B5CF6' : '#F0F4FF' }}>
-                      Questions MUZQUIZ (défaut)
-                    </span>
-                  </button>
-                  {hostPacks.map(pack => (
-                    <button key={pack.id}
-                      onClick={() => selectPack(pack.id, pack.mode)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left"
-                      style={{
-                        background: room.pack_id === pack.id ? 'rgba(255,0,170,0.1)' : 'rgba(255,255,255,0.04)',
-                        border: `1.5px solid ${room.pack_id === pack.id ? 'rgba(255,0,170,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                      }}>
-                      <MuzquizLogo width={20} showText={false} color={room.pack_id === pack.id ? '#FF00AA' : undefined} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#FF00AA' : '#F0F4FF' }}>
-                          {pack.name}
-                        </p>
-                        <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                          {pack.question_count} question{pack.question_count !== 1 ? 's' : ''} · {pack.mode === 'qcm' ? 'Quiz' : 'Buzz'}
-                        </p>
+                {/* Bouton déclencheur */}
+                <button
+                  onClick={() => { setPackDropdownOpen(o => !o); setPackSearch(''); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left"
+                  style={{
+                    background: room.pack_id ? 'rgba(255,0,170,0.08)' : 'rgba(139,92,246,0.08)',
+                    border: `1.5px solid ${room.pack_id ? 'rgba(255,0,170,0.35)' : 'rgba(139,92,246,0.3)'}`,
+                  }}>
+                  <MuzquizLogo width={18} showText={false} color={room.pack_id ? '#FF00AA' : '#8B5CF6'} />
+                  <span className="flex-1 text-sm font-bold truncate"
+                    style={{ color: room.pack_id ? '#FF00AA' : '#8B5CF6' }}>
+                    {room.pack_id
+                      ? (hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné')
+                      : 'Questions MUZQUIZ (défaut)'}
+                  </span>
+                  <span style={{ color: 'rgba(240,244,255,0.4)', fontSize: '0.9rem' }}>
+                    {packDropdownOpen ? '▲' : '▼'}
+                  </span>
+                </button>
+                {/* Dropdown */}
+                {packDropdownOpen && (
+                  <div className="mt-2 rounded-xl overflow-hidden"
+                    style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(13,27,62,0.98)' }}>
+                    {/* Recherche */}
+                    {hostPacks.length > 4 && (
+                      <div className="p-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+                        <input
+                          autoFocus
+                          value={packSearch}
+                          onChange={e => setPackSearch(e.target.value)}
+                          placeholder="Rechercher un pack…"
+                          className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                          style={{ background: 'rgba(255,255,255,0.07)', color: '#F0F4FF', border: '1px solid rgba(255,255,255,0.1)' }}
+                        />
                       </div>
-                      {room.pack_id === pack.id && (
-                        <span className="text-xs px-2 py-0.5 rounded-full font-black flex-shrink-0"
-                          style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA' }}>✓</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
+                    )}
+                    {/* Options */}
+                    <div className="max-h-52 overflow-y-auto">
+                      {/* Option défaut */}
+                      <button
+                        onClick={() => { selectPack(null); setPackDropdownOpen(false); }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
+                        <MuzquizLogo width={16} showText={false} />
+                        <span className="text-sm font-bold" style={{ color: !room.pack_id ? '#8B5CF6' : '#F0F4FF' }}>
+                          Questions MUZQUIZ (défaut)
+                        </span>
+                        {!room.pack_id && <span className="ml-auto text-xs font-black" style={{ color: '#8B5CF6' }}>✓</span>}
+                      </button>
+                      {/* Packs filtrés */}
+                      {hostPacks
+                        .filter(p => packSearch.trim() === '' || p.name.toLowerCase().includes(packSearch.toLowerCase()))
+                        .map(pack => (
+                          <button key={pack.id}
+                            onClick={() => { selectPack(pack.id, pack.mode); setPackDropdownOpen(false); }}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
+                            <MuzquizLogo width={16} showText={false} color={room.pack_id === pack.id ? '#FF00AA' : undefined} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#FF00AA' : '#F0F4FF' }}>
+                                {pack.name}
+                              </p>
+                              <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                                {pack.question_count}q · {pack.mode === 'qcm' ? 'Quiz' : 'Blind Test'}
+                              </p>
+                            </div>
+                            {room.pack_id === pack.id && <span className="text-xs font-black flex-shrink-0" style={{ color: '#FF00AA' }}>✓</span>}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -557,20 +592,32 @@ export default function RoomPage() {
       {/* Confettis lors de la révélation */}
       <Confetti active={qcmRevealed} />
 
-      {/* Bandeau PAUSE visible pour tous */}
+      {/* Overlay PAUSE : fond flouté + modal centré */}
       {room.is_paused && (
-        <div className="fixed inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">
-          <div className="px-10 py-5 rounded-2xl text-center muz-pop"
-            style={{ background: 'rgba(13,27,62,0.95)', border: '2px solid rgba(245,158,11,0.5)', backdropFilter: 'blur(8px)' }}>
-            <div className="flex justify-center mb-2"><MuzquizLogo width={80} showText={false} /></div>
-            <p className="text-2xl font-black" style={{ color: '#F59E0B' }}>Partie en pause</p>
-            {!myPlayer.is_host && (
-              <p className="text-sm mt-1" style={{ color: 'rgba(240,244,255,0.5)' }}>
-                En attente de l'hôte…
-              </p>
-            )}
+        <>
+          {/* Flou sur tout le contenu derrière */}
+          <div className="fixed inset-0 z-30 pointer-events-none"
+            style={{ backdropFilter: 'blur(6px)', background: 'rgba(13,27,62,0.55)' }} />
+          {/* Modal pause */}
+          <div className="fixed inset-0 z-40 flex flex-col items-center justify-center">
+            <div className="px-10 py-6 rounded-2xl text-center muz-pop"
+              style={{ background: 'rgba(13,27,62,0.97)', border: '2px solid rgba(245,158,11,0.5)', boxShadow: '0 0 40px rgba(245,158,11,0.2)' }}>
+              <div className="flex justify-center mb-3"><MuzquizLogo width={80} showText={false} /></div>
+              <p className="text-2xl font-black mb-1" style={{ color: '#F59E0B' }}>⏸ Partie en pause</p>
+              {myPlayer.is_host ? (
+                <button onClick={resumeGame}
+                  className="mt-4 px-8 py-3 rounded-xl font-black text-sm"
+                  style={{ background: 'rgba(0,229,209,0.2)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.4)' }}>
+                  ▶ Reprendre
+                </button>
+              ) : (
+                <p className="text-sm mt-1" style={{ color: 'rgba(240,244,255,0.5)' }}>
+                  En attente de l'hôte…
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* (menu flottant supprimé — contrôles dans le header) */}

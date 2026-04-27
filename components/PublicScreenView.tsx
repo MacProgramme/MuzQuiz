@@ -283,6 +283,28 @@ export function PublicScreenView({
         {/* Confettis */}
         <Confetti active={qcmRevealed} />
 
+        {/* Overlay PAUSE */}
+        {room.is_paused && (
+          <>
+            <div className="fixed inset-0 z-30 pointer-events-none"
+              style={{ backdropFilter: 'blur(8px)', background: 'rgba(13,27,62,0.6)' }} />
+            <div className="fixed inset-0 z-40 flex items-center justify-center">
+              <div className="px-16 py-10 rounded-3xl text-center"
+                style={{ background: 'rgba(13,27,62,0.97)', border: '2px solid rgba(245,158,11,0.5)', boxShadow: '0 0 60px rgba(245,158,11,0.2)' }}>
+                <MuzquizLogo width={100} showText={false} />
+                <p className="font-black mt-4" style={{ fontSize: '3rem', color: '#F59E0B' }}>⏸ PAUSE</p>
+                {myPlayer.is_host && (
+                  <button onClick={resumeGame}
+                    className="mt-6 px-10 py-4 rounded-2xl font-black text-xl"
+                    style={{ background: 'rgba(0,229,209,0.2)', color: '#00E5D1', border: '2px solid rgba(0,229,209,0.5)' }}>
+                    ▶ Reprendre
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Barre du haut */}
         <div className="flex items-center justify-between px-8 py-4"
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -326,16 +348,12 @@ export function PublicScreenView({
           </p>
         </div>
 
-        {/* Timer + pause banner */}
+        {/* Timer */}
         <div className="flex justify-center mb-6">
-          {room.is_paused ? (
-            <div className="px-8 py-4 rounded-2xl" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)' }}>
-              <p className="text-2xl font-black" style={{ color: '#F59E0B' }}>Pause</p>
-            </div>
-          ) : !qcmRevealed ? (
-            <BigTimer key={timerKey} duration={room.timer_duration} running={!room.is_paused}
+          {!qcmRevealed && !room.is_paused && (
+            <BigTimer key={timerKey} duration={room.timer_duration} running={true}
               onExpire={() => { if (myPlayer.is_host) revealQCMAndNext(); }} />
-          ) : null}
+          )}
         </div>
 
         {/* Grille de réponses 2×2 */}
@@ -389,6 +407,28 @@ export function PublicScreenView({
 
         {/* Confettis */}
         <Confetti active={qcmRevealed} />
+
+        {/* Overlay PAUSE */}
+        {room.is_paused && (
+          <>
+            <div className="fixed inset-0 z-30 pointer-events-none"
+              style={{ backdropFilter: 'blur(8px)', background: 'rgba(13,27,62,0.6)' }} />
+            <div className="fixed inset-0 z-40 flex items-center justify-center">
+              <div className="px-16 py-10 rounded-3xl text-center"
+                style={{ background: 'rgba(13,27,62,0.97)', border: '2px solid rgba(245,158,11,0.5)', boxShadow: '0 0 60px rgba(245,158,11,0.2)' }}>
+                <MuzquizLogo width={100} showText={false} />
+                <p className="font-black mt-4" style={{ fontSize: '3rem', color: '#F59E0B' }}>⏸ PAUSE</p>
+                {myPlayer.is_host && (
+                  <button onClick={resumeGame}
+                    className="mt-6 px-10 py-4 rounded-2xl font-black text-xl"
+                    style={{ background: 'rgba(0,229,209,0.2)', color: '#00E5D1', border: '2px solid rgba(0,229,209,0.5)' }}>
+                    ▶ Reprendre
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Barre du haut */}
         <div className="flex items-center justify-between px-8 py-4"
@@ -460,7 +500,7 @@ export function PublicScreenView({
           {/* Timer */}
           {!buzz && !room.is_paused && (
             <div className="flex justify-center mb-4">
-              <BigTimer key={timerKey} duration={room.timer_duration} running={!room.is_paused && !buzz}
+              <BigTimer key={timerKey} duration={room.timer_duration} running={!buzz}
                 onExpire={() => { if (myPlayer.is_host) revealQCMAndNext(); }} />
             </div>
           )}

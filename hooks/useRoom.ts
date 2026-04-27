@@ -19,6 +19,11 @@ export function useRoom(code: string, nickname: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Ref pour accéder aux questions custom sans stale closure dans les callbacks
+  const customQuestionsRef = useRef<(BuzzQuestion | QCMQuestion)[]>([]);
+  // Garder la ref synchronisée avec le state
+  useEffect(() => { customQuestionsRef.current = customQuestions; }, [customQuestions]);
+
   // Canal broadcast pour envoyer la révélation à tous
   const broadcastChannelRef = useRef<any>(null);
   // Timestamp de début de la question courante (pour le scoring progressif)
@@ -38,10 +43,12 @@ export function useRoom(code: string, nickname: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, nickname]);
 
-  // Recharger les questions custom dès que le pack change (ex: hôte sélectionne un pack en salle d'attente)
+  // Recharger les questions custom dès que le pack OU le mode change
+  // (le mode change en même temps que pack_id lors de selectPack → garder les deux en dep)
   useEffect(() => {
     if (!room?.pack_id) {
       setCustomQuestions([]);
+      customQuestionsRef.current = [];
       return;
     }
     const loadCustom = async () => {
@@ -52,6 +59,7 @@ export function useRoom(code: string, nickname: string) {
         .order('created_at', { ascending: true });
       if (cqs && cqs.length > 0) {
         const formatted = cqs.map((q: any) => ({
+          // Le type est déterminé par le mode courant de la room
           type: isBuzzMechanic(room.mode as GameMode) ? 'buzz' : 'qcm',
           q: q.question,
           choices: [q.choice_a, q.choice_b, q.choice_c, q.choice_d] as [string, string, string, string],
@@ -59,13 +67,15 @@ export function useRoom(code: string, nickname: string) {
           a: q.choice_a,
         }));
         setCustomQuestions(formatted as any);
+        customQuestionsRef.current = formatted as any;
       } else {
         setCustomQuestions([]);
+        customQuestionsRef.current = [];
       }
     };
     loadCustom();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room?.pack_id]);
+  }, [room?.pack_id, room?.mode]);
 
   // Créer le canal broadcast dès qu'on a l'id de la salle
   // Ce canal sert à la fois à envoyer (hôte) et à recevoir (non-hôtes) les données de révélation
@@ -154,6 +164,7 @@ export function useRoom(code: string, nickname: string) {
           a: q.choice_a,
         }));
         setCustomQuestions(formatted as any);
+        customQuestionsRef.current = formatted as any;
       }
     }
 
@@ -200,9 +211,9 @@ export function useRoom(code: string, nickname: string) {
     if (room.is_paused) return;
     // En mode buzz, seul le joueur buzzé peut répondre
     if (isBuzzMechanic(room.mode as GameMode) && buzz?.player_id !== myPlayer.id) return;
-    // Utiliser les questions custom si un pack est sélectionné
+    // Utiliser la ref pour les questions custom (évite stale closures dans useCallback)
     const questions = room.pack_id
-      ? customQuestions
+      ? customQuestionsRef.current
       : getQuestionsForMode(room.mode as GameMode);
     const currentQ = questions[room.current_question];
     if (!currentQ) return;
@@ -270,8 +281,9 @@ export function useRoom(code: string, nickname: string) {
   }, [room, myPlayer, qcmAnswers]);
 
   const nextQuestion = async (currentRoom: Room) => {
+    // Utiliser la ref pour éviter les stale closures (customQuestions peut changer après la création du callback)
     const questions = currentRoom.pack_id
-      ? customQuestions
+      ? customQuestionsRef.current
       : getQuestionsForMode(currentRoom.mode as GameMode);
     const nextQ = currentRoom.current_question + 1;
     const status = nextQ >= questions.length ? 'finished' : 'playing';

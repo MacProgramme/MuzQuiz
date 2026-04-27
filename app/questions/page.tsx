@@ -10,6 +10,7 @@ import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 type View = 'packs' | 'questions';
 type AddMode = 'manual' | 'csv' | 'ai';
+type SortKey = 'name' | 'created_at' | 'question_count' | 'mode';
 
 const MODE_LABEL: Record<string, string> = { qcm: 'Quiz', buzz: 'Blind Test' };
 const LABELS = ['A', 'B', 'C', 'D'];
@@ -121,6 +122,11 @@ export default function QuestionsPage() {
   const [csvPreview, setCsvPreview] = useState<ParsedQuestion[]>([]);
   const [csvError, setCsvError] = useState('');
   const [csvImporting, setCsvImporting] = useState(false);
+
+  // Tri des packs
+  const [sortKey, setSortKey] = useState<SortKey>('created_at');
+  const [sortAsc, setSortAsc] = useState(false);
+  const [packSearch, setPackSearch] = useState('');
 
   // Génération IA
   const [aiTheme, setAiTheme] = useState('');
@@ -328,6 +334,23 @@ export default function QuestionsPage() {
   const tc = TIER_COLORS[tier];
   const canAddMore = limits.maxQuestionsPerPack === Infinity || questions.length < limits.maxQuestionsPerPack;
 
+  // Packs filtrés + triés
+  const sortedPacks = [...packs]
+    .filter(p => packSearch.trim() === '' || p.name.toLowerCase().includes(packSearch.toLowerCase()))
+    .sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === 'name') cmp = a.name.localeCompare(b.name, 'fr');
+      else if (sortKey === 'created_at') cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      else if (sortKey === 'question_count') cmp = a.question_count - b.question_count;
+      else if (sortKey === 'mode') cmp = a.mode.localeCompare(b.mode);
+      return sortAsc ? cmp : -cmp;
+    });
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortAsc(a => !a);
+    else { setSortKey(key); setSortAsc(true); }
+  };
+
   // ─── Rendu ──────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen muz-fade-in" style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
@@ -336,11 +359,18 @@ export default function QuestionsPage() {
       <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
         <div className="flex items-center gap-3">
           {view === 'questions' ? (
-            <button onClick={() => { setView('packs'); setAddMode(null); setAiPreview([]); setCsvPreview([]); }}
-              className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
-              style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.6)' }}>
-              ← Packs
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => { setView('packs'); setAddMode(null); setAiPreview([]); setCsvPreview([]); }}
+                className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+                style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.6)' }}>
+                ← Packs
+              </button>
+              <Link href="/"
+                className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+                style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
+                🏠 Accueil
+              </Link>
+            </div>
           ) : (
             <Link href="/"><MuzquizLogo width={50} textSize="1rem" horizontal /></Link>
           )}
@@ -424,6 +454,41 @@ export default function QuestionsPage() {
               </div>
             )}
 
+            {packs.length > 1 && (
+              <>
+                {/* Barre de recherche */}
+                <div className="relative mb-3">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'rgba(240,244,255,0.35)' }}>🔍</span>
+                  <input
+                    value={packSearch}
+                    onChange={e => setPackSearch(e.target.value)}
+                    placeholder="Rechercher un pack…"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(139,92,246,0.25)', color: '#F0F4FF' }}
+                  />
+                </div>
+                {/* Boutons de tri */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {([
+                    { key: 'name' as SortKey, label: 'A–Z' },
+                    { key: 'created_at' as SortKey, label: 'Date' },
+                    { key: 'question_count' as SortKey, label: 'Nb questions' },
+                    { key: 'mode' as SortKey, label: 'Mode' },
+                  ]).map(s => (
+                    <button key={s.key} onClick={() => toggleSort(s.key)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                      style={{
+                        background: sortKey === s.key ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${sortKey === s.key ? 'rgba(139,92,246,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                        color: sortKey === s.key ? '#8B5CF6' : 'rgba(240,244,255,0.45)',
+                      }}>
+                      {s.label} {sortKey === s.key ? (sortAsc ? '↑' : '↓') : ''}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
             {packs.length === 0 && limits.canCreate && !showPackForm && (
               <div className="muz-card p-8 text-center">
                 <div className="flex justify-center mb-3"><MuzquizLogo width={60} showText={false} /></div>
@@ -432,8 +497,14 @@ export default function QuestionsPage() {
               </div>
             )}
 
+            {sortedPacks.length === 0 && packSearch && (
+              <p className="text-center text-sm py-6" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                Aucun pack ne correspond à « {packSearch} »
+              </p>
+            )}
+
             <div className="flex flex-col gap-3">
-              {packs.map(pack => (
+              {sortedPacks.map(pack => (
                 <div key={pack.id} className="muz-card muz-card-lift p-4 flex items-center gap-4 cursor-pointer" onClick={() => openPack(pack)}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
