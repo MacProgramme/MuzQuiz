@@ -403,7 +403,7 @@ export default function QuestionsPage() {
               <Link href="/"
                 className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
                 style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
-                <svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor" style={{ display: 'inline', marginRight: '5px', verticalAlign: 'middle', marginTop: '-2px' }}><path d="M10 2L2 9h2v9h5v-5h2v5h5V9h2L10 2z"/></svg>Accueil
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}><MuzquizLogo width={18} showText={false} />Accueil</span>
               </Link>
             </div>
           ) : (
