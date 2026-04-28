@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { QuestionPack, CustomQuestion, SubscriptionTier, TIER_LIMITS } from '@/types';
+import { QuestionPack, CustomQuestion, QuestionType, SubscriptionTier, TIER_LIMITS } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
@@ -115,6 +115,10 @@ export default function QuestionsPage() {
   const [qText, setQText] = useState('');
   const [qChoices, setQChoices] = useState(['', '', '', '']);
   const [qCorrect, setQCorrect] = useState<0|1|2|3>(0);
+  const [qType, setQType] = useState<QuestionType>('normal');
+  const [qImageUrl, setQImageUrl] = useState<string | null>(null);
+  const [qImageUploading, setQImageUploading] = useState(false);
+  const qImageInputRef = useRef<HTMLInputElement>(null);
   const [qSaving, setQSaving] = useState(false);
 
   // Import CSV
@@ -208,28 +212,59 @@ export default function QuestionsPage() {
       setQText(q.question);
       setQChoices([q.choice_a, q.choice_b, q.choice_c, q.choice_d]);
       setQCorrect(q.correct_index);
+      setQType(q.question_type ?? 'normal');
+      setQImageUrl(q.image_url ?? null);
     } else {
       setEditingQ(null);
       setQText(''); setQChoices(['', '', '', '']); setQCorrect(0);
+      setQType('normal'); setQImageUrl(null);
     }
     setAddMode('manual');
+  };
+
+  const uploadQuestionImage = async (file: File): Promise<string | null> => {
+    if (!userId) return null;
+    setQImageUploading(true);
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg';
+      const path = `${userId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage
+        .from('question-images')
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (error) { console.error('Upload image:', error.message); return null; }
+      const { data: urlData } = supabase.storage.from('question-images').getPublicUrl(path);
+      return urlData.publicUrl;
+    } finally {
+      setQImageUploading(false);
+    }
+  };
+
+  const handleQImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadQuestionImage(file);
+    if (url) setQImageUrl(url);
+    e.target.value = '';
   };
 
   const saveQuestion = async () => {
     if (!selectedPack || !userId || !qText.trim() || qChoices.some(c => !c.trim())) return;
     if (!editingQ && limits.maxQuestionsPerPack !== Infinity && questions.length >= limits.maxQuestionsPerPack) return;
     setQSaving(true);
-    const payload = {
+    const payload: any = {
       pack_id: selectedPack.id, owner_id: userId,
       question: qText.trim(),
       choice_a: qChoices[0].trim(), choice_b: qChoices[1].trim(),
       choice_c: qChoices[2].trim(), choice_d: qChoices[3].trim(),
       correct_index: qCorrect,
+      question_type: qType,
+      image_url: (qType !== 'normal') ? (qImageUrl ?? null) : null,
     };
     if (editingQ) await supabase.from('custom_questions').update(payload).eq('id', editingQ.id);
     else await supabase.from('custom_questions').insert(payload);
     await loadQuestions(selectedPack.id);
     setAddMode(null);
+    setQType('normal'); setQImageUrl(null);
     setQSaving(false);
   };
 
@@ -582,6 +617,71 @@ export default function QuestionsPage() {
                   <textarea value={qText} onChange={e => setQText(e.target.value)}
                     placeholder="La question..." rows={2}
                     style={{ ...inputStyle(), resize: 'none' }} />
+
+                  {/* Sélecteur type de question */}
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                      Type de question
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {([
+                        { value: 'normal'     as QuestionType, label: 'Texte',       emoji: '📝', color: '#8B5CF6' },
+                        { value: 'image'      as QuestionType, label: 'Image',       emoji: '🖼️', color: '#00E5D1' },
+                        { value: 'blur_reveal'as QuestionType, label: 'Flou → Net',  emoji: '🔍', color: '#FF00AA' },
+                      ]).map(opt => (
+                        <button key={opt.value} onClick={() => { setQType(opt.value); if (opt.value === 'normal') setQImageUrl(null); }}
+                          className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl transition-all"
+                          style={{
+                            background: qType === opt.value ? `${opt.color}20` : 'rgba(255,255,255,0.04)',
+                            border: `1.5px solid ${qType === opt.value ? opt.color : 'rgba(255,255,255,0.08)'}`,
+                          }}>
+                          <span className="text-xl">{opt.emoji}</span>
+                          <span className="text-xs font-black" style={{ color: qType === opt.value ? opt.color : 'rgba(240,244,255,0.5)' }}>
+                            {opt.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Upload image (si type image ou blur_reveal) */}
+                  {(qType === 'image' || qType === 'blur_reveal') && (
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                        {qType === 'blur_reveal' ? 'Image (floue au départ, se révèle avec le temps)' : 'Image de la question'}
+                      </p>
+                      <input ref={qImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleQImageChange} />
+                      {qImageUrl ? (
+                        <div className="relative rounded-xl overflow-hidden" style={{ maxHeight: 180 }}>
+                          <img src={qImageUrl} alt="Aperçu" className="w-full object-cover" style={{ maxHeight: 180 }} />
+                          <button
+                            onClick={() => { setQImageUrl(null); }}
+                            className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center font-black text-sm"
+                            style={{ background: 'rgba(255,0,170,0.85)', color: 'white' }}>
+                            ×
+                          </button>
+                          {qType === 'blur_reveal' && (
+                            <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full text-xs font-black"
+                              style={{ background: 'rgba(139,92,246,0.85)', color: 'white' }}>
+                              🔍 Déflou progressif
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => qImageInputRef.current?.click()}
+                          disabled={qImageUploading}
+                          className="w-full py-8 rounded-xl flex flex-col items-center gap-2 transition-all hover:opacity-80 disabled:opacity-50"
+                          style={{ border: '2px dashed rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.03)', color: 'rgba(240,244,255,0.4)' }}>
+                          {qImageUploading
+                            ? <><div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#8B5CF6', borderTopColor: 'transparent' }} /><span className="text-xs">Envoi en cours…</span></>
+                            : <><span className="text-2xl">📁</span><span className="text-xs font-bold">Cliquer pour choisir une image</span></>
+                          }
+                        </button>
+                      )}
+                    </div>
+                  )}
+
                   <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
                     Réponses (clique sur la lettre pour marquer comme correcte)
                   </p>

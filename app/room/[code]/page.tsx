@@ -18,6 +18,7 @@ import { FREE_QUESTION_LIMIT, getQuestionsForMode } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player, isBuzzMechanic } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
+import { QuestionImage } from '@/components/QuestionImage';
 import Link from 'next/link';
 
 // --- Confettis lors de la révélation ---
@@ -697,6 +698,19 @@ export default function RoomPage() {
         <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.6)' }}>
           {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
+
+        {/* Image de la question (si présente) */}
+        {(currentQ as any).image_url && (currentQ as any).question_type !== 'normal' && (
+          <div className="w-full max-w-lg">
+            <QuestionImage
+              imageUrl={(currentQ as any).image_url}
+              questionType={(currentQ as any).question_type}
+              timerKey={timerKey}
+              timerDuration={room.timer_duration}
+              isPaused={room.is_paused}
+            />
+          </div>
+        )}
 
         {/* Question */}
         <div className="muz-card text-center px-6 py-5 w-full max-w-lg">

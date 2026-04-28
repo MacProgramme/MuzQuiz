@@ -39,6 +39,8 @@ export interface QuestionPack {
   question_count?: number;
 }
 
+export type QuestionType = 'normal' | 'image' | 'blur_reveal';
+
 export interface CustomQuestion {
   id: string;
   pack_id: string;
@@ -49,6 +51,8 @@ export interface CustomQuestion {
   choice_c: string;
   choice_d: string;
   correct_index: 0 | 1 | 2 | 3;
+  image_url?: string | null;
+  question_type?: QuestionType;
   created_at: string;
 }
 
@@ -101,6 +105,8 @@ export interface BuzzQuestion {
   a: string;
   choices: [string, string, string, string];
   correct: 0 | 1 | 2 | 3;
+  image_url?: string | null;
+  question_type?: QuestionType;
 }
 
 export interface QCMQuestion {
@@ -108,6 +114,8 @@ export interface QCMQuestion {
   q: string;
   choices: [string, string, string, string];
   correct: 0 | 1 | 2 | 3;
+  image_url?: string | null;
+  question_type?: QuestionType;
 }
 
 export type Question = BuzzQuestion | QCMQuestion;

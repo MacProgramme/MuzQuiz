@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion, isBuzzMechanic } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
+import { QuestionImage } from '@/components/QuestionImage';
 
 const COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B'];
 const LABELS = ['A', 'B', 'C', 'D'];
@@ -340,8 +341,22 @@ export function PublicScreenView({
           </div>
         </div>
 
+        {/* Image de question (QCM mode) */}
+        {(currentQuestion as any).image_url && (currentQuestion as any).question_type !== 'normal' && (
+          <div className="px-12 pb-2">
+            <QuestionImage
+              imageUrl={(currentQuestion as any).image_url}
+              questionType={(currentQuestion as any).question_type}
+              timerKey={timerKey}
+              timerDuration={room.timer_duration}
+              isPaused={room.is_paused}
+              large
+            />
+          </div>
+        )}
+
         {/* Question */}
-        <div className="flex items-center justify-center px-12 py-8" style={{ minHeight: '200px' }}>
+        <div className="flex items-center justify-center px-12 py-8" style={{ minHeight: (currentQuestion as any).image_url ? '120px' : '200px' }}>
           <p className="font-black text-center leading-tight"
             style={{ fontSize: '2.5rem', color: '#F0F4FF', maxWidth: '900px' }}>
             {currentQuestion.q}
@@ -453,10 +468,24 @@ export function PublicScreenView({
           </div>
         </div>
 
+        {/* Image de question (Buzz mode) */}
+        {(currentQuestion as any).image_url && (currentQuestion as any).question_type !== 'normal' && (
+          <div className="px-12 pb-2">
+            <QuestionImage
+              imageUrl={(currentQuestion as any).image_url}
+              questionType={(currentQuestion as any).question_type}
+              timerKey={timerKey}
+              timerDuration={room.timer_duration}
+              isPaused={room.is_paused}
+              large
+            />
+          </div>
+        )}
+
         {/* Question — grande */}
         <div className="flex-1 flex items-center justify-center px-12 py-8">
           <p className="font-black text-center leading-tight"
-            style={{ fontSize: '3rem', color: '#F0F4FF', maxWidth: '900px' }}>
+            style={{ fontSize: (currentQuestion as any).image_url ? '2.2rem' : '3rem', color: '#F0F4FF', maxWidth: '900px' }}>
             {currentQuestion.q}
           </p>
         </div>

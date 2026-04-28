@@ -65,6 +65,8 @@ export function useRoom(code: string, nickname: string) {
           choices: [q.choice_a, q.choice_b, q.choice_c, q.choice_d] as [string, string, string, string],
           correct: q.correct_index as 0 | 1 | 2 | 3,
           a: q.choice_a,
+          image_url: q.image_url ?? null,
+          question_type: q.question_type ?? 'normal',
         }));
         setCustomQuestions(formatted as any);
         customQuestionsRef.current = formatted as any;
@@ -78,7 +80,7 @@ export function useRoom(code: string, nickname: string) {
   }, [room?.pack_id, room?.mode]);
 
   // Créer le canal broadcast dès qu'on a l'id de la salle
-  // Ce canal sert à la fois à envoyer (hôte) et à recevoir (non-hôtes) les données de révélation
+  // Ce canal sert à envoyer/recevoir : révélation QCM + buzz (fallback fiable vs realtime DB)
   useEffect(() => {
     if (!room?.id) return;
     const ch = supabase
@@ -86,6 +88,10 @@ export function useRoom(code: string, nickname: string) {
       .on('broadcast', { event: 'qcm_reveal' }, ({ payload }) => {
         // Les non-hôtes reçoivent les points gagnés via le broadcast
         setEarnedThisRound(payload?.earned ?? {});
+      })
+      .on('broadcast', { event: 'buzz' }, ({ payload }) => {
+        // Fallback broadcast : garantit la propagation du buzz même si realtime DB échoue
+        if (payload?.buzz) setBuzz(payload.buzz);
       });
     ch.subscribe();
     broadcastChannelRef.current = ch;
@@ -162,6 +168,8 @@ export function useRoom(code: string, nickname: string) {
           choices: [q.choice_a, q.choice_b, q.choice_c, q.choice_d] as [string, string, string, string],
           correct: q.correct_index as 0 | 1 | 2 | 3,
           a: q.choice_a,
+          image_url: q.image_url ?? null,
+          question_type: q.question_type ?? 'normal',
         }));
         setCustomQuestions(formatted as any);
         customQuestionsRef.current = formatted as any;
@@ -179,7 +187,15 @@ export function useRoom(code: string, nickname: string) {
       .insert({ room_id: room.id, player_id: myPlayer.id, question_index: room.current_question })
       .select('*')
       .single();
-    if (data) setBuzz(data);
+    if (data) {
+      setBuzz(data);
+      // Broadcast de secours : propage le buzz à tous même si realtime DB est lent/défaillant
+      broadcastChannelRef.current?.send({
+        type: 'broadcast',
+        event: 'buzz',
+        payload: { buzz: data },
+      });
+    }
   }, [room, myPlayer, buzz]);
 
   const judgeAnswer = useCallback(async (correct: boolean) => {

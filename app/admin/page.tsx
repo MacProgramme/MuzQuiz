@@ -20,10 +20,14 @@ interface UserProfile {
   created_at: string;
 }
 
+type QuestionType = 'normal' | 'image' | 'blur_reveal';
+
 interface QuizQuestion {
   question: string;
   choices: string[];
   correct: number;
+  image_url?: string | null;
+  question_type?: QuestionType;
 }
 
 interface DailyQuizEntry {
@@ -122,6 +126,10 @@ export default function AdminPage() {
   const [createSaving, setCreateSaving] = useState(false);
   const [createError, setCreateError] = useState('');
 
+  // ── Upload image (Quiz du Jour)
+  const [uploadingImgIdx, setUploadingImgIdx] = useState<number | null>(null);
+  const imgInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   // ── Import CSV
   const csvRef = useRef<HTMLInputElement>(null);
   const [csvPreview, setCsvPreview] = useState<{ date: string; theme: string; questions: QuizQuestion[] }[]>([]);
@@ -186,7 +194,7 @@ export default function AdminPage() {
 
   // ─── Quiz — création manuelle ─────────────────────────────────────────────
 
-  const updateQuestion = (i: number, field: 'question' | 'correct', val: string | number) => {
+  const updateQuestion = (i: number, field: 'question' | 'correct' | 'question_type' | 'image_url', val: string | number | null) => {
     setNewQuestions(prev => prev.map((q, idx) => idx === i ? { ...q, [field]: val } : q));
   };
   const updateChoice = (qi: number, ci: number, val: string) => {
@@ -194,6 +202,22 @@ export default function AdminPage() {
       ? { ...q, choices: q.choices.map((c, ci2) => ci2 === ci ? val : c) }
       : q
     ));
+  };
+
+  const uploadAdminImage = async (file: File, qi: number) => {
+    setUploadingImgIdx(qi);
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg';
+      const path = `admin/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage
+        .from('question-images')
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (error) { console.error('Upload:', error.message); return; }
+      const { data: urlData } = supabase.storage.from('question-images').getPublicUrl(path);
+      updateQuestion(qi, 'image_url', urlData.publicUrl);
+    } finally {
+      setUploadingImgIdx(null);
+    }
   };
 
   const saveManual = async () => {
@@ -536,6 +560,71 @@ export default function AdminPage() {
                           </button>
                         ))}
                       </div>
+
+                      {/* Type de question */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs" style={{ color: 'rgba(240,244,255,0.4)' }}>Type :</span>
+                        {([
+                          { value: 'normal',     label: '📝 Normal' },
+                          { value: 'image',      label: '🖼️ Image' },
+                          { value: 'blur_reveal', label: '🔍 Flou' },
+                        ] as { value: QuestionType; label: string }[]).map(opt => (
+                          <button key={opt.value}
+                            onClick={() => {
+                              updateQuestion(qi, 'question_type', opt.value);
+                              if (opt.value === 'normal') updateQuestion(qi, 'image_url', null);
+                            }}
+                            className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
+                            style={{
+                              background: (q.question_type ?? 'normal') === opt.value ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.05)',
+                              color: (q.question_type ?? 'normal') === opt.value ? '#8B5CF6' : 'rgba(240,244,255,0.35)',
+                              border: `1px solid ${(q.question_type ?? 'normal') === opt.value ? 'rgba(139,92,246,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                            }}>
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Upload image (si type image ou blur) */}
+                      {(q.question_type === 'image' || q.question_type === 'blur_reveal') && (
+                        <div className="mt-2">
+                          <input
+                            ref={el => { imgInputRefs.current[qi] = el; }}
+                            type="file" accept="image/*" className="hidden"
+                            onChange={async e => {
+                              const file = e.target.files?.[0];
+                              if (file) await uploadAdminImage(file, qi);
+                              e.target.value = '';
+                            }}
+                          />
+                          {q.image_url ? (
+                            <div className="relative rounded-xl overflow-hidden" style={{ maxHeight: '140px' }}>
+                              <img src={q.image_url} alt="" className="w-full object-cover" style={{ maxHeight: '140px' }} />
+                              <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity"
+                                style={{ background: 'rgba(13,27,62,0.75)' }}>
+                                <button onClick={() => imgInputRefs.current[qi]?.click()}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-black"
+                                  style={{ background: '#8B5CF6', color: 'white' }}>
+                                  Changer
+                                </button>
+                                <button onClick={() => updateQuestion(qi, 'image_url', null)}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-black"
+                                  style={{ background: 'rgba(255,0,170,0.8)', color: 'white' }}>
+                                  Supprimer
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => imgInputRefs.current[qi]?.click()}
+                              disabled={uploadingImgIdx === qi}
+                              className="w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                              style={{ background: 'rgba(139,92,246,0.08)', border: '1.5px dashed rgba(139,92,246,0.35)', color: '#8B5CF6' }}>
+                              {uploadingImgIdx === qi ? '⏳ Upload...' : '📷 Ajouter une image'}
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

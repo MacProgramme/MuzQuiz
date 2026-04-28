@@ -349,6 +349,18 @@ body {
   border-radius: 4px;
 }
 
+/* ── Image question — déflou progressif ── */
+@keyframes muz-deblur {
+  0%   { filter: blur(28px); }
+  100% { filter: blur(0px); }
+}
+.muz-deblur-img {
+  width: 100%;
+  border-radius: 1rem;
+  object-fit: cover;
+  max-height: 260px;
+}
+
 /* Séparateur décoratif */
 .muz-divider {
   height: 1px;
