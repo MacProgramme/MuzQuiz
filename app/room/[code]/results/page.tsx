@@ -63,17 +63,28 @@ export default function ResultsPage() {
 
       setLoading(false);
 
-      // Souscrire au canal broadcast pour recevoir un éventuel signal de replay
-      const channel = supabase
-        .channel(`muz-replay-${room.id}`)
+      // Double mécanisme de replay : broadcast (rapide) + realtime DB (fiable)
+      // 1. Realtime sur la salle → détecte next_code même si le broadcast est raté
+      const myNick = (data ?? []).find((p: any) => p.user_id === userId)?.nickname ?? 'Joueur';
+      const realtimeChannel = supabase
+        .channel(`muz-room-watch-${room.id}`)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${room.id}` },
+          (payload: any) => {
+            const nextCode: string | null = payload.new?.next_code ?? null;
+            if (nextCode) {
+              router.push(`/room/${nextCode}?nickname=${encodeURIComponent(myNick)}`);
+            }
+          }
+        )
+        // 2. Broadcast (fallback rapide — arrivée avant le changement DB)
         .on('broadcast', { event: 'replay' }, ({ payload }: { payload: { code: string } }) => {
-          router.push(`/room/${payload.code}?nickname=${encodeURIComponent(
-            (data ?? []).find((p: any) => p.user_id === userId)?.nickname ?? 'Joueur'
-          )}`);
+          router.push(`/room/${payload.code}?nickname=${encodeURIComponent(myNick)}`);
         })
         .subscribe();
 
-      channelRef.current = channel;
+      channelRef.current = realtimeChannel;
     };
 
     fetchResults();
@@ -117,9 +128,15 @@ export default function ResultsPage() {
 
       if (error || !newRoom) { setReplaying(false); return; }
 
-      // Trouver le nickname de l'hôte
-      const hostNickname = players.find(p => p.user_id === userId)?.nickname
-        ?? players.find(p => p.is_host)?.nickname
+      // Trouver le nickname de l'hôte (cherche dans TOUS les players y compris is_host, pas juste finalPlayers)
+      const { data: hostPlayerRow } = await supabase
+        .from('room_players')
+        .select('nickname')
+        .eq('room_id', roomInfo.id)
+        .eq('user_id', userId)
+        .single();
+      const hostNickname = hostPlayerRow?.nickname
+        ?? players.find(p => p.user_id === userId)?.nickname
         ?? myNickname;
 
       // Ajouter l'hôte dans la nouvelle salle
@@ -130,16 +147,19 @@ export default function ResultsPage() {
         is_host: true,
       });
 
-      // Notifier tous les autres joueurs via broadcast sur l'ancien canal
+      // Écrire next_code dans l'ancienne salle → tous les clients abonnés via realtime le reçoivent
+      await supabase.from('rooms').update({ next_code: newCode }).eq('id', roomInfo.id);
+
+      // Broadcast en plus (arrivée immédiate, avant le changement DB)
       if (channelRef.current) {
-        await channelRef.current.send({
+        channelRef.current.send({
           type: 'broadcast',
           event: 'replay',
           payload: { code: newCode },
         });
       }
 
-      // Afficher le code pour les joueurs qui ont raté le broadcast
+      // Afficher le code pour les joueurs qui auraient raté les deux mécanismes
       setReplayCode(newCode);
 
       // Rediriger l'hôte
