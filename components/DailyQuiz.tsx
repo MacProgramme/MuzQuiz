@@ -5,6 +5,52 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
+// ─── Countdown vers minuit heure de Paris ─────────────────────────────────────
+function useCountdownToMidnightParis() {
+  const getMsLeft = () => {
+    const now = new Date();
+    const nowParis = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+    const nextMidnight = new Date(nowParis);
+    nextMidnight.setDate(nextMidnight.getDate() + 1);
+    nextMidnight.setHours(0, 0, 0, 0);
+    return Math.max(0, nextMidnight.getTime() - nowParis.getTime());
+  };
+  const [msLeft, setMsLeft] = useState(getMsLeft);
+  useEffect(() => {
+    const t = setInterval(() => setMsLeft(getMsLeft()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const h = Math.floor(msLeft / 3_600_000);
+  const m = Math.floor((msLeft % 3_600_000) / 60_000);
+  const s = Math.floor((msLeft % 60_000) / 1000);
+  return { h, m, s };
+}
+
+function NextQuizCountdown() {
+  const { h, m, s } = useCountdownToMidnightParis();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return (
+    <div className="flex flex-col items-center gap-3 py-4">
+      <MuzquizLogo width={40} showText={false} color="rgba(255,0,170,0.5)" />
+      <p className="text-xs font-bold uppercase tracking-widest text-center"
+        style={{ color: 'rgba(240,244,255,0.4)' }}>
+        Prochain quiz dans
+      </p>
+      <div className="flex items-center gap-2">
+        {[{ val: h, label: 'h' }, { val: m, label: 'min' }, { val: s, label: 's' }].map(({ val, label }) => (
+          <div key={label} className="flex flex-col items-center">
+            <div className="text-3xl font-black tabular-nums px-3 py-2 rounded-xl"
+              style={{ color: '#FF00AA', background: 'rgba(255,0,170,0.1)', border: '1.5px solid rgba(255,0,170,0.25)', minWidth: 56, textAlign: 'center' }}>
+              {pad(val)}
+            </div>
+            <span className="text-xs mt-1" style={{ color: 'rgba(240,244,255,0.35)' }}>{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface DailyQuestion {
   id: number;
@@ -206,10 +252,18 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
       const res = await fetch('/api/daily-quiz', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const data = await res.json();
+
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch {
+        setLoadError('Quiz non disponible pour aujourd\'hui');
+        setState('intro');
+        return;
+      }
 
       if (!res.ok || data.error) {
-        setLoadError(data.error ?? 'Erreur de chargement');
+        setLoadError(data.error ?? 'Quiz non disponible pour aujourd\'hui');
         setState('intro');
         return;
       }
@@ -530,7 +584,7 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ background: alreadyCompleted ? 'rgba(0,229,209,0.2)' : 'rgba(255,0,170,0.2)' }}>
-            <span className="text-xl">{alreadyCompleted ? '✅' : '🧠'}</span>
+            <span className="text-xl">{alreadyCompleted ? '✅' : loadError ? '⏳' : '🧠'}</span>
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-widest"
@@ -538,23 +592,21 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
               Quiz du Jour
             </p>
             <p className="font-black text-base" style={{ color: '#F0F4FF' }}>
-              {theme || '…'}
+              {loadError ? 'Reviens demain !' : theme || '…'}
             </p>
           </div>
         </div>
 
-        {loadError && (
-          <p className="text-sm font-bold mb-3" style={{ color: '#FF00AA' }}>{loadError}</p>
-        )}
-
-        {alreadyCompleted ? (
+        {loadError ? (
+          <NextQuizCountdown />
+        ) : alreadyCompleted ? (
           <div className="flex items-center justify-between px-4 py-3 rounded-xl"
             style={{ background: 'rgba(0,229,209,0.1)', border: '1px solid rgba(0,229,209,0.2)' }}>
             <p className="font-bold text-sm" style={{ color: '#00E5D1' }}>Score d'aujourd'hui</p>
             <p className="font-black text-2xl" style={{ color: '#00E5D1' }}>{myTodayScore}/100</p>
           </div>
         ) : (
-          <button onClick={startQuiz} disabled={!!loadError || questions.length === 0}
+          <button onClick={startQuiz} disabled={questions.length === 0}
             className="w-full py-3.5 rounded-xl font-black text-base transition-all disabled:opacity-40"
             style={{ background: '#FF00AA', color: 'white' }}>
             {questions.length === 0 ? 'Chargement…' : `▶ Jouer — ${questions.length} questions`}
