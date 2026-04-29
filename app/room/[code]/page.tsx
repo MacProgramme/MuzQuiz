@@ -545,13 +545,13 @@ export default function RoomPage() {
             </div>
             <button
               onClick={async () => {
-                if (!confirm('Fermer la salle ?')) return;
                 await endGame();
                 router.push('/');
               }}
-              className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80"
-              style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.6)', border: '1px solid rgba(255,0,170,0.2)' }}>
-              Fermer la salle
+              className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80 flex items-center justify-center gap-1.5"
+              style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
+              <MuzquizLogo width={18} showText={false} />
+              Accueil
             </button>
           </div>
         ) : (
