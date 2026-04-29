@@ -3,6 +3,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { Player } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
@@ -184,7 +185,16 @@ export default function ResultsPage() {
     <div className="min-h-screen flex flex-col items-center p-6 pb-12"
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 60%, #0D1B3E 100%)' }}>
 
-      <div className="mt-6 mb-4 text-center flex flex-col items-center">
+      {/* Accueil button */}
+      <div className="w-full max-w-md flex justify-start mb-2">
+        <Link href="/"
+          className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+          style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}><MuzquizLogo width={18} showText={false} />Accueil</span>
+        </Link>
+      </div>
+
+      <div className="mt-2 mb-4 text-center flex flex-col items-center">
         <MuzquizLogo width={120} textSize="2rem" />
         <p className="text-sm font-bold mt-1" style={{ color: 'rgba(240,244,255,0.4)' }}>
           Résultats finaux

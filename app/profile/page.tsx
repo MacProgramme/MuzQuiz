@@ -249,8 +249,10 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4"
         style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
-        <Link href="/">
-          <MuzquizLogo width={50} textSize="1rem" horizontal />
+        <Link href="/"
+          className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+          style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}><MuzquizLogo width={18} showText={false} />Accueil</span>
         </Link>
         <div className="flex items-center gap-2">
           {isAdmin && (

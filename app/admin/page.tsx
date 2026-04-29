@@ -326,7 +326,11 @@ export default function AdminPage() {
       <div className="flex items-center justify-between px-6 py-4"
         style={{ borderBottom: '1px solid rgba(255,0,170,0.2)' }}>
         <div className="flex items-center gap-3">
-          <Link href="/"><MuzquizLogo width={60} textSize="1.1rem" horizontal /></Link>
+          <Link href="/"
+            className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+            style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}><MuzquizLogo width={18} showText={false} />Accueil</span>
+          </Link>
           <span className="text-xs font-black px-3 py-1 rounded-full"
             style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.3)' }}>
             Admin

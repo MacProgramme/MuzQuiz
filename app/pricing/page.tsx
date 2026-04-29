@@ -75,9 +75,9 @@ export default function PricingPage() {
       {/* Header */}
       <div className="text-center mb-12">
         <Link href="/"
-          className="inline-flex items-center gap-1 text-sm font-bold mb-6 transition-all hover:opacity-80"
-          style={{ color: 'rgba(139,92,246,0.7)' }}>
-          ← Retour
+          className="inline-flex items-center text-sm font-bold mb-6 px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+          style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}><MuzquizLogo width={18} showText={false} />Accueil</span>
         </Link>
         <div className="mb-3">
           <MuzquizLogo width={160} textSize="3rem" animate />

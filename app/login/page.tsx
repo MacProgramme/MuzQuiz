@@ -34,6 +34,15 @@ export default function LoginPage() {
     <main className="min-h-screen flex flex-col items-center justify-center p-6 muz-fade-in"
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
 
+      {/* Accueil button top-left */}
+      <div className="absolute top-4 left-4">
+        <Link href="/"
+          className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+          style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}><MuzquizLogo width={18} showText={false} />Accueil</span>
+        </Link>
+      </div>
+
       {/* Logo */}
       <Link href="/" className="mb-8 block">
         <MuzquizLogo width={160} textSize="2rem" animate />

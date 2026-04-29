@@ -175,6 +175,27 @@ export default function Home() {
       {/* Séparateur décoratif */}
       <div className="muz-divider w-48 mb-8" />
 
+      {/* Quiz du Jour — accès rapide (pro & premium uniquement) */}
+      {isLoggedIn && userId && (userTier === 'pro' || userTier === 'premium') && (
+        <div className="w-full max-w-md mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-base">🧠</span>
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
+              Quiz du Jour
+            </p>
+            <span className="text-xs font-black px-2 py-0.5 rounded-full ml-auto"
+              style={{
+                background: userTier === 'premium' ? 'rgba(245,158,11,0.15)' : 'rgba(139,92,246,0.15)',
+                color: userTier === 'premium' ? '#F59E0B' : '#8B5CF6',
+                border: `1px solid ${userTier === 'premium' ? 'rgba(245,158,11,0.3)' : 'rgba(139,92,246,0.3)'}`,
+              }}>
+              {userTier === 'premium' ? '⭐ Premium' : 'Pro'}
+            </span>
+          </div>
+          <DailyQuiz userId={userId} nickname={nickname} avatarColor={avatarColor} />
+        </div>
+      )}
+
       {/* Card principale */}
       <div className="muz-card muz-card-pink w-full max-w-md p-8">
 
@@ -359,27 +380,6 @@ export default function Home() {
         style={{ color: 'rgba(139,92,246,0.55)', letterSpacing: '0.08em' }}>
         Formules & abonnements →
       </Link>
-
-      {/* Quiz du Jour — accès rapide (pro & premium uniquement) */}
-      {isLoggedIn && userId && (userTier === 'pro' || userTier === 'premium') && (
-        <div className="w-full max-w-md mt-8">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-base">🧠</span>
-            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
-              Quiz du Jour
-            </p>
-            <span className="text-xs font-black px-2 py-0.5 rounded-full ml-auto"
-              style={{
-                background: userTier === 'premium' ? 'rgba(245,158,11,0.15)' : 'rgba(139,92,246,0.15)',
-                color: userTier === 'premium' ? '#F59E0B' : '#8B5CF6',
-                border: `1px solid ${userTier === 'premium' ? 'rgba(245,158,11,0.3)' : 'rgba(139,92,246,0.3)'}`,
-              }}>
-              {userTier === 'premium' ? '⭐ Premium' : 'Pro'}
-            </span>
-          </div>
-          <DailyQuiz userId={userId} nickname={nickname} avatarColor={avatarColor} />
-        </div>
-      )}
 
       </div>{/* fin contenu centré */}
     </main>

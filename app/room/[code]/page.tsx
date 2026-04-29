@@ -193,10 +193,24 @@ export default function RoomPage() {
   }, [myPlayer?.is_host, room?.status]);
 
   // Sélectionner un pack (hôte) — met à jour pack_id ET mode en DB
+  // Préserve le mécanisme buzz si la salle est en mode buzz
   const selectPack = async (packId: string | null, packMode?: string) => {
     if (!room) return;
     const updates: any = { pack_id: packId };
-    if (packId && packMode) updates.mode = packMode;
+    if (packId && packMode) {
+      if (isBuzzMechanic(room.mode)) {
+        // Préserver le buzz — mapper le mode du pack vers l'équivalent buzz
+        // blind_test pack → buzz_blind_test, quiz/qcm pack → buzz_quiz
+        updates.mode = (packMode === 'blind_test' || packMode === 'buzz_blind_test')
+          ? 'buzz_blind_test'
+          : 'buzz_quiz';
+      } else {
+        // Pas de buzz — mapper vers le mode non-buzz équivalent
+        updates.mode = (packMode === 'blind_test' || packMode === 'buzz_blind_test')
+          ? 'blind_test'
+          : 'quiz';
+      }
+    }
     await supabase.from('rooms').update(updates).eq('id', room.id);
   };
 
