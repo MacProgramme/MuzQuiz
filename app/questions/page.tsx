@@ -625,9 +625,9 @@ export default function QuestionsPage() {
                     </p>
                     <div className="grid grid-cols-3 gap-2">
                       {([
-                        { value: 'normal'     as QuestionType, label: 'Texte',       emoji: '📝', color: '#8B5CF6' },
-                        { value: 'image'      as QuestionType, label: 'Image',       emoji: '🖼️', color: '#00E5D1' },
-                        { value: 'blur_reveal'as QuestionType, label: 'Flou → Net',  emoji: '🔍', color: '#FF00AA' },
+                        { value: 'normal'     as QuestionType, label: 'Texte',      color: '#8B5CF6' },
+                        { value: 'image'      as QuestionType, label: 'Image',      color: '#00E5D1' },
+                        { value: 'blur_reveal'as QuestionType, label: 'Flou → Net', color: '#FF00AA' },
                       ]).map(opt => (
                         <button key={opt.value} onClick={() => { setQType(opt.value); if (opt.value === 'normal') setQImageUrl(null); }}
                           className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl transition-all"
@@ -635,7 +635,7 @@ export default function QuestionsPage() {
                             background: qType === opt.value ? `${opt.color}20` : 'rgba(255,255,255,0.04)',
                             border: `1.5px solid ${qType === opt.value ? opt.color : 'rgba(255,255,255,0.08)'}`,
                           }}>
-                          <span className="text-xl">{opt.emoji}</span>
+                          <MuzquizLogo width={28} showText={false} color={qType === opt.value ? opt.color : 'rgba(240,244,255,0.3)'} />
                           <span className="text-xs font-black" style={{ color: qType === opt.value ? opt.color : 'rgba(240,244,255,0.5)' }}>
                             {opt.label}
                           </span>

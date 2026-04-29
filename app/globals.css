@@ -355,10 +355,12 @@ body {
   100% { filter: blur(0px); }
 }
 .muz-deblur-img {
+  /* Remplit le conteneur 16:9 — object-fit: contain = letterbox noir si portrait */
   width: 100%;
-  border-radius: 1rem;
-  object-fit: cover;
-  max-height: 260px;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  background: #000;
 }
 
 /* Séparateur décoratif */

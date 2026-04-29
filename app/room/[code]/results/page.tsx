@@ -29,6 +29,8 @@ export default function ResultsPage() {
   const [replaying, setReplaying] = useState(false);
   const [replayCode, setReplayCode] = useState<string | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const navigatedRef = useRef(false); // évite la double navigation
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -36,9 +38,10 @@ export default function ResultsPage() {
       const userId = session?.user?.id ?? null;
       setMyUserId(userId);
 
+      // Inclure next_code dans le SELECT pour détecter un replay déjà lancé
       const { data: room } = await supabase
         .from('rooms')
-        .select('id, public_screen, mode, pack_id, host_id')
+        .select('id, public_screen, mode, pack_id, host_id, next_code')
         .eq('code', code.toUpperCase())
         .single();
 
@@ -64,9 +67,23 @@ export default function ResultsPage() {
 
       setLoading(false);
 
-      // Double mécanisme de replay : broadcast (rapide) + realtime DB (fiable)
-      // 1. Realtime sur la salle → détecte next_code même si le broadcast est raté
       const myNick = (data ?? []).find((p: any) => p.user_id === userId)?.nickname ?? 'Joueur';
+
+      // Helper de navigation — évite la double navigation
+      const goToReplay = (nextCode: string) => {
+        if (navigatedRef.current) return;
+        navigatedRef.current = true;
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        router.push(`/room/${nextCode}?nickname=${encodeURIComponent(myNick)}`);
+      };
+
+      // Cas 1 : next_code déjà défini au chargement (arrivé en retard sur la page résultats)
+      if ((room as any).next_code) {
+        goToReplay((room as any).next_code);
+        return;
+      }
+
+      // Cas 2 : Realtime — postgres_changes (fiable, reçu si abonné avant l'événement)
       const realtimeChannel = supabase
         .channel(`muz-room-watch-${room.id}`)
         .on(
@@ -74,23 +91,34 @@ export default function ResultsPage() {
           { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${room.id}` },
           (payload: any) => {
             const nextCode: string | null = payload.new?.next_code ?? null;
-            if (nextCode) {
-              router.push(`/room/${nextCode}?nickname=${encodeURIComponent(myNick)}`);
-            }
+            if (nextCode) goToReplay(nextCode);
           }
         )
-        // 2. Broadcast (fallback rapide — arrivée avant le changement DB)
+        // Cas 3 : Broadcast (le plus rapide, mais fire-and-forget)
         .on('broadcast', { event: 'replay' }, ({ payload }: { payload: { code: string } }) => {
-          router.push(`/room/${payload.code}?nickname=${encodeURIComponent(myNick)}`);
+          if (payload?.code) goToReplay(payload.code);
         })
         .subscribe();
 
       channelRef.current = realtimeChannel;
+
+      // Cas 4 : Polling toutes les 3s — filet de sécurité si broadcast et realtime ont été ratés
+      const poll = setInterval(async () => {
+        if (navigatedRef.current) { clearInterval(poll); return; }
+        const { data: latestRoom } = await supabase
+          .from('rooms')
+          .select('next_code')
+          .eq('id', room.id)
+          .single();
+        if (latestRoom?.next_code) goToReplay(latestRoom.next_code);
+      }, 3000);
+      pollIntervalRef.current = poll;
     };
 
     fetchResults();
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     };
   }, [code]);
 

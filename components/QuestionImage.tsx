@@ -24,14 +24,14 @@ export function QuestionImage({
   large = false,
 }: Props) {
   const isBlur = questionType === 'blur_reveal';
-  const maxH = large ? '360px' : '240px';
 
   return (
     <div
       className="w-full overflow-hidden rounded-2xl"
       style={{
-        maxHeight: maxH,
-        background: 'rgba(255,255,255,0.04)',
+        // Format paysage 16:9 fixe — bandes noires (letterbox) pour les images portrait
+        aspectRatio: '16 / 9',
+        background: '#000',
         border: '1.5px solid rgba(255,255,255,0.08)',
         boxShadow: isBlur
           ? '0 0 30px rgba(139,92,246,0.15)'
@@ -63,7 +63,8 @@ export function QuestionImage({
         style={{
           ...(isBlur
             ? {
-                animation: `muz-deblur ${timerDuration}s linear forwards`,
+                // L'image devient nette à 50% du timer (moitié de la durée)
+                animation: `muz-deblur ${timerDuration / 2}s linear forwards`,
                 animationPlayState: isPaused ? 'paused' : 'running',
               }
             : {}),
