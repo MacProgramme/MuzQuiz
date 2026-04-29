@@ -5,30 +5,38 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
-// ─── Countdown vers minuit heure de Paris ─────────────────────────────────────
-function useCountdownToMidnightParis() {
+// ─── Countdown vers une date cible (minuit heure de Paris) ────────────────────
+function useCountdownToDateParis(targetDate: string | null) {
   const getMsLeft = () => {
+    if (!targetDate) return 0;
     const now = new Date();
     const nowParis = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
-    const nextMidnight = new Date(nowParis);
-    nextMidnight.setDate(nextMidnight.getDate() + 1);
-    nextMidnight.setHours(0, 0, 0, 0);
-    return Math.max(0, nextMidnight.getTime() - nowParis.getTime());
+    const [y, mo, d] = targetDate.split('-').map(Number);
+    const targetMidnight = new Date(nowParis);
+    targetMidnight.setFullYear(y, mo - 1, d);
+    targetMidnight.setHours(0, 0, 0, 0);
+    return Math.max(0, targetMidnight.getTime() - nowParis.getTime());
   };
   const [msLeft, setMsLeft] = useState(getMsLeft);
   useEffect(() => {
+    setMsLeft(getMsLeft());
     const t = setInterval(() => setMsLeft(getMsLeft()), 1000);
     return () => clearInterval(t);
-  }, []);
-  const h = Math.floor(msLeft / 3_600_000);
+  }, [targetDate]);
+  const days = Math.floor(msLeft / 86_400_000);
+  const h = Math.floor((msLeft % 86_400_000) / 3_600_000);
   const m = Math.floor((msLeft % 3_600_000) / 60_000);
   const s = Math.floor((msLeft % 60_000) / 1000);
-  return { h, m, s };
+  return { days, h, m, s };
 }
 
-function NextQuizCountdown() {
-  const { h, m, s } = useCountdownToMidnightParis();
+function NextQuizCountdown({ targetDate }: { targetDate: string | null }) {
+  const { days, h, m, s } = useCountdownToDateParis(targetDate);
   const pad = (n: number) => String(n).padStart(2, '0');
+  // Si > 1 jour : afficher jours + heures + minutes ; sinon heures + minutes + secondes
+  const units = days > 0
+    ? [{ val: days, label: 'j' }, { val: h, label: 'h' }, { val: m, label: 'min' }]
+    : [{ val: h, label: 'h' }, { val: m, label: 'min' }, { val: s, label: 's' }];
   return (
     <div className="flex flex-col items-center gap-3 py-4">
       <MuzquizLogo width={40} showText={false} color="rgba(255,0,170,0.5)" />
@@ -37,7 +45,7 @@ function NextQuizCountdown() {
         Prochain quiz dans
       </p>
       <div className="flex items-center gap-2">
-        {[{ val: h, label: 'h' }, { val: m, label: 'min' }, { val: s, label: 's' }].map(({ val, label }) => (
+        {units.map(({ val, label }) => (
           <div key={label} className="flex flex-col items-center">
             <div className="text-3xl font-black tabular-nums px-3 py-2 rounded-xl"
               style={{ color: '#FF00AA', background: 'rgba(255,0,170,0.1)', border: '1.5px solid rgba(255,0,170,0.25)', minWidth: 56, textAlign: 'center' }}>
@@ -228,6 +236,7 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
   const [myTodayScore, setMyTodayScore] = useState<number | null>(null);
   const [lastWinner, setLastWinner] = useState<MonthlyWinner | null>(null);
   const [loadError, setLoadError] = useState('');
+  const [nextQuizDate, setNextQuizDate] = useState<string | null>(null);
 
   // Quiz en cours
   const [currentQ, setCurrentQ] = useState(0);
@@ -258,12 +267,31 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
         data = await res.json();
       } catch {
         setLoadError('Quiz non disponible pour aujourd\'hui');
+        const today = new Date().toLocaleDateString('fr-CA', { timeZone: 'Europe/Paris' });
+        const { data: nextRow } = await supabase
+          .from('daily_quizzes')
+          .select('date')
+          .gt('date', today)
+          .order('date', { ascending: true })
+          .limit(1)
+          .single();
+        setNextQuizDate(nextRow?.date ?? null);
         setState('intro');
         return;
       }
 
       if (!res.ok || data.error) {
         setLoadError(data.error ?? 'Quiz non disponible pour aujourd\'hui');
+        // Chercher la prochaine date avec un quiz dans la DB
+        const today = new Date().toLocaleDateString('fr-CA', { timeZone: 'Europe/Paris' });
+        const { data: nextRow } = await supabase
+          .from('daily_quizzes')
+          .select('date')
+          .gt('date', today)
+          .order('date', { ascending: true })
+          .limit(1)
+          .single();
+        setNextQuizDate(nextRow?.date ?? null);
         setState('intro');
         return;
       }
@@ -592,13 +620,17 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
               Quiz du Jour
             </p>
             <p className="font-black text-base" style={{ color: '#F0F4FF' }}>
-              {loadError ? 'Reviens demain !' : theme || '…'}
+              {loadError
+                ? nextQuizDate
+                  ? `Prochain quiz le ${new Date(nextQuizDate + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`
+                  : 'Bientôt disponible'
+                : theme || '…'}
             </p>
           </div>
         </div>
 
         {loadError ? (
-          <NextQuizCountdown />
+          <NextQuizCountdown targetDate={nextQuizDate} />
         ) : alreadyCompleted ? (
           <div className="flex items-center justify-between px-4 py-3 rounded-xl"
             style={{ background: 'rgba(0,229,209,0.1)', border: '1px solid rgba(0,229,209,0.2)' }}>
