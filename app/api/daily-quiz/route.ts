@@ -17,7 +17,8 @@ const THEMES = [
 ];
 
 function todayStr(): string {
-  return new Date().toLocaleDateString('fr-CA'); // YYYY-MM-DD in Paris time (approx)
+  // Utilise le fuseau Europe/Paris → change à minuit heure de Paris (pas UTC)
+  return new Date().toLocaleDateString('fr-CA', { timeZone: 'Europe/Paris' });
 }
 
 function themeForDate(dateStr: string): string {

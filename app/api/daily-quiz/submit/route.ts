@@ -6,7 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
 function todayStr(): string {
-  return new Date().toLocaleDateString('fr-CA');
+  // Utilise le fuseau Europe/Paris → change à minuit heure de Paris (pas UTC)
+  return new Date().toLocaleDateString('fr-CA', { timeZone: 'Europe/Paris' });
 }
 
 export async function POST(req: NextRequest) {
