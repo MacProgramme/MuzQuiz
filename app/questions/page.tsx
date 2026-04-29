@@ -583,21 +583,21 @@ export default function QuestionsPage() {
                 <button onClick={() => { openQForm(); }}
                   className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02]"
                   style={{ background: 'rgba(255,0,170,0.1)', border: '1.5px solid rgba(255,0,170,0.3)' }}>
-                  <span className="text-2xl">✏️</span>
+                  <MuzquizLogo width={32} showText={false} color="#FF00AA" />
                   <span className="text-xs font-black" style={{ color: '#FF00AA' }}>Manuel</span>
                   <span className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>Question par question</span>
                 </button>
                 <button onClick={() => { setAddMode('csv'); setCsvPreview([]); setCsvError(''); }}
                   className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02]"
                   style={{ background: 'rgba(0,229,209,0.08)', border: '1.5px solid rgba(0,229,209,0.25)' }}>
-                  <span className="text-2xl">📄</span>
+                  <MuzquizLogo width={32} showText={false} color="#00E5D1" />
                   <span className="text-xs font-black" style={{ color: '#00E5D1' }}>Importer CSV</span>
                   <span className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>Depuis Excel</span>
                 </button>
                 <button onClick={() => { setAddMode('ai'); setAiPreview([]); setAiError(''); }}
                   className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02]"
                   style={{ background: 'rgba(139,92,246,0.12)', border: '1.5px solid rgba(139,92,246,0.35)' }}>
-                  <span className="text-2xl">✨</span>
+                  <MuzquizLogo width={32} showText={false} color="#8B5CF6" />
                   <span className="text-xs font-black" style={{ color: '#8B5CF6' }}>Générer par IA</span>
                   <span className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>Tape un thème</span>
                 </button>
