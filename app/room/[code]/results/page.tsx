@@ -15,7 +15,22 @@ const PODIUM_COLORS = [
   { bg: '#F59E0B', text: '#1a1a2e', border: 'rgba(245,158,11,0.5)' },
   { bg: '#CD7C3A', text: '#1a1a2e', border: 'rgba(180,83,9,0.4)' },
 ];
-const MEDALS_LIST = ['🥇', '🥈', '🥉'];
+// Moustaches SVG colorées pour le podium
+function MustachePodium({ rank }: { rank: 1 | 2 | 3 }) {
+  const colors: Record<number, { fill: string; glow: string }> = {
+    1: { fill: '#F59E0B', glow: 'drop-shadow(0 0 8px rgba(245,158,11,0.9))' },
+    2: { fill: '#9CA3AF', glow: 'drop-shadow(0 0 6px rgba(156,163,175,0.7))' },
+    3: { fill: '#CD7C3A', glow: 'drop-shadow(0 0 6px rgba(180,83,9,0.7))' },
+  };
+  const { fill, glow } = colors[rank];
+  return (
+    <svg viewBox="0 0 100 40" width="54" height="22" style={{ filter: glow, display: 'block' }}>
+      {/* Moustache classique — deux courbes symétriques */}
+      <path d="M50 20 C42 8, 18 6, 8 16 C4 20, 10 28, 20 22 C28 17, 38 22, 50 20 Z" fill={fill} />
+      <path d="M50 20 C58 8, 82 6, 92 16 C96 20, 90 28, 80 22 C72 17, 62 22, 50 20 Z" fill={fill} />
+    </svg>
+  );
+}
 
 export default function ResultsPage() {
   const { code } = useParams<{ code: string }>();
@@ -241,8 +256,8 @@ export default function ResultsPage() {
           return (
             <div key={player.id} className="flex flex-col items-center" style={{ width: 96 }}>
               {revealed && (
-                <div className="muz-crown text-3xl mb-2" style={{ animationDelay: `${parseInt(delay) + 300}ms` }}>
-                  {rank === 1 ? '👑' : MEDALS_LIST[rank - 1]}
+                <div className="muz-crown mb-2 flex items-center justify-center" style={{ animationDelay: `${parseInt(delay) + 300}ms` }}>
+                  <MustachePodium rank={rank as 1 | 2 | 3} />
                 </div>
               )}
               <div className="text-center mb-2 px-1" style={{ opacity: revealed ? 1 : 0, transition: `opacity 0.5s ease ${delay}` }}>

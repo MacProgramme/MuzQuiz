@@ -29,9 +29,9 @@ export function QuestionImage({
     <div
       className="w-full overflow-hidden rounded-2xl"
       style={{
-        // Format paysage 16:9 fixe — bandes noires (letterbox) pour les images portrait
+        // Format paysage 16:9 fixe — fond couleur site pour les images portrait
         aspectRatio: '16 / 9',
-        background: '#000',
+        background: '#0D1B3E',
         border: '1.5px solid rgba(255,255,255,0.08)',
         boxShadow: isBlur
           ? '0 0 30px rgba(139,92,246,0.15)'
