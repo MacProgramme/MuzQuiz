@@ -134,6 +134,11 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Code promo
+  const [promoCode, setPromoCode] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoMsg, setPromoMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
   // Edition profil
   const [isAdmin, setIsAdmin] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -217,6 +222,34 @@ export default function ProfilePage() {
   const logout = async () => {
     await supabase.auth.signOut();
     router.push('/');
+  };
+
+  const redeemPromoCode = async () => {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoMsg(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const res = await fetch('/api/redeem-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ code: promoCode }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPromoMsg({ text: data.message, ok: true });
+        setPromoCode('');
+        // Recharger le profil pour mettre à jour le tier affiché
+        setProfile(p => p ? { ...p, subscription_tier: data.tier } : p);
+      } else {
+        setPromoMsg({ text: data.error ?? 'Erreur', ok: false });
+      }
+    } catch {
+      setPromoMsg({ text: 'Erreur réseau', ok: false });
+    } finally {
+      setPromoLoading(false);
+    }
   };
 
   const formatDate = (str: string) => {
@@ -390,6 +423,34 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Code promo */}
+                  <div className="mt-3 p-4 rounded-2xl" style={{ background: 'rgba(139,92,246,0.07)', border: '1.5px solid rgba(139,92,246,0.15)' }}>
+                    <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(139,92,246,0.7)' }}>🎟 Code promo</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Entre ton code…"
+                        value={promoCode}
+                        onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoMsg(null); }}
+                        className="flex-1 px-3 py-2 rounded-xl font-mono text-sm font-bold"
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F0F4FF', outline: 'none' }}
+                        onKeyDown={e => e.key === 'Enter' && !promoLoading && redeemPromoCode()}
+                      />
+                      <button
+                        onClick={redeemPromoCode}
+                        disabled={promoLoading || !promoCode.trim()}
+                        className="px-4 py-2 rounded-xl font-black text-sm transition-all disabled:opacity-40"
+                        style={{ background: '#8B5CF6', color: 'white' }}>
+                        {promoLoading ? '…' : 'Activer'}
+                      </button>
+                    </div>
+                    {promoMsg && (
+                      <p className="text-xs font-bold mt-2" style={{ color: promoMsg.ok ? '#00E5D1' : '#FF00AA' }}>
+                        {promoMsg.ok ? '✓ ' : '✗ '}{promoMsg.text}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Lien upgrade pour les non-admins en gratuit */}
                   {!isAdmin && profile.subscription_tier === 'free' && (

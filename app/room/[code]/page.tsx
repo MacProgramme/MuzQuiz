@@ -15,10 +15,11 @@ import { InterLeaderboard } from '@/components/InterLeaderboard';
 import { PublicScreenView } from '@/components/PublicScreenView';
 import { PhoneControllerView, ScorePreview } from '@/components/PhoneControllerView';
 import { FREE_QUESTION_LIMIT, getQuestionsForMode } from '@/lib/questions';
-import { Buzz, QCMAnswer, Player, isBuzzMechanic } from '@/types';
+import { Buzz, QCMAnswer, Player, isBuzzMechanic, isBlindTestMode } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
 import { QuestionImage } from '@/components/QuestionImage';
+import { YouTubePlayer } from '@/components/YouTubePlayer';
 import Link from 'next/link';
 
 // --- Confettis lors de la révélation ---
@@ -712,6 +713,13 @@ export default function RoomPage() {
         <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.6)' }}>
           {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
+
+        {/* Lecteur YouTube pour les blind tests */}
+        {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && (
+          <div className="w-full max-w-lg">
+            <YouTubePlayer url={(currentQ as any).youtube_url} />
+          </div>
+        )}
 
         {/* Image de la question (si présente) */}
         {(currentQ as any).image_url && (currentQ as any).question_type !== 'normal' && (

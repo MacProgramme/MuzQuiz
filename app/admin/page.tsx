@@ -44,7 +44,7 @@ const TIER_OPTIONS: { value: SubscriptionTier; label: string; color: string }[] 
   { value: 'premium', label: 'Premium',  color: '#F59E0B' },
 ];
 
-type AdminTab = 'users' | 'quizzes';
+type AdminTab = 'users' | 'quizzes' | 'promo';
 
 // ─── CSV Parser ───────────────────────────────────────────────────────────────
 
@@ -136,6 +136,15 @@ export default function AdminPage() {
   const [csvImporting, setCsvImporting] = useState(false);
   const [csvMsg, setCsvMsg] = useState('');
 
+  // ── Codes promo
+  const [promoCodes, setPromoCodes] = useState<any[]>([]);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [newPromoCode, setNewPromoCode] = useState('');
+  const [newPromoTier, setNewPromoTier] = useState<'pro' | 'premium'>('premium');
+  const [newPromoExpiry, setNewPromoExpiry] = useState('');
+  const [promoSaving, setPromoSaving] = useState(false);
+  const [promoMsg, setPromoMsg] = useState('');
+
   // ─── Chargement initial ───────────────────────────────────────────────────
 
   useEffect(() => {
@@ -164,7 +173,46 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (adminTab === 'quizzes') loadQuizzes();
+    if (adminTab === 'promo') loadPromoCodes();
   }, [adminTab]);
+
+  const loadPromoCodes = async () => {
+    setPromoLoading(true);
+    const { data } = await supabase.from('promo_codes').select('*').order('created_at', { ascending: false });
+    if (data) setPromoCodes(data);
+    setPromoLoading(false);
+  };
+
+  const createPromoCode = async () => {
+    if (!newPromoCode.trim() || !newPromoExpiry) return;
+    setPromoSaving(true);
+    setPromoMsg('');
+    const { error } = await supabase.from('promo_codes').insert({
+      code: newPromoCode.trim().toUpperCase(),
+      tier: newPromoTier,
+      expires_at: new Date(newPromoExpiry + 'T23:59:59').toISOString(),
+      is_active: true,
+    });
+    if (error) {
+      setPromoMsg(error.code === '23505' ? '⚠ Ce code existe déjà.' : `Erreur : ${error.message}`);
+    } else {
+      setPromoMsg('✓ Code créé !');
+      setNewPromoCode('');
+      setNewPromoExpiry('');
+      await loadPromoCodes();
+    }
+    setPromoSaving(false);
+  };
+
+  const togglePromoCode = async (id: string, isActive: boolean) => {
+    await supabase.from('promo_codes').update({ is_active: !isActive }).eq('id', id);
+    setPromoCodes(prev => prev.map(p => p.id === id ? { ...p, is_active: !isActive } : p));
+  };
+
+  const deletePromoCode = async (id: string) => {
+    await supabase.from('promo_codes').delete().eq('id', id);
+    setPromoCodes(prev => prev.filter(p => p.id !== id));
+  };
 
   // ─── Utilisateurs ─────────────────────────────────────────────────────────
 
@@ -348,6 +396,7 @@ export default function AdminPage() {
           {([
             { key: 'users',   label: '👥 Utilisateurs' },
             { key: 'quizzes', label: '🧠 Quiz du Jour' },
+            { key: 'promo',   label: '🎟 Codes promo' },
           ] as { key: AdminTab; label: string }[]).map(t => (
             <button key={t.key} onClick={() => setAdminTab(t.key)}
               className="flex-1 py-3 text-sm font-bold transition-all"
@@ -703,6 +752,138 @@ export default function AdminPage() {
               </div>
             )}
           </>
+        )}
+
+        {/* ══════════════ ONGLET CODES PROMO ══════════════ */}
+        {adminTab === 'promo' && (
+          <div className="flex flex-col gap-6">
+
+            {/* Formulaire de création */}
+            <div className="muz-card p-5" style={{ background: 'rgba(139,92,246,0.08)', border: '1.5px solid rgba(139,92,246,0.2)' }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'rgba(139,92,246,0.7)' }}>
+                Créer un code promo
+              </p>
+              <div className="flex flex-col gap-3">
+                {/* Code */}
+                <div>
+                  <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Code (majuscules)</p>
+                  <input
+                    type="text"
+                    placeholder="EX : PROMO2026"
+                    value={newPromoCode}
+                    onChange={e => setNewPromoCode(e.target.value.toUpperCase())}
+                    className="w-full px-4 py-2.5 rounded-xl font-mono font-bold text-sm"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.3)', color: '#F0F4FF', outline: 'none' }}
+                  />
+                </div>
+                {/* Tier */}
+                <div>
+                  <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Tier accordé</p>
+                  <div className="flex gap-2">
+                    {(['pro', 'premium'] as const).map(t => (
+                      <button key={t} onClick={() => setNewPromoTier(t)}
+                        className="flex-1 py-2 rounded-xl font-black text-sm transition-all"
+                        style={{
+                          background: newPromoTier === t ? (t === 'premium' ? '#F59E0B' : '#8B5CF6') : 'rgba(255,255,255,0.05)',
+                          color: newPromoTier === t ? '#0D1B3E' : 'rgba(240,244,255,0.5)',
+                          border: `1px solid ${newPromoTier === t ? 'transparent' : 'rgba(255,255,255,0.1)'}`,
+                        }}>
+                        {t === 'premium' ? '⭐ Premium' : '🚀 Pro'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* Date d'expiration */}
+                <div>
+                  <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Expiration du code</p>
+                  <input
+                    type="date"
+                    value={newPromoExpiry}
+                    onChange={e => setNewPromoExpiry(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.3)', color: '#F0F4FF', outline: 'none', colorScheme: 'dark' }}
+                  />
+                </div>
+                <button
+                  onClick={createPromoCode}
+                  disabled={promoSaving || !newPromoCode.trim() || !newPromoExpiry}
+                  className="w-full py-3 rounded-xl font-black text-sm transition-all disabled:opacity-40"
+                  style={{ background: '#8B5CF6', color: 'white' }}>
+                  {promoSaving ? 'Création…' : '+ Créer le code'}
+                </button>
+                {promoMsg && (
+                  <p className="text-xs font-bold text-center" style={{ color: promoMsg.startsWith('✓') ? '#00E5D1' : '#FF00AA' }}>
+                    {promoMsg}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Liste des codes */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(240,244,255,0.3)' }}>
+                Codes existants ({promoCodes.length})
+              </p>
+              {promoLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#8B5CF6', borderTopColor: 'transparent' }} />
+                </div>
+              ) : promoCodes.length === 0 ? (
+                <p className="text-sm text-center py-6" style={{ color: 'rgba(240,244,255,0.3)' }}>Aucun code créé.</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {promoCodes.map(p => {
+                    const expired = new Date(p.expires_at) < new Date();
+                    const tierColor = p.tier === 'premium' ? '#F59E0B' : '#8B5CF6';
+                    return (
+                      <div key={p.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                        style={{
+                          background: (!p.is_active || expired) ? 'rgba(255,255,255,0.03)' : 'rgba(139,92,246,0.08)',
+                          border: `1.5px solid ${(!p.is_active || expired) ? 'rgba(255,255,255,0.07)' : 'rgba(139,92,246,0.25)'}`,
+                          opacity: (!p.is_active || expired) ? 0.6 : 1,
+                        }}>
+                        {/* Code */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="font-mono font-black text-base" style={{ color: p.is_active && !expired ? '#F0F4FF' : 'rgba(240,244,255,0.4)' }}>
+                              {p.code}
+                            </span>
+                            <span className="text-xs font-black px-2 py-0.5 rounded-full" style={{ background: `${tierColor}20`, color: tierColor }}>
+                              {p.tier}
+                            </span>
+                            {expired && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,0,0,0.1)', color: '#FF6B6B' }}>Expiré</span>}
+                            {!p.is_active && !expired && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(240,244,255,0.4)' }}>Désactivé</span>}
+                          </div>
+                          <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                            Expire le {new Date(p.expires_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {!expired && (
+                            <button onClick={() => togglePromoCode(p.id, p.is_active)}
+                              className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
+                              style={{
+                                background: p.is_active ? 'rgba(0,229,209,0.1)' : 'rgba(255,0,170,0.1)',
+                                color: p.is_active ? '#00E5D1' : '#FF00AA',
+                                border: `1px solid ${p.is_active ? 'rgba(0,229,209,0.25)' : 'rgba(255,0,170,0.25)'}`,
+                              }}>
+                              {p.is_active ? 'Désactiver' : 'Activer'}
+                            </button>
+                          )}
+                          <button onClick={() => deletePromoCode(p.id)}
+                            className="text-xs font-bold px-2 py-1.5 rounded-lg transition-all"
+                            style={{ background: 'rgba(255,0,0,0.08)', color: '#FF6B6B', border: '1px solid rgba(255,0,0,0.15)' }}>
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>

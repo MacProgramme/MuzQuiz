@@ -117,6 +117,7 @@ export default function QuestionsPage() {
   const [qCorrect, setQCorrect] = useState<0|1|2|3>(0);
   const [qType, setQType] = useState<QuestionType>('normal');
   const [qImageUrl, setQImageUrl] = useState<string | null>(null);
+  const [qYoutubeUrl, setQYoutubeUrl] = useState<string>('');
   const [qImageUploading, setQImageUploading] = useState(false);
   const qImageInputRef = useRef<HTMLInputElement>(null);
   const [qSaving, setQSaving] = useState(false);
@@ -214,9 +215,11 @@ export default function QuestionsPage() {
       setQCorrect(q.correct_index);
       setQType(q.question_type ?? 'normal');
       setQImageUrl(q.image_url ?? null);
+      setQYoutubeUrl(q.youtube_url ?? '');
     } else {
       setEditingQ(null);
       setQText(''); setQChoices(['', '', '', '']); setQCorrect(0);
+      setQYoutubeUrl('');
       setQType('normal'); setQImageUrl(null);
     }
     setAddMode('manual');
@@ -259,12 +262,13 @@ export default function QuestionsPage() {
       correct_index: qCorrect,
       question_type: qType,
       image_url: (qType !== 'normal') ? (qImageUrl ?? null) : null,
+      youtube_url: qYoutubeUrl.trim() || null,
     };
     if (editingQ) await supabase.from('custom_questions').update(payload).eq('id', editingQ.id);
     else await supabase.from('custom_questions').insert(payload);
     await loadQuestions(selectedPack.id);
     setAddMode(null);
-    setQType('normal'); setQImageUrl(null);
+    setQType('normal'); setQImageUrl(null); setQYoutubeUrl('');
     setQSaving(false);
   };
 
@@ -678,6 +682,31 @@ export default function QuestionsPage() {
                             : <><span className="text-2xl">📁</span><span className="text-xs font-bold">Cliquer pour choisir une image</span></>
                           }
                         </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Lien YouTube (pour packs blind test) */}
+                  {selectedPack && (selectedPack.mode === 'blind_test' || selectedPack.mode === 'buzz_blind_test') && (
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(0,229,209,0.6)' }}>
+                        ♪ Lien YouTube (musique à identifier)
+                      </p>
+                      <input
+                        type="url"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        value={qYoutubeUrl}
+                        onChange={e => setQYoutubeUrl(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl font-mono text-sm"
+                        style={{
+                          background: 'rgba(0,229,209,0.07)',
+                          border: `1.5px solid ${qYoutubeUrl ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                          color: '#F0F4FF',
+                          outline: 'none',
+                        }}
+                      />
+                      {qYoutubeUrl && !qYoutubeUrl.includes('youtu') && (
+                        <p className="text-xs mt-1" style={{ color: '#FF00AA' }}>⚠ URL YouTube non reconnue</p>
                       )}
                     </div>
                   )}

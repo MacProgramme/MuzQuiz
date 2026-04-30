@@ -104,7 +104,7 @@ export default function Home() {
       const roomCode = genCode();
       const { data: room, error } = await supabase
         .from('rooms')
-        .insert({ code: roomCode, host_id: userId, mode, timer_duration: 20, max_players: 100, sound_enabled: true, pack_id: null, public_screen: publicScreen })
+        .insert({ code: roomCode, host_id: userId, mode, timer_duration: 20, max_players: TIER_LIMITS[userTier].maxPlayers, sound_enabled: true, pack_id: null, public_screen: publicScreen })
         .select('*')
         .single();
 

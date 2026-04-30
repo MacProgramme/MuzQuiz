@@ -123,6 +123,7 @@ CREATE TABLE IF NOT EXISTS custom_questions (
   image_url     TEXT  DEFAULT NULL,
   question_type TEXT  DEFAULT 'normal'
                 CHECK (question_type IN ('normal','image','blur_reveal')),
+  youtube_url   TEXT  DEFAULT NULL,
   created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -171,12 +172,23 @@ CREATE TABLE IF NOT EXISTS monthly_winners (
 -- 5. REALTIME
 -- ================================================================
 
--- Note : si une table est déjà dans la publication, Supabase retourne
--- une erreur "already member" — c'est normal, tu peux ignorer.
-ALTER PUBLICATION supabase_realtime ADD TABLE rooms;
-ALTER PUBLICATION supabase_realtime ADD TABLE room_players;
-ALTER PUBLICATION supabase_realtime ADD TABLE buzzes;
-ALTER PUBLICATION supabase_realtime ADD TABLE qcm_answers;
+-- Chaque table est ajoutée individuellement dans un bloc DO
+-- pour ignorer l'erreur "already member" si elle est déjà présente.
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE rooms;
+EXCEPTION WHEN others THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE room_players;
+EXCEPTION WHEN others THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE buzzes;
+EXCEPTION WHEN others THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE qcm_answers;
+EXCEPTION WHEN others THEN NULL; END $$;
 
 
 -- ================================================================
@@ -195,6 +207,9 @@ ALTER TABLE daily_quiz_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE monthly_winners   ENABLE ROW LEVEL SECURITY;
 
 -- ── rooms ──────────────────────────────────────────────────────
+DROP POLICY IF EXISTS "rooms: lecture publique"                   ON rooms;
+DROP POLICY IF EXISTS "rooms: création par l'hôte authentifié"   ON rooms;
+DROP POLICY IF EXISTS "rooms: modification par l'hôte"           ON rooms;
 CREATE POLICY "rooms: lecture publique"
   ON rooms FOR SELECT USING (true);
 CREATE POLICY "rooms: création par l'hôte authentifié"
@@ -203,6 +218,10 @@ CREATE POLICY "rooms: modification par l'hôte"
   ON rooms FOR UPDATE USING (auth.uid() = host_id);
 
 -- ── room_players ───────────────────────────────────────────────
+DROP POLICY IF EXISTS "room_players: lecture publique"            ON room_players;
+DROP POLICY IF EXISTS "room_players: insertion libre"             ON room_players;
+DROP POLICY IF EXISTS "room_players: mise à jour libre"           ON room_players;
+DROP POLICY IF EXISTS "room_players: suppression par le joueur"   ON room_players;
 CREATE POLICY "room_players: lecture publique"
   ON room_players FOR SELECT USING (true);
 CREATE POLICY "room_players: insertion libre"
@@ -213,23 +232,29 @@ CREATE POLICY "room_players: suppression par le joueur"
   ON room_players FOR DELETE USING (auth.uid() = user_id);
 
 -- ── buzzes ─────────────────────────────────────────────────────
+DROP POLICY IF EXISTS "buzzes: lecture publique"  ON buzzes;
+DROP POLICY IF EXISTS "buzzes: insertion libre"   ON buzzes;
 CREATE POLICY "buzzes: lecture publique"
   ON buzzes FOR SELECT USING (true);
 CREATE POLICY "buzzes: insertion libre"
   ON buzzes FOR INSERT WITH CHECK (true);
 
 -- ── qcm_answers ────────────────────────────────────────────────
+DROP POLICY IF EXISTS "qcm_answers: lecture publique"  ON qcm_answers;
+DROP POLICY IF EXISTS "qcm_answers: insertion libre"   ON qcm_answers;
 CREATE POLICY "qcm_answers: lecture publique"
   ON qcm_answers FOR SELECT USING (true);
 CREATE POLICY "qcm_answers: insertion libre"
   ON qcm_answers FOR INSERT WITH CHECK (true);
 
 -- ── profiles ───────────────────────────────────────────────────
+DROP POLICY IF EXISTS "profiles: lecture publique"                           ON profiles;
+DROP POLICY IF EXISTS "profiles: insertion par l'utilisateur"                ON profiles;
+DROP POLICY IF EXISTS "profiles: modification par l'utilisateur (sans tier)" ON profiles;
 CREATE POLICY "profiles: lecture publique"
   ON profiles FOR SELECT USING (true);
 CREATE POLICY "profiles: insertion par l'utilisateur"
   ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
--- L'utilisateur peut modifier son profil SAUF changer son tier d'abonnement
 CREATE POLICY "profiles: modification par l'utilisateur (sans tier)"
   ON profiles FOR UPDATE
   USING (auth.uid() = id)
@@ -239,6 +264,8 @@ CREATE POLICY "profiles: modification par l'utilisateur (sans tier)"
   );
 
 -- ── question_packs ─────────────────────────────────────────────
+DROP POLICY IF EXISTS "question_packs: lecture publique"         ON question_packs;
+DROP POLICY IF EXISTS "question_packs: gestion par le propriétaire" ON question_packs;
 CREATE POLICY "question_packs: lecture publique"
   ON question_packs FOR SELECT USING (true);
 CREATE POLICY "question_packs: gestion par le propriétaire"
@@ -247,6 +274,8 @@ CREATE POLICY "question_packs: gestion par le propriétaire"
   WITH CHECK (auth.uid() = owner_id);
 
 -- ── custom_questions ───────────────────────────────────────────
+DROP POLICY IF EXISTS "custom_questions: lecture publique"              ON custom_questions;
+DROP POLICY IF EXISTS "custom_questions: gestion par le propriétaire"   ON custom_questions;
 CREATE POLICY "custom_questions: lecture publique"
   ON custom_questions FOR SELECT USING (true);
 CREATE POLICY "custom_questions: gestion par le propriétaire"
@@ -255,18 +284,24 @@ CREATE POLICY "custom_questions: gestion par le propriétaire"
   WITH CHECK (auth.uid() = owner_id);
 
 -- ── daily_quizzes ──────────────────────────────────────────────
+DROP POLICY IF EXISTS "daily_quizzes: lecture publique"      ON daily_quizzes;
+DROP POLICY IF EXISTS "daily_quizzes: insertion permissive"  ON daily_quizzes;
 CREATE POLICY "daily_quizzes: lecture publique"
   ON daily_quizzes FOR SELECT USING (true);
 CREATE POLICY "daily_quizzes: insertion permissive"
   ON daily_quizzes FOR INSERT WITH CHECK (true);
 
 -- ── daily_quiz_scores ──────────────────────────────────────────
+DROP POLICY IF EXISTS "daily_quiz_scores: lecture publique"              ON daily_quiz_scores;
+DROP POLICY IF EXISTS "daily_quiz_scores: insertion par l'utilisateur"   ON daily_quiz_scores;
 CREATE POLICY "daily_quiz_scores: lecture publique"
   ON daily_quiz_scores FOR SELECT USING (true);
 CREATE POLICY "daily_quiz_scores: insertion par l'utilisateur"
   ON daily_quiz_scores FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- ── monthly_winners ────────────────────────────────────────────
+DROP POLICY IF EXISTS "monthly_winners: lecture publique"      ON monthly_winners;
+DROP POLICY IF EXISTS "monthly_winners: insertion permissive"  ON monthly_winners;
 CREATE POLICY "monthly_winners: lecture publique"
   ON monthly_winners FOR SELECT USING (true);
 CREATE POLICY "monthly_winners: insertion permissive"
@@ -429,6 +464,50 @@ WHERE id IN (
   SELECT id FROM auth.users
   WHERE email IN ('antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr')
 );
+
+
+-- ================================================================
+-- 12. CODES PROMO
+-- ================================================================
+
+-- Table des codes promo
+CREATE TABLE IF NOT EXISTS promo_codes (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  code        TEXT        UNIQUE NOT NULL,
+  tier        TEXT        NOT NULL DEFAULT 'premium'
+                          CHECK (tier IN ('free','pro','premium')),
+  expires_at  TIMESTAMPTZ NOT NULL,
+  is_active   BOOLEAN     NOT NULL DEFAULT true,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table des utilisations (une ligne par joueur par code)
+CREATE TABLE IF NOT EXISTS promo_code_uses (
+  id         UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  code_id    UUID        REFERENCES promo_codes(id) ON DELETE CASCADE NOT NULL,
+  user_id    UUID        REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  used_at    TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (code_id, user_id)
+);
+
+ALTER TABLE promo_codes      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE promo_code_uses  ENABLE ROW LEVEL SECURITY;
+
+-- Les codes sont lisibles par tous (pour vérifier l'existence)
+DROP POLICY IF EXISTS "promo_codes: lecture publique"       ON promo_codes;
+CREATE POLICY "promo_codes: lecture publique"
+  ON promo_codes FOR SELECT USING (true);
+
+-- Seuls les admins (service role) peuvent créer/modifier/supprimer
+-- (via l'API route qui utilise SUPABASE_SERVICE_ROLE_KEY)
+
+-- promo_code_uses : l'utilisateur peut lire ses propres utilisations
+DROP POLICY IF EXISTS "promo_code_uses: lecture personnelle" ON promo_code_uses;
+CREATE POLICY "promo_code_uses: lecture personnelle"
+  ON promo_code_uses FOR SELECT USING (auth.uid() = user_id);
+
+-- L'insertion se fait via l'API route avec le service role
+-- donc pas de policy INSERT nécessaire côté client
 
 
 -- ================================================================

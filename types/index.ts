@@ -23,10 +23,10 @@ export const MODE_DISPLAY: Record<GameMode, string> = {
   buzz:            'Buzz Quiz',
 };
 
-export const TIER_LIMITS: Record<SubscriptionTier, { maxPacks: number; maxQuestionsPerPack: number; canCreate: boolean }> = {
-  free:    { maxPacks: 0,        maxQuestionsPerPack: 0,        canCreate: false },
-  pro:     { maxPacks: 5,        maxQuestionsPerPack: 30,       canCreate: true },
-  premium: { maxPacks: Infinity, maxQuestionsPerPack: Infinity, canCreate: true },
+export const TIER_LIMITS: Record<SubscriptionTier, { maxPacks: number; maxQuestionsPerPack: number; canCreate: boolean; maxPlayers: number }> = {
+  free:    { maxPacks: 0,        maxQuestionsPerPack: 0,        canCreate: false, maxPlayers: 20  },
+  pro:     { maxPacks: 5,        maxQuestionsPerPack: 30,       canCreate: true,  maxPlayers: 100 },
+  premium: { maxPacks: Infinity, maxQuestionsPerPack: Infinity, canCreate: true,  maxPlayers: 200 },
 };
 
 export interface QuestionPack {
@@ -53,6 +53,7 @@ export interface CustomQuestion {
   correct_index: 0 | 1 | 2 | 3;
   image_url?: string | null;
   question_type?: QuestionType;
+  youtube_url?: string | null;
   created_at: string;
 }
 
@@ -107,6 +108,7 @@ export interface BuzzQuestion {
   correct: 0 | 1 | 2 | 3;
   image_url?: string | null;
   question_type?: QuestionType;
+  youtube_url?: string | null;
 }
 
 export interface QCMQuestion {
@@ -116,6 +118,7 @@ export interface QCMQuestion {
   correct: 0 | 1 | 2 | 3;
   image_url?: string | null;
   question_type?: QuestionType;
+  youtube_url?: string | null;
 }
 
 export type Question = BuzzQuestion | QCMQuestion;

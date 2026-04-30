@@ -140,6 +140,17 @@ export function useRoom(code: string, nickname: string) {
     if (existingPlayer) {
       setMyPlayer(existingPlayer);
     } else {
+      // Vérifier la limite de joueurs
+      const { count } = await supabase
+        .from('room_players')
+        .select('id', { count: 'exact', head: true })
+        .eq('room_id', roomData.id);
+      if (count !== null && roomData.max_players > 0 && count >= roomData.max_players) {
+        setError(`La salle est pleine (max ${roomData.max_players} joueurs).`);
+        setLoading(false);
+        return;
+      }
+
       const { data: playerData } = await supabase
         .from('room_players')
         .insert({ room_id: roomData.id, user_id: userId, nickname, is_host: false })
@@ -170,6 +181,7 @@ export function useRoom(code: string, nickname: string) {
           a: q.choice_a,
           image_url: q.image_url ?? null,
           question_type: q.question_type ?? 'normal',
+          youtube_url: q.youtube_url ?? null,
         }));
         setCustomQuestions(formatted as any);
         customQuestionsRef.current = formatted as any;
