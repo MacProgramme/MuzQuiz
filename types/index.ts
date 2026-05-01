@@ -13,6 +13,18 @@ export const isBuzzMechanic = (mode: GameMode): boolean =>
 export const isBlindTestMode = (mode: GameMode): boolean =>
   mode === 'blind_test' || mode === 'buzz_blind_test';
 
+/**
+ * Normalise les anciennes valeurs de tier (avant migration DB) vers les nouvelles.
+ * 'free' → 'decouverte', 'premium' → 'expert', valeurs inconnues → 'decouverte'.
+ */
+export function normalizeTier(raw: string | null | undefined): SubscriptionTier {
+  if (raw === 'free')    return 'decouverte';
+  if (raw === 'premium') return 'expert';
+  const valid: SubscriptionTier[] = ['decouverte', 'essentiel', 'pro', 'expert'];
+  if (valid.includes(raw as SubscriptionTier)) return raw as SubscriptionTier;
+  return 'decouverte';
+}
+
 /** Label affiché pour chaque mode */
 export const MODE_DISPLAY: Record<GameMode, string> = {
   quiz:            'Quiz',

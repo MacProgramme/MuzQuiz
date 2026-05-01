@@ -318,6 +318,11 @@ VALUES ('avatars', 'avatars', true, 5242880,
         ARRAY['image/jpeg','image/png','image/webp','image/gif'])
 ON CONFLICT (id) DO NOTHING;
 
+DROP POLICY IF EXISTS "avatars: lecture publique"             ON storage.objects;
+DROP POLICY IF EXISTS "avatars: upload par le propriétaire"   ON storage.objects;
+DROP POLICY IF EXISTS "avatars: mise à jour par le propriétaire" ON storage.objects;
+DROP POLICY IF EXISTS "avatars: suppression par le propriétaire" ON storage.objects;
+
 CREATE POLICY "avatars: lecture publique"
   ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
 
@@ -338,6 +343,11 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 VALUES ('question-images', 'question-images', true, 5242880,
         ARRAY['image/jpeg','image/jpg','image/png','image/webp','image/gif'])
 ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "question-images: lecture publique"                ON storage.objects;
+DROP POLICY IF EXISTS "question-images: upload authentifié"              ON storage.objects;
+DROP POLICY IF EXISTS "question-images: suppression par le propriétaire" ON storage.objects;
+DROP POLICY IF EXISTS "question-images: mise à jour par le propriétaire" ON storage.objects;
 
 CREATE POLICY "question-images: lecture publique"
   ON storage.objects FOR SELECT USING (bucket_id = 'question-images');
@@ -427,6 +437,29 @@ LANGUAGE SQL SECURITY DEFINER AS $$
   WHERE TO_CHAR(s.completed_at AT TIME ZONE 'Europe/Paris', 'YYYY-MM') = target_month
   GROUP BY p.id, p.nickname, p.avatar_color
   ORDER BY total_score DESC
+  LIMIT 11;
+$$;
+
+-- ── Classement journalier ─────────────────────────────────────
+CREATE OR REPLACE FUNCTION get_daily_leaderboard(target_date DATE)
+RETURNS TABLE (
+  user_id      UUID,
+  nickname     TEXT,
+  avatar_color TEXT,
+  score        INT,
+  rank         BIGINT
+)
+LANGUAGE SQL SECURITY DEFINER AS $$
+  SELECT
+    p.id            AS user_id,
+    p.nickname,
+    COALESCE(p.avatar_color, '#8B5CF6') AS avatar_color,
+    s.score,
+    RANK() OVER (ORDER BY s.score DESC) AS rank
+  FROM daily_quiz_scores s
+  JOIN profiles p ON p.id = s.user_id
+  WHERE s.date = target_date
+  ORDER BY s.score DESC
   LIMIT 11;
 $$;
 

@@ -4,10 +4,11 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { SubscriptionTier, TIER_LIMITS } from '@/types';
+import { SubscriptionTier, TIER_LIMITS, normalizeTier } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { DailyQuiz } from '@/components/DailyQuiz';
+import { LeaderboardQuizDuJour } from '@/components/LeaderboardQuizDuJour';
 
 interface Profile {
   id: string;
@@ -122,10 +123,10 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
 }
 
 const TIER_INFO: Record<SubscriptionTier, { label: string; color: string; bg: string; price: string; perks: string[] }> = {
-  decouverte: { label: 'Découverte', color: 'rgba(240,244,255,0.5)', bg: 'rgba(255,255,255,0.06)',  price: '0€',     perks: ['Accès aux questions MUZQUIZ', 'Parties illimitées', 'Jusqu\'à 10 joueurs', 'Quiz QCM & Buzz Quiz'] },
-  essentiel:  { label: 'Essentiel',  color: '#00E5D1',               bg: 'rgba(0,229,209,0.1)',      price: '9,99€',  perks: ['Tout le Découverte', 'Jusqu\'à 20 joueurs', 'Questions image', 'Import Excel', 'IA : 10 quiz/mois'] },
-  pro:        { label: 'Pro',        color: '#8B5CF6',               bg: 'rgba(139,92,246,0.12)',    price: '19,99€', perks: ['Tout l\'Essentiel', 'Jusqu\'à 100 joueurs', 'Blind Test Audio', 'IA : 40 quiz/mois'] },
-  expert:     { label: 'Expert',     color: '#F59E0B',               bg: 'rgba(245,158,11,0.1)',     price: '29,99€', perks: ['Tout le Pro', 'Jusqu\'à 250 joueurs', 'Tous les modes', 'IA : 80 quiz/mois'] },
+  decouverte: { label: 'Moustachu Découverte', color: 'rgba(240,244,255,0.5)', bg: 'rgba(255,255,255,0.06)',  price: '0€',     perks: ['Accès aux questions MUZQUIZ', 'Parties illimitées', 'Jusqu\'à 10 joueurs', 'Quiz QCM & Buzz Quiz'] },
+  essentiel:  { label: 'Moustachu Essentiel',  color: '#00E5D1',               bg: 'rgba(0,229,209,0.1)',      price: '9,99€',  perks: ['Tout le Découverte', 'Jusqu\'à 20 joueurs', 'Questions image', 'Import Excel', 'IA : 10 quiz/mois'] },
+  pro:        { label: 'Moustachu Pro',        color: '#8B5CF6',               bg: 'rgba(139,92,246,0.12)',    price: '19,99€', perks: ['Tout l\'Essentiel', 'Jusqu\'à 100 joueurs', 'Blind Test Audio', 'IA : 40 quiz/mois'] },
+  expert:     { label: 'Moustachu Expert',     color: '#F59E0B',               bg: 'rgba(245,158,11,0.1)',     price: '29,99€', perks: ['Tout le Pro', 'Jusqu\'à 250 joueurs', 'Tous les modes', 'IA : 80 quiz/mois'] },
 };
 
 const AVATAR_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981'];
@@ -176,9 +177,9 @@ export default function ProfilePage() {
             .insert({ id: user.id, nickname: user.email?.split('@')[0] ?? 'Joueur', avatar_color: '#8B5CF6' })
             .select('*')
             .single();
-          if (newProf) setProfile(newProf);
+          if (newProf) setProfile({ ...newProf, subscription_tier: normalizeTier(newProf.subscription_tier) });
         } else {
-          setProfile(prof);
+          setProfile({ ...prof, subscription_tier: normalizeTier(prof.subscription_tier) });
         }
 
       } catch (e) {
@@ -334,6 +335,11 @@ export default function ProfilePage() {
             nickname={profile.nickname}
             avatarColor={profile.avatar_color}
           />
+        </div>
+
+        {/* Classement Quiz du Jour */}
+        <div className="mb-6">
+          <LeaderboardQuizDuJour userId={profile.id} />
         </div>
 
         {/* ===== PROFIL ===== */}

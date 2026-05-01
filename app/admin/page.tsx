@@ -4,7 +4,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { SubscriptionTier } from '@/types';
+import { SubscriptionTier, normalizeTier } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
@@ -39,10 +39,10 @@ interface DailyQuizEntry {
 }
 
 const TIER_OPTIONS: { value: SubscriptionTier; label: string; color: string }[] = [
-  { value: 'decouverte', label: 'Découverte', color: 'rgba(240,244,255,0.5)' },
-  { value: 'essentiel',  label: 'Essentiel',  color: '#00E5D1'               },
-  { value: 'pro',        label: 'Pro',        color: '#8B5CF6'               },
-  { value: 'expert',     label: 'Expert',     color: '#F59E0B'               },
+  { value: 'decouverte', label: 'Moustachu Découverte', color: 'rgba(240,244,255,0.5)' },
+  { value: 'essentiel',  label: 'Moustachu Essentiel',  color: '#00E5D1'               },
+  { value: 'pro',        label: 'Moustachu Pro',        color: '#8B5CF6'               },
+  { value: 'expert',     label: 'Moustachu Expert',     color: '#F59E0B'               },
 ];
 
 type AdminTab = 'users' | 'quizzes' | 'promo';
@@ -156,7 +156,10 @@ export default function AdminPage() {
 
       const { data: profiles } = await supabase
         .from('profiles').select('*').order('created_at', { ascending: false });
-      if (profiles) setUsers(profiles as UserProfile[]);
+      if (profiles) setUsers(profiles.map(p => ({
+        ...p,
+        subscription_tier: normalizeTier(p.subscription_tier),
+      })) as UserProfile[]);
       setLoading(false);
     };
     load();

@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { GameMode, SubscriptionTier, TIER_LIMITS } from '@/types';
+import { GameMode, SubscriptionTier, TIER_LIMITS, normalizeTier } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { QRScanner } from '@/components/QRScanner';
@@ -28,6 +28,10 @@ export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
   const [avatarColor, setAvatarColor] = useState('#8B5CF6');
 
+  // Classement journalier (mini — top 3 sur la home)
+  type MiniEntry = { user_id: string; nickname: string; avatar_color: string; score: number; rank: number };
+  const [miniLeaderboard, setMiniLeaderboard] = useState<MiniEntry[]>([]);
+
   // Lecture du param ?join=CODE dans l'URL (depuis un QR code scanné nativement)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -50,7 +54,7 @@ export default function Home() {
           .eq('id', uid)
           .single();
         if (profile?.nickname) setNickname(profile.nickname);
-        const tier = (profile?.subscription_tier as SubscriptionTier) ?? 'decouverte';
+        const tier = normalizeTier(profile?.subscription_tier);
         setUserTier(tier);
         setAvatarColor(profile?.avatar_color ?? '#8B5CF6');
         setUserId(uid);
@@ -81,6 +85,18 @@ export default function Home() {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Charger le mini classement journalier (top 3) au montage
+  useEffect(() => {
+    const loadMini = async () => {
+      const now = new Date();
+      const paris = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+      const dateStr = `${paris.getFullYear()}-${String(paris.getMonth() + 1).padStart(2, '0')}-${String(paris.getDate()).padStart(2, '0')}`;
+      const { data } = await (supabase as any).rpc('get_daily_leaderboard', { target_date: dateStr });
+      if (data) setMiniLeaderboard((data as MiniEntry[]).slice(0, 3));
+    };
+    loadMini();
   }, []);
 
   const genCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -199,6 +215,59 @@ export default function Home() {
         </div>
       )}
 
+      {/* Mini classement journalier — visible par tous */}
+      {miniLeaderboard.length > 0 && (
+        <div className="w-full max-w-md mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-base">🏆</span>
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
+              Top du jour — Quiz du Jour
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            {miniLeaderboard.map((e) => {
+              const medal = ['🥇','🥈','🥉'][Number(e.rank) - 1] ?? `#${e.rank}`;
+              const isMe = userId === e.user_id;
+              return (
+                <div
+                  key={e.user_id}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-2xl"
+                  style={{
+                    background: isMe
+                      ? 'rgba(139,92,246,0.12)'
+                      : Number(e.rank) === 1
+                      ? 'rgba(245,158,11,0.08)'
+                      : 'rgba(255,255,255,0.03)',
+                    border: isMe
+                      ? '1.5px solid rgba(139,92,246,0.4)'
+                      : Number(e.rank) === 1
+                      ? '1.5px solid rgba(245,158,11,0.3)'
+                      : '1.5px solid rgba(255,255,255,0.05)',
+                  }}
+                >
+                  <span className="text-lg flex-shrink-0 w-8 text-center">{medal}</span>
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0"
+                    style={{ background: e.avatar_color ?? '#8B5CF6', color: '#0D1B3E' }}
+                  >
+                    {e.nickname[0]?.toUpperCase()}
+                  </div>
+                  <span className="flex-1 font-bold text-sm truncate" style={{ color: isMe ? '#8B5CF6' : '#F0F4FF' }}>
+                    {e.nickname} {isMe && <span className="text-xs opacity-50">(toi)</span>}
+                  </span>
+                  <span
+                    className="font-black text-sm flex-shrink-0"
+                    style={{ color: Number(e.rank) === 1 ? '#F59E0B' : isMe ? '#8B5CF6' : 'rgba(240,244,255,0.6)' }}
+                  >
+                    {e.score} pts
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Card principale */}
       <div className="muz-card muz-card-pink w-full max-w-md p-8">
 
@@ -255,34 +324,41 @@ export default function Home() {
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {([
-                  { value: 'quiz'            as GameMode, label: 'Quiz',            sub: '4 choix simultané',  color: '#8B5CF6', mechanic: 'QCM' },
-                  { value: 'blind_test'      as GameMode, label: 'Blind Test',       sub: 'Musique, 4 choix',   color: '#00E5D1', mechanic: 'QCM' },
-                  { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',        sub: 'Buzz puis répondre', color: '#FF00AA', mechanic: 'BUZZ' },
-                  { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test',  sub: 'Musique + buzz',     color: '#F59E0B', mechanic: 'BUZZ' },
-                ] as const).map(m => (
-                  <button key={m.value} onClick={() => setMode(m.value)}
-                    className="flex flex-col items-start gap-1 p-3 rounded-xl transition-all text-left"
+                  { value: 'quiz'            as GameMode, label: 'Quiz',            sub: '4 choix simultané',  color: '#8B5CF6', mechanic: 'QCM',  minTier: 'decouverte' },
+                  { value: 'blind_test'      as GameMode, label: 'Blind Test',       sub: 'Musique, 4 choix',   color: '#00E5D1', mechanic: 'QCM',  minTier: 'pro' },
+                  { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',        sub: 'Buzz puis répondre', color: '#FF00AA', mechanic: 'BUZZ', minTier: 'decouverte' },
+                  { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test',  sub: 'Musique + buzz',     color: '#F59E0B', mechanic: 'BUZZ', minTier: 'pro' },
+                ] as const).map(m => {
+                  const tierOrder: SubscriptionTier[] = ['decouverte', 'essentiel', 'pro', 'expert'];
+                  const locked = isLoggedIn && tierOrder.indexOf(userTier) < tierOrder.indexOf(m.minTier as SubscriptionTier);
+                  return (
+                  <button key={m.value}
+                    onClick={() => { if (!locked) setMode(m.value); }}
+                    className="flex flex-col items-start gap-1 p-3 rounded-xl transition-all text-left relative overflow-hidden"
                     style={{
-                      border: `2px solid ${mode === m.value ? m.color : 'rgba(139,92,246,0.15)'}`,
-                      background: mode === m.value ? `${m.color}18` : 'rgba(255,255,255,0.03)',
+                      border: `2px solid ${locked ? 'rgba(255,255,255,0.06)' : mode === m.value ? m.color : 'rgba(139,92,246,0.15)'}`,
+                      background: locked ? 'rgba(255,255,255,0.02)' : mode === m.value ? `${m.color}18` : 'rgba(255,255,255,0.03)',
+                      cursor: locked ? 'not-allowed' : 'pointer',
+                      opacity: locked ? 0.5 : 1,
                     }}>
                     <div className="flex items-center gap-1.5 w-full">
-                      <MuzquizLogo width={22} showText={false} color={mode === m.value ? m.color : 'rgba(240,244,255,0.25)'} />
+                      <MuzquizLogo width={22} showText={false} color={locked ? 'rgba(240,244,255,0.15)' : mode === m.value ? m.color : 'rgba(240,244,255,0.25)'} />
                       <span className="text-xs font-black px-1.5 py-0.5 rounded-md"
                         style={{
-                          background: mode === m.value ? `${m.color}25` : 'transparent',
-                          color: mode === m.value ? m.color : 'rgba(240,244,255,0.2)',
+                          background: mode === m.value && !locked ? `${m.color}25` : 'transparent',
+                          color: locked ? 'rgba(240,244,255,0.15)' : mode === m.value ? m.color : 'rgba(240,244,255,0.2)',
                           fontSize: '0.6rem', letterSpacing: '0.08em',
                         }}>
                         {m.mechanic}
                       </span>
+                      {locked && <span className="ml-auto text-xs" style={{ color: 'rgba(240,244,255,0.25)' }}>🔒 Pro</span>}
                     </div>
-                    <span className="font-black text-sm leading-tight" style={{ color: mode === m.value ? m.color : '#F0F4FF' }}>
+                    <span className="font-black text-sm leading-tight" style={{ color: locked ? 'rgba(240,244,255,0.3)' : mode === m.value ? m.color : '#F0F4FF' }}>
                       {m.label}
                     </span>
                     <span className="text-xs" style={{ color: 'rgba(240,244,255,0.3)' }}>{m.sub}</span>
                   </button>
-                ))}
+                );})}
               </div>
             </div>
           )}

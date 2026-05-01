@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { QuestionPack, CustomQuestion, QuestionType, SubscriptionTier, TIER_LIMITS } from '@/types';
+import { QuestionPack, CustomQuestion, QuestionType, SubscriptionTier, TIER_LIMITS, normalizeTier } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
@@ -153,7 +153,7 @@ export default function QuestionsPage() {
       setUserId(user.id);
 
       const { data: profile } = await supabase.from('profiles').select('subscription_tier').eq('id', user.id).single();
-      const userTier = (profile?.subscription_tier as SubscriptionTier) ?? 'decouverte';
+      const userTier = normalizeTier(profile?.subscription_tier);
 
       if (!TIER_LIMITS[userTier].canCreate) { router.replace('/pricing'); return; }
 
