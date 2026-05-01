@@ -355,12 +355,12 @@ body {
   100% { filter: blur(0px); }
 }
 .muz-deblur-img {
-  /* Remplit le conteneur 16:9 — object-fit: contain = letterbox noir si portrait */
+  /* Remplit le conteneur 16:9 — bandes couleur fond site pour les images portrait */
   width: 100%;
   height: 100%;
   display: block;
   object-fit: contain;
-  background: #000;
+  background: #0D1B3E;
 }
 
 /* Séparateur décoratif */
