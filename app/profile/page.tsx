@@ -433,14 +433,14 @@ export default function ProfilePage() {
                         placeholder="Entre ton code…"
                         value={promoCode}
                         onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoMsg(null); }}
-                        className="flex-1 px-3 py-2 rounded-xl font-mono text-sm font-bold"
+                        className="min-w-0 flex-1 px-3 py-2 rounded-xl font-mono text-sm font-bold"
                         style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F0F4FF', outline: 'none' }}
                         onKeyDown={e => e.key === 'Enter' && !promoLoading && redeemPromoCode()}
                       />
                       <button
                         onClick={redeemPromoCode}
                         disabled={promoLoading || !promoCode.trim()}
-                        className="px-4 py-2 rounded-xl font-black text-sm transition-all disabled:opacity-40"
+                        className="shrink-0 px-4 py-2 rounded-xl font-black text-sm transition-all disabled:opacity-40 whitespace-nowrap"
                         style={{ background: '#8B5CF6', color: 'white' }}>
                         {promoLoading ? '…' : 'Activer'}
                       </button>

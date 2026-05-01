@@ -4,6 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
+import { MustacheMedal } from '@/components/MustacheMedal';
 
 // ─── Countdown vers une date cible (minuit heure de Paris) ────────────────────
 function useCountdownToDateParis(targetDate: string | null) {
@@ -165,15 +166,20 @@ function Leaderboard({ userId, month }: { userId: string; month: string }) {
               boxShadow: i === 0 ? '0 0 16px rgba(245,158,11,0.1)' : 'none',
             }}>
             {/* Rang */}
-            <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
-              style={{
-                background: i === 0 ? '#F59E0B' : i === 1 ? '#9CA3AF' : i === 2 ? '#B45309' : isMe ? '#8B5CF6' : 'rgba(255,255,255,0.08)',
-                color: i < 3 || isMe ? '#0D1B3E' : '#F0F4FF',
-                fontSize: medal ? '1.1rem' : '0.75rem',
-                boxShadow: i === 0 ? '0 0 12px rgba(245,158,11,0.5)' : 'none',
-              }}>
-              {medal ?? `#${e.rank}`}
-            </div>
+            {i < 3 ? (
+              <div className="flex items-center justify-center flex-shrink-0" style={{ width: 38 }}>
+                <MustacheMedal rank={(i + 1) as 1|2|3} width={38} />
+              </div>
+            ) : (
+              <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
+                style={{
+                  background: isMe ? '#8B5CF6' : 'rgba(255,255,255,0.08)',
+                  color: '#F0F4FF',
+                  fontSize: '0.75rem',
+                }}>
+                #{e.rank}
+              </div>
+            )}
             {/* Avatar initiale */}
             <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
               style={{ background: e.avatar_color ?? '#8B5CF6', color: '#0D1B3E' }}>

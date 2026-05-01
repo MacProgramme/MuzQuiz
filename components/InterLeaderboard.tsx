@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { Player } from '@/types';
+import { MustacheMedal } from '@/components/MustacheMedal';
 
 interface RankedPlayer extends Player {
   rank: number;
@@ -109,17 +110,22 @@ export function InterLeaderboard({ players, correctPlayerIds, visible, pointsEar
                 }}
               >
                 {/* Rang */}
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center font-black flex-shrink-0"
-                  style={{
-                    background: p.rank === 1 ? '#F59E0B' : p.rank === 2 ? '#9CA3AF' : p.rank === 3 ? '#B45309' : 'rgba(255,255,255,0.08)',
-                    color: p.rank <= 3 ? '#0D1B3E' : '#F0F4FF',
-                    fontSize: p.rank <= 3 ? '1.1rem' : '0.8rem',
-                    boxShadow: isFirst ? '0 0 14px rgba(245,158,11,0.5)' : 'none',
-                  }}
-                >
-                  {p.rank <= 3 ? MEDALS[p.rank - 1] : `#${p.rank}`}
-                </div>
+                {p.rank <= 3 ? (
+                  <div className="flex items-center justify-center flex-shrink-0" style={{ width: 40 }}>
+                    <MustacheMedal rank={p.rank as 1|2|3} width={40} />
+                  </div>
+                ) : (
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center font-black flex-shrink-0"
+                    style={{
+                      background: 'rgba(255,255,255,0.08)',
+                      color: '#F0F4FF',
+                      fontSize: '0.8rem',
+                    }}
+                  >
+                    #{p.rank}
+                  </div>
+                )}
 
                 {/* Pseudo */}
                 <span className="flex-1 font-bold text-sm truncate"

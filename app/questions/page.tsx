@@ -121,6 +121,7 @@ export default function QuestionsPage() {
   const [qImageUploading, setQImageUploading] = useState(false);
   const qImageInputRef = useRef<HTMLInputElement>(null);
   const [qSaving, setQSaving] = useState(false);
+  const [qSaveError, setQSaveError] = useState<string | null>(null);
 
   // Import CSV
   const csvInputRef = useRef<HTMLInputElement>(null);
@@ -254,6 +255,7 @@ export default function QuestionsPage() {
     if (!selectedPack || !userId || !qText.trim() || qChoices.some(c => !c.trim())) return;
     if (!editingQ && limits.maxQuestionsPerPack !== Infinity && questions.length >= limits.maxQuestionsPerPack) return;
     setQSaving(true);
+    setQSaveError(null);
     const payload: any = {
       pack_id: selectedPack.id, owner_id: userId,
       question: qText.trim(),
@@ -264,8 +266,28 @@ export default function QuestionsPage() {
       image_url: (qType !== 'normal') ? (qImageUrl ?? null) : null,
       youtube_url: qYoutubeUrl.trim() || null,
     };
-    if (editingQ) await supabase.from('custom_questions').update(payload).eq('id', editingQ.id);
-    else await supabase.from('custom_questions').insert(payload);
+    let err: any = null;
+    if (editingQ) {
+      const { error } = await supabase.from('custom_questions').update(payload).eq('id', editingQ.id);
+      err = error;
+    } else {
+      const { error } = await supabase.from('custom_questions').insert(payload);
+      err = error;
+    }
+    if (err) {
+      // Colonne youtube_url absente → on réessaie sans elle
+      if (err.code === '42703') {
+        const { youtube_url: _drop, ...payloadWithout } = payload;
+        const { error: err2 } = editingQ
+          ? await supabase.from('custom_questions').update(payloadWithout).eq('id', editingQ.id)
+          : await supabase.from('custom_questions').insert(payloadWithout);
+        if (err2) { setQSaveError(err2.message); setQSaving(false); return; }
+      } else {
+        setQSaveError(err.message);
+        setQSaving(false);
+        return;
+      }
+    }
     await loadQuestions(selectedPack.id);
     setAddMode(null);
     setQType('normal'); setQImageUrl(null); setQYoutubeUrl('');
@@ -731,8 +753,13 @@ export default function QuestionsPage() {
                         style={{ ...inputStyle(), flex: 1 }} />
                     </div>
                   ))}
+                  {qSaveError && (
+                    <p className="text-xs font-bold px-1 mt-1" style={{ color: '#FF00AA' }}>
+                      ✗ {qSaveError}
+                    </p>
+                  )}
                   <div className="flex gap-2 mt-1">
-                    <button onClick={() => setAddMode(null)}
+                    <button onClick={() => { setAddMode(null); setQSaveError(null); }}
                       className="flex-1 py-2.5 rounded-xl text-sm font-bold"
                       style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.5)' }}>
                       Annuler
