@@ -503,7 +503,7 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
   if (state === 'done' && finalScore !== null) {
     const maxScore = questions.length * 100;
     const pct = (finalScore / maxScore) * 100;
-    const emoji = pct >= 90 ? '🏆' : pct >= 70 ? '🎯' : pct >= 50 ? '💪' : pct >= 30 ? '😅' : '💡';
+    const mustacheColor = pct >= 90 ? '#F59E0B' : pct >= 70 ? '#00E5D1' : pct >= 50 ? '#8B5CF6' : pct >= 30 ? '#FF00AA' : 'rgba(240,244,255,0.4)';
     const msg   = pct >= 90 ? 'Parfait !'  : pct >= 70 ? 'Excellent !' : pct >= 50 ? 'Bien joué !' : pct >= 30 ? 'Continue !' : 'Tu progresseras !';
 
     return (
@@ -512,7 +512,9 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
         {/* Score final */}
         <div className="muz-card p-6 text-center muz-pop"
           style={{ background: 'rgba(139,92,246,0.12)', border: '2px solid rgba(139,92,246,0.4)' }}>
-          <div className="text-4xl mb-1">{emoji}</div>
+          <div className="flex justify-center mb-2">
+            <MuzquizLogo width={48} showText={false} color={mustacheColor} />
+          </div>
           <p className="text-base font-black mb-3" style={{ color: '#8B5CF6' }}>{msg}</p>
           <div className="text-6xl font-black" style={{ color: '#F0F4FF' }}>
             {finalScore}
@@ -526,19 +528,6 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
           </p>
         </div>
 
-        {/* Classement mensuel */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
-              Classement — {monthLabel(currentMonthStr())}
-            </p>
-            <span className="text-xs font-bold px-2 py-1 rounded-full"
-              style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.2)' }}>
-              Top 10
-            </span>
-          </div>
-          <Leaderboard userId={userId} month={currentMonthStr()} />
-        </div>
       </div>
     );
   }
@@ -574,7 +563,10 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ background: alreadyCompleted ? 'rgba(0,229,209,0.2)' : 'rgba(255,0,170,0.2)' }}>
-            <span className="text-xl">{alreadyCompleted ? '✅' : loadError ? '⏳' : '🧠'}</span>
+            {loadError
+              ? <span className="text-xl">⏳</span>
+              : <MuzquizLogo width={26} showText={false} color={alreadyCompleted ? '#00E5D1' : '#FF00AA'} />
+            }
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-widest"
@@ -608,19 +600,6 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
         )}
       </div>
 
-      {/* Classement mensuel */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
-            Classement — {monthLabel(currentMonthStr())}
-          </p>
-          <span className="text-xs font-bold px-2 py-1 rounded-full"
-            style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.2)' }}>
-            Top 10
-          </span>
-        </div>
-        <Leaderboard userId={userId} month={currentMonthStr()} />
-      </div>
     </div>
   );
 }

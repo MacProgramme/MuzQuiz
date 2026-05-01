@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MustacheMedal } from '@/components/MustacheMedal';
+import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface DailyEntry {
@@ -277,7 +278,7 @@ export function LeaderboardQuizDuJour({ userId }: { userId: string }) {
     >
       {/* Titre */}
       <div className="flex items-center gap-2 mb-4">
-        <span className="text-lg">🏆</span>
+        <MuzquizLogo width={22} showText={false} />
         <h2 className="font-black text-base" style={{ color: '#00E5D1' }}>
           Classement Quiz du Jour
         </h2>
