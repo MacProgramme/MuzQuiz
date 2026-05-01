@@ -561,11 +561,11 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
           border: `1.5px solid ${alreadyCompleted ? 'rgba(0,229,209,0.25)' : 'rgba(255,0,170,0.25)'}`,
         }}>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+          <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ background: alreadyCompleted ? 'rgba(0,229,209,0.2)' : 'rgba(255,0,170,0.2)' }}>
             {loadError
               ? <span className="text-xl">⏳</span>
-              : <MuzquizLogo width={26} showText={false} color={alreadyCompleted ? '#00E5D1' : '#FF00AA'} />
+              : <MuzquizLogo width={36} showText={false} color={alreadyCompleted ? '#00E5D1' : '#FF00AA'} />
             }
           </div>
           <div>

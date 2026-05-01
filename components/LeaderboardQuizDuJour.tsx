@@ -278,7 +278,7 @@ export function LeaderboardQuizDuJour({ userId }: { userId: string }) {
     >
       {/* Titre */}
       <div className="flex items-center gap-2 mb-4">
-        <MuzquizLogo width={22} showText={false} />
+        <MuzquizLogo width={32} showText={false} color="#00E5D1" />
         <h2 className="font-black text-base" style={{ color: '#00E5D1' }}>
           Classement Quiz du Jour
         </h2>
