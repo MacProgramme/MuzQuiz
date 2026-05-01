@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS daily_quiz_scores (
   user_id      UUID REFERENCES auth.users NOT NULL,
   nickname     TEXT NOT NULL,
   date         DATE NOT NULL,
-  score        INT  NOT NULL DEFAULT 0 CHECK (score >= 0 AND score <= 100),
+  score        INT  NOT NULL DEFAULT 0 CHECK (score >= 0 AND score <= 1000),
   completed_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT daily_quiz_scores_user_date_unique UNIQUE (user_id, date)
 );
