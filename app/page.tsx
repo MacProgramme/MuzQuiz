@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { QRScanner } from '@/components/QRScanner';
 import { DailyQuiz } from '@/components/DailyQuiz';
+import { TestDailyQuiz } from '@/components/TestDailyQuiz'; // ⚠️ TEST — à supprimer au lancement
 
 export default function Home() {
   const router = useRouter();
@@ -193,6 +194,8 @@ export default function Home() {
             </span>
           </div>
           <DailyQuiz userId={userId} nickname={nickname} avatarColor={avatarColor} />
+          {/* ⚠️ TEST — à supprimer au lancement */}
+          <TestDailyQuiz userId={userId} nickname={nickname} />
         </div>
       )}
 
