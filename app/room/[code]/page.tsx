@@ -19,7 +19,7 @@ import { Buzz, QCMAnswer, Player, isBuzzMechanic, isBlindTestMode } from '@/type
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
 import { QuestionImage } from '@/components/QuestionImage';
-import { YouTubePlayer } from '@/components/YouTubePlayer';
+import { AudioPlayer } from '@/components/AudioPlayer';
 import Link from 'next/link';
 
 // --- Confettis lors de la révélation ---
@@ -714,10 +714,10 @@ export default function RoomPage() {
           {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
 
-        {/* Lecteur YouTube pour les blind tests */}
+        {/* Lecteur audio pour les blind tests */}
         {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && (
           <div className="w-full max-w-lg">
-            <YouTubePlayer url={(currentQ as any).youtube_url} />
+            <AudioPlayer url={(currentQ as any).youtube_url} />
           </div>
         )}
 

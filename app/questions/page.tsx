@@ -118,9 +118,11 @@ export default function QuestionsPage() {
   const [qCorrect, setQCorrect] = useState<0|1|2|3>(0);
   const [qType, setQType] = useState<QuestionType>('normal');
   const [qImageUrl, setQImageUrl] = useState<string | null>(null);
-  const [qYoutubeUrl, setQYoutubeUrl] = useState<string>('');
+  const [qYoutubeUrl, setQYoutubeUrl] = useState<string>('');  // réutilisé pour l'URL audio
   const [qImageUploading, setQImageUploading] = useState(false);
+  const [qAudioUploading, setQAudioUploading] = useState(false);
   const qImageInputRef = useRef<HTMLInputElement>(null);
+  const qAudioInputRef = useRef<HTMLInputElement>(null);
   const [qSaving, setQSaving] = useState(false);
   const [qSaveError, setQSaveError] = useState<string | null>(null);
 
@@ -249,6 +251,31 @@ export default function QuestionsPage() {
     if (!file) return;
     const url = await uploadQuestionImage(file);
     if (url) setQImageUrl(url);
+    e.target.value = '';
+  };
+
+  const uploadAudio = async (file: File): Promise<string | null> => {
+    if (!userId) return null;
+    setQAudioUploading(true);
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() ?? 'mp3';
+      const path = `audio/${userId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage
+        .from('question-images')
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (error) { console.error('Upload audio:', error.message); return null; }
+      const { data: urlData } = supabase.storage.from('question-images').getPublicUrl(path);
+      return urlData.publicUrl;
+    } finally {
+      setQAudioUploading(false);
+    }
+  };
+
+  const handleQAudioChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadAudio(file);
+    if (url) setQYoutubeUrl(url);  // stocké dans la colonne youtube_url
     e.target.value = '';
   };
 
@@ -709,27 +736,59 @@ export default function QuestionsPage() {
                     </div>
                   )}
 
-                  {/* Lien YouTube (pour packs blind test) */}
+                  {/* Upload audio (pour packs blind test) */}
                   {selectedPack && (selectedPack.mode === 'blind_test' || selectedPack.mode === 'buzz_blind_test') && (
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(0,229,209,0.6)' }}>
-                        ♪ Lien YouTube (musique à identifier)
+                        ♪ Fichier audio (musique à identifier)
                       </p>
                       <input
-                        type="url"
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        value={qYoutubeUrl}
-                        onChange={e => setQYoutubeUrl(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl font-mono text-sm"
-                        style={{
-                          background: 'rgba(0,229,209,0.07)',
-                          border: `1.5px solid ${qYoutubeUrl ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                          color: '#F0F4FF',
-                          outline: 'none',
-                        }}
+                        ref={qAudioInputRef}
+                        type="file"
+                        accept=".mp3,.ogg,.wav,.aac,.m4a,audio/*"
+                        className="hidden"
+                        onChange={handleQAudioChange}
                       />
-                      {qYoutubeUrl && !qYoutubeUrl.includes('youtu') && (
-                        <p className="text-xs mt-1" style={{ color: '#FF00AA' }}>⚠ URL YouTube non reconnue</p>
+                      {qYoutubeUrl ? (
+                        /* Aperçu : fichier chargé */
+                        <div
+                          className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                          style={{ background: 'rgba(0,229,209,0.07)', border: '1.5px solid rgba(0,229,209,0.4)' }}
+                        >
+                          <span style={{ color: '#00E5D1', fontSize: '1.3rem' }}>♪</span>
+                          <span className="flex-1 min-w-0 text-xs font-bold truncate" style={{ color: '#00E5D1' }}>
+                            Fichier audio chargé ✓
+                          </span>
+                          <button
+                            onClick={() => setQYoutubeUrl('')}
+                            className="text-xs font-black px-2 py-1 rounded-lg flex-shrink-0"
+                            style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}
+                          >
+                            ✕ Supprimer
+                          </button>
+                        </div>
+                      ) : (
+                        /* Zone d'upload */
+                        <button
+                          onClick={() => qAudioInputRef.current?.click()}
+                          disabled={qAudioUploading}
+                          className="w-full py-6 rounded-xl flex flex-col items-center gap-2 transition-all hover:opacity-80 disabled:opacity-50"
+                          style={{ border: '2px dashed rgba(0,229,209,0.3)', background: 'rgba(0,229,209,0.04)', color: 'rgba(240,244,255,0.4)' }}
+                        >
+                          {qAudioUploading ? (
+                            <>
+                              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
+                                style={{ borderColor: '#00E5D1', borderTopColor: 'transparent' }} />
+                              <span className="text-xs font-bold" style={{ color: '#00E5D1' }}>Envoi en cours…</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-2xl">🎵</span>
+                              <span className="text-xs font-bold" style={{ color: '#00E5D1' }}>Cliquer pour choisir un fichier audio</span>
+                              <span className="text-xs" style={{ color: 'rgba(240,244,255,0.3)' }}>MP3, OGG, WAV, AAC, M4A</span>
+                            </>
+                          )}
+                        </button>
                       )}
                     </div>
                   )}
@@ -996,7 +1055,15 @@ export default function QuestionsPage() {
                       {idx + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm mb-2" style={{ color: '#F0F4FF' }}>{q.question}</p>
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <p className="font-bold text-sm" style={{ color: '#F0F4FF' }}>{q.question}</p>
+                        {q.youtube_url && (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-bold flex-shrink-0"
+                            style={{ background: 'rgba(0,229,209,0.12)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.25)' }}>
+                            ♪ Audio
+                          </span>
+                        )}
+                      </div>
                       <div className="grid grid-cols-2 gap-1.5">
                         {[q.choice_a, q.choice_b, q.choice_c, q.choice_d].map((choice, i) => (
                           <div key={i} className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs"
