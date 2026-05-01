@@ -21,7 +21,7 @@ export default function Home() {
   const [err, setErr] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [userTier, setUserTier] = useState<SubscriptionTier>('free');
+  const [userTier, setUserTier] = useState<SubscriptionTier>('decouverte');
   const [publicScreen, setPublicScreen] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   // Pour le Quiz du Jour
@@ -50,7 +50,7 @@ export default function Home() {
           .eq('id', uid)
           .single();
         if (profile?.nickname) setNickname(profile.nickname);
-        const tier = (profile?.subscription_tier as SubscriptionTier) ?? 'free';
+        const tier = (profile?.subscription_tier as SubscriptionTier) ?? 'decouverte';
         setUserTier(tier);
         setAvatarColor(profile?.avatar_color ?? '#8B5CF6');
         setUserId(uid);
@@ -73,7 +73,7 @@ export default function Home() {
         loadProfile(user.id);
       } else {
         setNickname('');
-        setUserTier('free');
+        setUserTier('decouverte');
         setUserId(null);
         setAvatarColor('#8B5CF6');
         setProfileLoading(false);
@@ -176,8 +176,8 @@ export default function Home() {
       {/* Séparateur décoratif */}
       <div className="muz-divider w-48 mb-8" />
 
-      {/* Quiz du Jour — accès rapide (pro & premium uniquement) */}
-      {isLoggedIn && userId && (userTier === 'pro' || userTier === 'premium') && (
+      {/* Quiz du Jour — accès rapide (essentiel et supérieur) */}
+      {isLoggedIn && userId && (userTier === 'essentiel' || userTier === 'pro' || userTier === 'expert') && (
         <div className="w-full max-w-md mb-8">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-base">🧠</span>
@@ -186,11 +186,11 @@ export default function Home() {
             </p>
             <span className="text-xs font-black px-2 py-0.5 rounded-full ml-auto"
               style={{
-                background: userTier === 'premium' ? 'rgba(245,158,11,0.15)' : 'rgba(139,92,246,0.15)',
-                color: userTier === 'premium' ? '#F59E0B' : '#8B5CF6',
-                border: `1px solid ${userTier === 'premium' ? 'rgba(245,158,11,0.3)' : 'rgba(139,92,246,0.3)'}`,
+                background: userTier === 'expert' ? 'rgba(245,158,11,0.15)' : userTier === 'pro' ? 'rgba(139,92,246,0.15)' : 'rgba(0,229,209,0.15)',
+                color: userTier === 'expert' ? '#F59E0B' : userTier === 'pro' ? '#8B5CF6' : '#00E5D1',
+                border: `1px solid ${userTier === 'expert' ? 'rgba(245,158,11,0.3)' : userTier === 'pro' ? 'rgba(139,92,246,0.3)' : 'rgba(0,229,209,0.3)'}`,
               }}>
-              {userTier === 'premium' ? '⭐ Premium' : 'Pro'}
+              {userTier === 'expert' ? '⭐ Expert' : userTier === 'pro' ? '🚀 Pro' : '✨ Essentiel'}
             </span>
           </div>
           <DailyQuiz userId={userId} nickname={nickname} avatarColor={avatarColor} />

@@ -3,7 +3,7 @@
 export type RoomStatus = 'waiting' | 'playing' | 'finished';
 // 4 modes + anciens identifiants (backward compat)
 export type GameMode = 'quiz' | 'blind_test' | 'buzz_quiz' | 'buzz_blind_test' | 'qcm' | 'buzz';
-export type SubscriptionTier = 'free' | 'pro' | 'premium';
+export type SubscriptionTier = 'decouverte' | 'essentiel' | 'pro' | 'expert';
 
 /** Vrai si le mode utilise la mécanique "buzz d'abord" */
 export const isBuzzMechanic = (mode: GameMode): boolean =>
@@ -23,10 +23,28 @@ export const MODE_DISPLAY: Record<GameMode, string> = {
   buzz:            'Buzz Quiz',
 };
 
-export const TIER_LIMITS: Record<SubscriptionTier, { maxPacks: number; maxQuestionsPerPack: number; canCreate: boolean; maxPlayers: number }> = {
-  free:    { maxPacks: 0,        maxQuestionsPerPack: 0,        canCreate: false, maxPlayers: 20  },
-  pro:     { maxPacks: 5,        maxQuestionsPerPack: 30,       canCreate: true,  maxPlayers: 100 },
-  premium: { maxPacks: Infinity, maxQuestionsPerPack: Infinity, canCreate: true,  maxPlayers: 200 },
+export const TIER_LIMITS: Record<SubscriptionTier, {
+  maxPacks: number;
+  maxQuestionsPerPack: number;
+  canCreate: boolean;
+  maxPlayers: number;
+  maxAiQuizzes: number;
+}> = {
+  //  Moustachu Découverte — Gratuit
+  //  Modes : Quiz QCM + Buzz Quiz | Saisie manuelle uniquement
+  decouverte: { maxPacks: 0,        maxQuestionsPerPack: 0,        canCreate: false, maxPlayers: 10,  maxAiQuizzes: 0  },
+
+  //  Moustachu Essentiel — 9,99 €/mois
+  //  Modes : Quiz QCM + Buzz Quiz + Questions image | Manuel + Excel + IA 10 quiz/mois
+  essentiel:  { maxPacks: 5,        maxQuestionsPerPack: 50,       canCreate: true,  maxPlayers: 20,  maxAiQuizzes: 10 },
+
+  //  Moustachu Pro — 19,99 €/mois
+  //  Modes : Tous (+ Blind Test Audio) | Manuel + Excel + IA 40 quiz/mois
+  pro:        { maxPacks: 20,       maxQuestionsPerPack: 200,      canCreate: true,  maxPlayers: 100, maxAiQuizzes: 40 },
+
+  //  Moustachu Expert — 29,99 €/mois
+  //  Modes : Tous | Manuel + Excel + IA 80 quiz/mois
+  expert:     { maxPacks: Infinity, maxQuestionsPerPack: Infinity, canCreate: true,  maxPlayers: 250, maxAiQuizzes: 80 },
 };
 
 export interface QuestionPack {

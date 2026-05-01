@@ -39,9 +39,10 @@ interface DailyQuizEntry {
 }
 
 const TIER_OPTIONS: { value: SubscriptionTier; label: string; color: string }[] = [
-  { value: 'free',    label: 'Gratuit',  color: 'rgba(240,244,255,0.5)' },
-  { value: 'pro',     label: 'Pro',      color: '#00E5D1' },
-  { value: 'premium', label: 'Premium',  color: '#F59E0B' },
+  { value: 'decouverte', label: 'Découverte', color: 'rgba(240,244,255,0.5)' },
+  { value: 'essentiel',  label: 'Essentiel',  color: '#00E5D1'               },
+  { value: 'pro',        label: 'Pro',        color: '#8B5CF6'               },
+  { value: 'expert',     label: 'Expert',     color: '#F59E0B'               },
 ];
 
 type AdminTab = 'users' | 'quizzes' | 'promo';
@@ -140,7 +141,7 @@ export default function AdminPage() {
   const [promoCodes, setPromoCodes] = useState<any[]>([]);
   const [promoLoading, setPromoLoading] = useState(false);
   const [newPromoCode, setNewPromoCode] = useState('');
-  const [newPromoTier, setNewPromoTier] = useState<'pro' | 'premium'>('premium');
+  const [newPromoTier, setNewPromoTier] = useState<'essentiel' | 'pro' | 'expert'>('expert');
   const [newPromoExpiry, setNewPromoExpiry] = useState('');
   const [promoSaving, setPromoSaving] = useState(false);
   const [promoMsg, setPromoMsg] = useState('');
@@ -225,9 +226,10 @@ export default function AdminPage() {
 
   const filtered = users.filter(u => u.nickname.toLowerCase().includes(search.toLowerCase()));
   const counts = {
-    free:    users.filter(u => u.subscription_tier === 'free').length,
-    pro:     users.filter(u => u.subscription_tier === 'pro').length,
-    premium: users.filter(u => u.subscription_tier === 'premium').length,
+    decouverte: users.filter(u => u.subscription_tier === 'decouverte').length,
+    essentiel:  users.filter(u => u.subscription_tier === 'essentiel').length,
+    pro:        users.filter(u => u.subscription_tier === 'pro').length,
+    expert:     users.filter(u => u.subscription_tier === 'expert').length,
   };
 
   // ─── Quiz — suppression ───────────────────────────────────────────────────
@@ -418,11 +420,12 @@ export default function AdminPage() {
               {users.length} compte{users.length > 1 ? 's' : ''} enregistré{users.length > 1 ? 's' : ''}
             </p>
 
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-4 gap-3 mb-6">
               {[
-                { label: 'Gratuit', value: counts.free,    color: 'rgba(240,244,255,0.5)' },
-                { label: 'Pro',     value: counts.pro,     color: '#00E5D1' },
-                { label: 'Premium', value: counts.premium, color: '#F59E0B' },
+                { label: 'Découverte', value: counts.decouverte, color: 'rgba(240,244,255,0.5)' },
+                { label: 'Essentiel',  value: counts.essentiel,  color: '#00E5D1'               },
+                { label: 'Pro',        value: counts.pro,        color: '#8B5CF6'               },
+                { label: 'Expert',     value: counts.expert,     color: '#F59E0B'               },
               ].map(s => (
                 <div key={s.label} className="muz-card p-4 text-center">
                   <div className="text-2xl font-black" style={{ color: s.color }}>{s.value}</div>
@@ -461,7 +464,7 @@ export default function AdminPage() {
                           className="px-3 py-1.5 rounded-lg text-xs font-black transition-all"
                           style={{
                             background: user.subscription_tier === tier.value
-                              ? tier.value === 'free' ? 'rgba(255,255,255,0.12)' : tier.value === 'pro' ? 'rgba(0,229,209,0.2)' : 'rgba(245,158,11,0.2)'
+                              ? tier.value === 'decouverte' ? 'rgba(255,255,255,0.12)' : `${tier.color}22`
                               : 'rgba(255,255,255,0.04)',
                             color: user.subscription_tier === tier.value ? tier.color : 'rgba(240,244,255,0.3)',
                             border: `1px solid ${user.subscription_tier === tier.value ? tier.color + '55' : 'rgba(255,255,255,0.07)'}`,
@@ -780,15 +783,19 @@ export default function AdminPage() {
                 <div>
                   <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Tier accordé</p>
                   <div className="flex gap-2">
-                    {(['pro', 'premium'] as const).map(t => (
-                      <button key={t} onClick={() => setNewPromoTier(t)}
-                        className="flex-1 py-2 rounded-xl font-black text-sm transition-all"
+                    {([
+                      { value: 'essentiel', label: '✨ Essentiel', color: '#00E5D1' },
+                      { value: 'pro',       label: '🚀 Pro',       color: '#8B5CF6' },
+                      { value: 'expert',    label: '⭐ Expert',    color: '#F59E0B' },
+                    ] as { value: 'essentiel' | 'pro' | 'expert'; label: string; color: string }[]).map(t => (
+                      <button key={t.value} onClick={() => setNewPromoTier(t.value)}
+                        className="flex-1 py-2 rounded-xl font-black text-xs transition-all"
                         style={{
-                          background: newPromoTier === t ? (t === 'premium' ? '#F59E0B' : '#8B5CF6') : 'rgba(255,255,255,0.05)',
-                          color: newPromoTier === t ? '#0D1B3E' : 'rgba(240,244,255,0.5)',
-                          border: `1px solid ${newPromoTier === t ? 'transparent' : 'rgba(255,255,255,0.1)'}`,
+                          background: newPromoTier === t.value ? t.color : 'rgba(255,255,255,0.05)',
+                          color: newPromoTier === t.value ? '#0D1B3E' : 'rgba(240,244,255,0.5)',
+                          border: `1px solid ${newPromoTier === t.value ? 'transparent' : 'rgba(255,255,255,0.1)'}`,
                         }}>
-                        {t === 'premium' ? '⭐ Premium' : '🚀 Pro'}
+                        {t.label}
                       </button>
                     ))}
                   </div>
@@ -834,7 +841,7 @@ export default function AdminPage() {
                 <div className="flex flex-col gap-3">
                   {promoCodes.map(p => {
                     const expired = new Date(p.expires_at) < new Date();
-                    const tierColor = p.tier === 'premium' ? '#F59E0B' : '#8B5CF6';
+                    const tierColor = p.tier === 'expert' ? '#F59E0B' : p.tier === 'pro' ? '#8B5CF6' : '#00E5D1';
                     return (
                       <div key={p.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl"
                         style={{

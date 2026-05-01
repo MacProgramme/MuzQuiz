@@ -87,6 +87,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     success: true,
     tier: promoCode.tier,
-    message: `Félicitations ! Ton compte est maintenant ${promoCode.tier === 'premium' ? 'Premium' : promoCode.tier === 'pro' ? 'Pro' : 'Free'}.`,
+    message: `Félicitations ! Ton compte est maintenant ${promoCode.tier === 'expert' ? 'Expert' : promoCode.tier === 'pro' ? 'Pro' : 'Essentiel'}.`,
   });
 }

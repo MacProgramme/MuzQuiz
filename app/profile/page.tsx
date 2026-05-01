@@ -122,9 +122,10 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
 }
 
 const TIER_INFO: Record<SubscriptionTier, { label: string; color: string; bg: string; price: string; perks: string[] }> = {
-  free:    { label: 'Gratuit',  color: 'rgba(240,244,255,0.5)', bg: 'rgba(255,255,255,0.06)',  price: '0€',    perks: ['Accès aux questions MUZQUIZ', 'Parties illimitées'] },
-  pro:     { label: 'Pro',      color: '#00E5D1',               bg: 'rgba(0,229,209,0.1)',      price: '9.99€', perks: ['Tout le Gratuit', 'Jusqu\'à 5 packs (30 questions chacun)', 'Questions personnalisées'] },
-  premium: { label: 'Premium',  color: '#F59E0B',               bg: 'rgba(245,158,11,0.1)',     price: '19.99€',perks: ['Tout le Pro', 'Packs illimités', 'Questions illimitées'] },
+  decouverte: { label: 'Découverte', color: 'rgba(240,244,255,0.5)', bg: 'rgba(255,255,255,0.06)',  price: '0€',     perks: ['Accès aux questions MUZQUIZ', 'Parties illimitées', 'Jusqu\'à 10 joueurs', 'Quiz QCM & Buzz Quiz'] },
+  essentiel:  { label: 'Essentiel',  color: '#00E5D1',               bg: 'rgba(0,229,209,0.1)',      price: '9,99€',  perks: ['Tout le Découverte', 'Jusqu\'à 20 joueurs', 'Questions image', 'Import Excel', 'IA : 10 quiz/mois'] },
+  pro:        { label: 'Pro',        color: '#8B5CF6',               bg: 'rgba(139,92,246,0.12)',    price: '19,99€', perks: ['Tout l\'Essentiel', 'Jusqu\'à 100 joueurs', 'Blind Test Audio', 'IA : 40 quiz/mois'] },
+  expert:     { label: 'Expert',     color: '#F59E0B',               bg: 'rgba(245,158,11,0.1)',     price: '29,99€', perks: ['Tout le Pro', 'Jusqu\'à 250 joueurs', 'Tous les modes', 'IA : 80 quiz/mois'] },
 };
 
 const AVATAR_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981'];
@@ -399,7 +400,7 @@ export default function ProfilePage() {
                         Changer le tier (test admin)
                       </p>
                       <div className="flex gap-2">
-                        {(['free', 'pro', 'premium'] as SubscriptionTier[]).map(tier => {
+                        {(['decouverte', 'essentiel', 'pro', 'expert'] as SubscriptionTier[]).map(tier => {
                           const info = TIER_INFO[tier];
                           const isActive = profile.subscription_tier === tier;
                           return (
@@ -453,7 +454,7 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Lien upgrade pour les non-admins en gratuit */}
-                  {!isAdmin && profile.subscription_tier === 'free' && (
+                  {!isAdmin && profile.subscription_tier === 'decouverte' && (
                     <Link href="/pricing"
                       className="flex items-center justify-center gap-2 mt-3 py-2.5 rounded-xl font-black text-sm transition-all hover:opacity-90"
                       style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)' }}>

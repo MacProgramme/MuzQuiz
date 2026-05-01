@@ -15,9 +15,10 @@ type SortKey = 'name' | 'created_at' | 'question_count' | 'mode';
 const MODE_LABEL: Record<string, string> = { qcm: 'Quiz', buzz: 'Blind Test' };
 const LABELS = ['A', 'B', 'C', 'D'];
 const TIER_COLORS: Record<SubscriptionTier, { bg: string; text: string; label: string }> = {
-  free:    { bg: 'rgba(255,255,255,0.06)',  text: 'rgba(240,244,255,0.5)', label: 'Gratuit' },
-  pro:     { bg: 'rgba(0,229,209,0.12)',    text: '#00E5D1',              label: 'Pro' },
-  premium: { bg: 'rgba(245,158,11,0.12)',   text: '#F59E0B',              label: 'Premium' },
+  decouverte: { bg: 'rgba(255,255,255,0.06)',  text: 'rgba(240,244,255,0.5)', label: 'Découverte' },
+  essentiel:  { bg: 'rgba(0,229,209,0.12)',    text: '#00E5D1',               label: 'Essentiel'  },
+  pro:        { bg: 'rgba(139,92,246,0.12)',   text: '#8B5CF6',               label: 'Pro'        },
+  expert:     { bg: 'rgba(245,158,11,0.12)',   text: '#F59E0B',               label: 'Expert'     },
 };
 
 function inputStyle(focused = false): React.CSSProperties {
@@ -93,7 +94,7 @@ function parseCSV(text: string): ParsedQuestion[] {
 // ─── Composant principal ─────────────────────────────────────────────────────
 export default function QuestionsPage() {
   const router = useRouter();
-  const [tier, setTier] = useState<SubscriptionTier>('free');
+  const [tier, setTier] = useState<SubscriptionTier>('decouverte');
   const [userId, setUserId] = useState<string | null>(null);
   const [packs, setPacks] = useState<(QuestionPack & { question_count: number })[]>([]);
   const [selectedPack, setSelectedPack] = useState<QuestionPack | null>(null);
@@ -152,7 +153,7 @@ export default function QuestionsPage() {
       setUserId(user.id);
 
       const { data: profile } = await supabase.from('profiles').select('subscription_tier').eq('id', user.id).single();
-      const userTier = (profile?.subscription_tier as SubscriptionTier) ?? 'free';
+      const userTier = (profile?.subscription_tier as SubscriptionTier) ?? 'decouverte';
 
       if (!TIER_LIMITS[userTier].canCreate) { router.replace('/pricing'); return; }
 

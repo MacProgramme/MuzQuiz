@@ -18,7 +18,7 @@ INSERT INTO daily_quizzes (date, theme, questions) VALUES
   {"question":"Quelle est la langue la plus parlée au monde ?","choices":["Anglais","Espagnol","Hindi","Mandarin"],"correct":3},
   {"question":"En quelle année a eu lieu la Révolution française ?","choices":["1776","1789","1793","1804"],"correct":1},
   {"question":"Quelle est la formule chimique de l''eau ?","choices":["CO2","H2O","O2","NaCl"],"correct":1},
-  {"question":"Quel est le plus long fleuve du monde ?","choices":["Amazone","Nil","Yangtsé","Mississippi"],"correct":1},
+  {"question":"Quel est le plus long fleuve du monde ?","choices":["Amazone","Nil","Yangtsé","Mississippi"],"correct":0},
   {"question":"Combien de joueurs compose une équipe de rugby à XV ?","choices":["11","13","15","17"],"correct":2}
 ]'),
 
@@ -145,7 +145,7 @@ INSERT INTO daily_quizzes (date, theme, questions) VALUES
   {"question":"Quel jeu se déroule dans le royaume de Hyrule ?","choices":["Zelda","Mario","Metroid","Kirby"],"correct":0},
   {"question":"Quelle société a développé le moteur de jeu Unreal Engine ?","choices":["Unity","EA Games","Epic Games","Ubisoft"],"correct":2},
   {"question":"Combien de bits avait la Nintendo 64 ?","choices":["16","32","64","128"],"correct":2},
-  {"question":"Quel est le jeu vidéo le plus vendu de tous les temps ?","choices":["GTA V","Tetris","Minecraft","Wii Sports"],"correct":2},
+  {"question":"Quel est le jeu vidéo le plus vendu de tous les temps ?","choices":["GTA V","Tetris","Minecraft","Wii Sports"],"correct":1},
   {"question":"Quelle entreprise fabrique les processeurs Ryzen ?","choices":["Intel","NVIDIA","AMD","Qualcomm"],"correct":2},
   {"question":"Dans Fortnite, combien de joueurs maximum participent à une partie Battle Royale ?","choices":["50","75","100","150"],"correct":2}
 ]'),
@@ -176,7 +176,7 @@ INSERT INTO daily_quizzes (date, theme, questions) VALUES
   {"question":"Quelle est la gestation d''un éléphant ?","choices":["12 mois","18 mois","22 mois","26 mois"],"correct":2},
   {"question":"Quel est l''oiseau le plus rapide en piqué ?","choices":["Aigle royal","Faucon pèlerin","Albatros","Autour des palombes"],"correct":1},
   {"question":"Combien de pattes a une araignée ?","choices":["6","8","10","12"],"correct":1},
-  {"question":"Quel mammifère ne peut pas voler malgré ses ailes ?","choices":["Chauve-souris","Pingouin","Autruche","Manchot"],"correct":3},
+  {"question":"Quel oiseau est totalement incapable de voler ?","choices":["Faucon","Albatros","Manchot","Cigogne"],"correct":2},
   {"question":"Quel animal produit la soie naturelle ?","choices":["Abeille","Araignée","Ver à soie","Chenille processionnaire"],"correct":2},
   {"question":"Combien d''espèces de pingouins existe-t-il environ ?","choices":["8","13","18","25"],"correct":2},
   {"question":"Quel reptile peut changer de couleur ?","choices":["Gecko","Lézard vert","Caméléon","Iguane"],"correct":2}
@@ -234,7 +234,7 @@ INSERT INTO daily_quizzes (date, theme, questions) VALUES
 -- 15 MAI — Musique
 -- ─────────────────────────────────────────────────────────────────────
 ('2026-05-15', 'Musique', '[
-  {"question":"Quel chanteur français est surnommé Le Grand Charles ?","choices":["Charles Trenet","Charles Aznavour","Georges Brassens","Jacques Brel"],"correct":1},
+  {"question":"Quel chanteur français est surnommé Le Fou Chantant ?","choices":["Charles Trenet","Charles Aznavour","Georges Brassens","Jacques Brel"],"correct":0},
   {"question":"Quel album de Michael Jackson est le plus vendu de tous les temps ?","choices":["Bad","Dangerous","Off the Wall","Thriller"],"correct":3},
   {"question":"Quel groupe chante Stairway to Heaven ?","choices":["The Who","Deep Purple","Led Zeppelin","Black Sabbath"],"correct":2},
   {"question":"De quel pays vient la bossa nova ?","choices":["Argentine","Cuba","Brésil","Mexique"],"correct":2},
@@ -254,7 +254,7 @@ INSERT INTO daily_quizzes (date, theme, questions) VALUES
   {"question":"Quel est le nom du trophée décerné au meilleur basketteur NBA ?","choices":["Hart Trophy","Larry O''Brien Trophy","Maurice Podoloff Trophy","Art Ross Trophy"],"correct":2},
   {"question":"Quelle nation a remporté le plus de Coupes du monde de football ?","choices":["Allemagne","Italie","Argentine","Brésil"],"correct":3},
   {"question":"En natation, quelle nage est la plus rapide ?","choices":["Brasse","Dos","Papillon","Crawl"],"correct":3},
-  {"question":"Quel sportif français a remporté Roland-Garros le plus de fois ?","choices":["Henri Leconte","Yannick Noah","Noah (même)","Yannick Noah"],"correct":1},
+  {"question":"Quel sportif français a remporté Roland-Garros le plus de fois ?","choices":["Henri Leconte","Yannick Noah","Henri Lacoste","Gustavo Kuerten"],"correct":1},
   {"question":"Quelle équipe de basket porte le surnom des ''Bulls'' ?","choices":["Los Angeles","New York","Chicago","Boston"],"correct":2},
   {"question":"Quel est le record du monde du 100 m ?","choices":["9s58","9s63","9s69","9s72"],"correct":0},
   {"question":"Dans quel sport pratique-t-on le salto ?","choices":["Gym rythmique","Trampoline","Gym artistique","Plongeon"],"correct":2},
@@ -291,7 +291,7 @@ INSERT INTO daily_quizzes (date, theme, questions) VALUES
   {"question":"Quel pays n''a pas d''accès à la mer ?","choices":["Bolivie","Paraguay","Zambie","Tous ces pays"],"correct":3},
   {"question":"Quelle chaîne de montagnes sépare l''Europe de l''Asie ?","choices":["Caucase","Carpates","Oural","Alpes"],"correct":2},
   {"question":"Quelle est la capitale de la Nouvelle-Zélande ?","choices":["Auckland","Christchurch","Hamilton","Wellington"],"correct":3},
-  {"question":"Quel continent est entièrement dans l''hémisphère Sud ?","choices":["Afrique","Australie","Asie","Antarctique"],"correct":3}
+  {"question":"Quel est le seul continent entièrement recouvert de glace ?","choices":["Afrique","Australie","Asie","Antarctique"],"correct":3}
 ]'),
 
 -- ─────────────────────────────────────────────────────────────────────
@@ -337,7 +337,7 @@ INSERT INTO daily_quizzes (date, theme, questions) VALUES
   {"question":"Qui est la youtubeuse franco-belge connue pour ses tests beauté ?","choices":["EnjoyPhoenix","Léna Situations","Natoo","Cyprien"],"correct":0},
   {"question":"En quelle année Twitter est-il fondé ?","choices":["2004","2005","2006","2007"],"correct":2},
   {"question":"Que signifie ''meme'' dans le contexte internet ?","choices":["Une blague en image","Une vidéo virale","Un gif animé","Un tweet"],"correct":0},
-  {"question":"Quel personnage est le logo de Reddit ?","choices":["Un alien vert","Un chien","Un extraterrestre orange","Un raton laveur"],"correct":0},
+  {"question":"Quel personnage est le logo de Reddit ?","choices":["Un alien vert","Un chien","Un extraterrestre orange","Un raton laveur"],"correct":2},
   {"question":"Combien de followers a Cristiano Ronaldo sur Instagram (environ, 2024) ?","choices":["400 M","500 M","600 M","700 M"],"correct":2},
   {"question":"Quel réseau social est fondé par Elon Musk après son rachat de Twitter ?","choices":["X","Bluesky","Threads","Mastodon"],"correct":0}
 ]'),
@@ -383,7 +383,7 @@ INSERT INTO daily_quizzes (date, theme, questions) VALUES
   {"question":"Qui est la première femme à avoir présidé un gouvernement français ?","choices":["Simone Veil","Édith Cresson","Ségolène Royal","Martine Aubry"],"correct":1},
   {"question":"Quel est le régime politique instauré par Napoléon III ?","choices":["Première République","Seconde République","Second Empire","Troisième République"],"correct":2},
   {"question":"Quelle loi de 1905 sépare l''Église et l''État ?","choices":["Loi Jules Ferry","Loi Combes","Loi de séparation","Loi Falloux"],"correct":2},
-  {"question":"Quel héros médiéval français a combattu les Anglais à Azincourt ?","choices":["Bertrand du Guesclin","Jeanne d''Arc","Bayard","Du Guesclin"],"correct":0},
+  {"question":"Quel héros médiéval français est surnommé le Connétable de France ?","choices":["Bertrand du Guesclin","Jeanne d''Arc","Bayard","Roland"],"correct":0},
   {"question":"Dans quelle ville se situe le château des Ducs de Bretagne ?","choices":["Rennes","Brest","Saint-Malo","Nantes"],"correct":3},
   {"question":"Quel est le nom de la première constitution française ?","choices":["Constitution de 1789","Constitution de 1791","Déclaration des droits","Charte de 1814"],"correct":1},
   {"question":"Quel général remplace de Gaulle comme chef d''État en 1969 ?","choices":["Michel Debré","Jacques Chaban-Delmas","Georges Pompidou","Valéry Giscard d''Estaing"],"correct":2},
@@ -466,7 +466,7 @@ INSERT INTO daily_quizzes (date, theme, questions) VALUES
   {"question":"En quelle année sort le film Le Seigneur des Anneaux : La Communauté de l''Anneau ?","choices":["1999","2001","2003","2005"],"correct":1},
   {"question":"Quel film de Denis Villeneuve adapte un roman de Frank Herbert ?","choices":["Blade Runner 2049","Arrival","Dune","Sicario"],"correct":2},
   {"question":"Quel acteur joue dans Taxi Driver ET Goodfellas ?","choices":["Al Pacino","Jack Nicholson","Robert De Niro","Dustin Hoffman"],"correct":2},
-  {"question":"Quelle actrice joue dans Aliens, Terminator 2 et Titanic ?","choices":["Sigourney Weaver","Linda Hamilton","Kate Winslet","Jamie Lee Curtis"],"correct":1},
+  {"question":"Quelle actrice joue Sarah Connor dans les deux premiers films Terminator ?","choices":["Sigourney Weaver","Linda Hamilton","Kate Winslet","Jamie Lee Curtis"],"correct":1},
   {"question":"Dans quel film voit-on la scène de danse du twist entre Uma Thurman et John Travolta ?","choices":["Kill Bill","Reservoir Dogs","Jackie Brown","Pulp Fiction"],"correct":3}
 ]'),
 
@@ -492,7 +492,7 @@ INSERT INTO daily_quizzes (date, theme, questions) VALUES
 ('2026-05-31', 'Mix — Toutes catégories', '[
   {"question":"Quel est le nombre de doigts d''une patte de chien ?","choices":["3","4","5","6"],"correct":2},
   {"question":"Qui chante la chanson La Vie en Rose ?","choices":["Joséphine Baker","Édith Piaf","Charles Trenet","Mireille Mathieu"],"correct":1},
-  {"question":"Dans quel pays se trouve la ville de Dubrovnik ?","choices":["Monténégro","Bosnie","Slovénie","Croatie"],"correct":3},
+  {"question":"Quel est le plus grand pays d''Afrique par superficie ?","choices":["République Démocratique du Congo","Soudan","Libye","Algérie"],"correct":3},
   {"question":"Quel personnage de fiction est surnommé l''Homme araignée ?","choices":["Batman","Iron Man","Superman","Spider-Man"],"correct":3},
   {"question":"Quelle est la capitale de la Suisse ?","choices":["Genève","Lausanne","Berne","Zurich"],"correct":2},
   {"question":"Qui a écrit Germinal ?","choices":["Victor Hugo","Guy de Maupassant","Émile Zola","Honoré de Balzac"],"correct":2},

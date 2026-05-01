@@ -88,8 +88,8 @@ CREATE TABLE IF NOT EXISTS profiles (
   nickname          TEXT  NOT NULL DEFAULT '',
   avatar_color      TEXT  NOT NULL DEFAULT '#8B5CF6',
   avatar_url        TEXT,
-  subscription_tier TEXT  NOT NULL DEFAULT 'free'
-                          CHECK (subscription_tier IN ('free','pro','premium')),
+  subscription_tier TEXT  NOT NULL DEFAULT 'decouverte'
+                          CHECK (subscription_tier IN ('decouverte','essentiel','pro','expert')),
   created_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -377,7 +377,7 @@ BEGIN
       'Joueur'
     ),
     COALESCE(NEW.raw_user_meta_data->>'avatar_color', '#8B5CF6'),
-    'free'
+    'decouverte'
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
@@ -396,7 +396,7 @@ SELECT
   COALESCE(u.raw_user_meta_data->>'full_name', u.raw_user_meta_data->>'name',
            split_part(u.email, '@', 1), 'Joueur'),
   '#8B5CF6',
-  'free'
+  'decouverte'
 FROM auth.users u
 WHERE u.is_anonymous IS NOT TRUE
   AND NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = u.id);
@@ -455,11 +455,11 @@ CREATE INDEX IF NOT EXISTS idx_room_players_room       ON room_players(room_id);
 
 
 -- ================================================================
--- 11. DONNÉES INITIALES — Comptes admins en Premium
+-- 11. DONNÉES INITIALES — Comptes admins en Expert
 -- ================================================================
 
 UPDATE public.profiles
-SET subscription_tier = 'premium'
+SET subscription_tier = 'expert'
 WHERE id IN (
   SELECT id FROM auth.users
   WHERE email IN ('antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr')
@@ -474,8 +474,8 @@ WHERE id IN (
 CREATE TABLE IF NOT EXISTS promo_codes (
   id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
   code        TEXT        UNIQUE NOT NULL,
-  tier        TEXT        NOT NULL DEFAULT 'premium'
-                          CHECK (tier IN ('free','pro','premium')),
+  tier        TEXT        NOT NULL DEFAULT 'expert'
+                          CHECK (tier IN ('essentiel','pro','expert')),
   expires_at  TIMESTAMPTZ NOT NULL,
   is_active   BOOLEAN     NOT NULL DEFAULT true,
   created_at  TIMESTAMPTZ DEFAULT NOW()
