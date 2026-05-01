@@ -708,7 +708,7 @@ export default function AdminPage() {
               </div>
             ) : quizzes.length === 0 ? (
               <div className="muz-card p-10 text-center">
-                <p className="text-4xl mb-3">🧠</p>
+                <div className="flex justify-center mb-3"><MuzquizLogo width={48} showText={false} color="rgba(240,244,255,0.2)" /></div>
                 <p className="font-black mb-1" style={{ color: '#F0F4FF' }}>Aucun quiz planifié</p>
                 <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
                   Importe un CSV ou crée un quiz manuellement.

@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion, isBuzzMechanic, isBlindTestMode } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
+import { MustacheMedal } from '@/components/MustacheMedal';
 import { RoomQRCode } from '@/components/RoomQRCode';
 import { QuestionImage } from '@/components/QuestionImage';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
@@ -272,9 +273,12 @@ export function PublicScreenView({
                 background: i === 0 ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.05)',
                 border: `1px solid ${i === 0 ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.07)'}`,
               }}>
-              <span style={{ fontSize: '2rem', minWidth: '3rem' }}>
-                {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
-              </span>
+              <div style={{ minWidth: '3rem', display: 'flex', alignItems: 'center' }}>
+                {i < 3
+                  ? <MustacheMedal rank={(i + 1) as 1|2|3} width={52} />
+                  : <span className="font-black" style={{ fontSize: '1.5rem', color: 'rgba(240,244,255,0.5)' }}>#{i + 1}</span>
+                }
+              </div>
               <span className="flex-1 font-black" style={{ fontSize: '1.5rem', color: '#F0F4FF' }}>{p.nickname}</span>
               <span className="font-black" style={{ fontSize: '1.5rem', color: '#8B5CF6' }}>{p.score} pts</span>
             </div>
@@ -296,9 +300,12 @@ export function PublicScreenView({
           {sorted.map((p, i) => (
             <div key={p.id} className="flex items-center gap-5 px-8 py-4 rounded-2xl"
               style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <span style={{ fontSize: '1.8rem', minWidth: '3rem' }}>
-                {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
-              </span>
+              <div style={{ minWidth: '3rem', display: 'flex', alignItems: 'center' }}>
+                {i < 3
+                  ? <MustacheMedal rank={(i + 1) as 1|2|3} width={44} />
+                  : <span className="font-black" style={{ fontSize: '1.3rem', color: 'rgba(240,244,255,0.5)' }}>#{i + 1}</span>
+                }
+              </div>
               <span className="flex-1 font-black" style={{ fontSize: '1.3rem', color: '#F0F4FF' }}>{p.nickname}</span>
               <span className="font-black" style={{ fontSize: '1.3rem', color: '#8B5CF6' }}>{p.score} pts</span>
             </div>

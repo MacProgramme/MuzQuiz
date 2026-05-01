@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { GameMode, SubscriptionTier, TIER_LIMITS, normalizeTier } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
+import { MustacheMedal, MEDAL_COLORS } from '@/components/MustacheMedal';
 import { QRScanner } from '@/components/QRScanner';
 import { DailyQuiz } from '@/components/DailyQuiz';
 import { TestDailyQuiz } from '@/components/TestDailyQuiz'; // ⚠️ TEST — à supprimer au lancement
@@ -196,7 +197,7 @@ export default function Home() {
       {isLoggedIn && userId && (userTier === 'essentiel' || userTier === 'pro' || userTier === 'expert') && (
         <div className="w-full max-w-md mb-8">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-base">🧠</span>
+            <MuzquizLogo width={20} showText={false} color="rgba(255,0,170,0.7)" />
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
               Quiz du Jour
             </p>
@@ -219,15 +220,16 @@ export default function Home() {
       {miniLeaderboard.length > 0 && (
         <div className="w-full max-w-md mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-base">🏆</span>
+            <MuzquizLogo width={20} showText={false} color="rgba(240,244,255,0.35)" />
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
               Top du jour — Quiz du Jour
             </p>
           </div>
           <div className="flex flex-col gap-2">
             {miniLeaderboard.map((e) => {
-              const medal = ['🥇','🥈','🥉'][Number(e.rank) - 1] ?? `#${e.rank}`;
+              const rank = Number(e.rank) as 1 | 2 | 3;
               const isMe = userId === e.user_id;
+              const rankColor = rank <= 3 ? MEDAL_COLORS[rank].fill : 'rgba(240,244,255,0.3)';
               return (
                 <div
                   key={e.user_id}
@@ -235,17 +237,22 @@ export default function Home() {
                   style={{
                     background: isMe
                       ? 'rgba(139,92,246,0.12)'
-                      : Number(e.rank) === 1
+                      : rank === 1
                       ? 'rgba(245,158,11,0.08)'
                       : 'rgba(255,255,255,0.03)',
                     border: isMe
                       ? '1.5px solid rgba(139,92,246,0.4)'
-                      : Number(e.rank) === 1
+                      : rank === 1
                       ? '1.5px solid rgba(245,158,11,0.3)'
                       : '1.5px solid rgba(255,255,255,0.05)',
                   }}
                 >
-                  <span className="text-lg flex-shrink-0 w-8 text-center">{medal}</span>
+                  <div className="flex items-center justify-center flex-shrink-0" style={{ width: 36 }}>
+                    {rank <= 3
+                      ? <MustacheMedal rank={rank} width={36} />
+                      : <span className="font-black text-xs" style={{ color: rankColor }}>#{rank}</span>
+                    }
+                  </div>
                   <div
                     className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0"
                     style={{ background: e.avatar_color ?? '#8B5CF6', color: '#0D1B3E' }}

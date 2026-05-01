@@ -25,7 +25,6 @@ function RankArrow({ diff }: { diff: number }) {
 }
 
 const COUNTDOWN_DURATION = 5;
-const MEDALS = ['🥇', '🥈', '🥉'];
 
 export function InterLeaderboard({ players, correctPlayerIds, visible, pointsEarned = {} }: Props) {
   const [ranked, setRanked] = useState<RankedPlayer[]>([]);

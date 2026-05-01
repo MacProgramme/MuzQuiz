@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Room, Player, Buzz, QCMAnswer, BuzzQuestion, QCMQuestion, isBuzzMechanic } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
+import { MustacheMedal, MEDAL_COLORS } from '@/components/MustacheMedal';
 
 const COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B'];
 const LABELS = ['A', 'B', 'C', 'D'];
@@ -122,11 +123,16 @@ export function PhoneControllerView({
 
   /* ---- TERMINÉE ---- */
   if (room.status === 'finished') {
-    const medal = myRank === 1 ? '🥇' : myRank === 2 ? '🥈' : myRank === 3 ? '🥉' : `#${myRank}`;
+    const rankColor = myRank <= 3 ? MEDAL_COLORS[myRank as 1|2|3].fill : 'rgba(240,244,255,0.5)';
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-        <div className="text-7xl mb-4">{medal}</div>
+        <div className="mb-4 flex justify-center">
+          {myRank <= 3
+            ? <MustacheMedal rank={myRank as 1|2|3} width={100} />
+            : <span className="font-black text-5xl" style={{ color: rankColor }}>#{myRank}</span>
+          }
+        </div>
         <h1 className="text-3xl font-black mb-2" style={{ color: '#F0F4FF' }}>
           {myRank === 1 ? 'Victoire !' : 'Partie terminée !'}
         </h1>
