@@ -346,9 +346,13 @@ CREATE POLICY "avatars: suppression par le propriétaire"
 
 -- ── Bucket question-images ─────────────────────────────────────
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES ('question-images', 'question-images', true, 5242880,
-        ARRAY['image/jpeg','image/jpg','image/png','image/webp','image/gif'])
-ON CONFLICT (id) DO NOTHING;
+VALUES ('question-images', 'question-images', true, 20971520,
+        ARRAY['image/jpeg','image/jpg','image/png','image/webp','image/gif',
+              'audio/mpeg','audio/mp3','audio/ogg','audio/wav','audio/aac',
+              'audio/mp4','audio/x-m4a','audio/flac','audio/webm'])
+ON CONFLICT (id) DO UPDATE
+  SET file_size_limit    = EXCLUDED.file_size_limit,
+      allowed_mime_types = EXCLUDED.allowed_mime_types;
 
 DROP POLICY IF EXISTS "question-images: lecture publique"                ON storage.objects;
 DROP POLICY IF EXISTS "question-images: upload authentifié"              ON storage.objects;

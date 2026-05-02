@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { QuestionPack, CustomQuestion, QuestionType, SubscriptionTier, TIER_LIMITS, normalizeTier } from '@/types';
+import { QuestionPack, CustomQuestion, QuestionType, SubscriptionTier, TIER_LIMITS, normalizeTier, GameMode, isBlindTestMode } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
@@ -12,7 +12,10 @@ type View = 'packs' | 'questions';
 type AddMode = 'manual' | 'csv' | 'ai';
 type SortKey = 'name' | 'created_at' | 'question_count' | 'mode';
 
-const MODE_LABEL: Record<string, string> = { qcm: 'Quiz', buzz: 'Blind Test' };
+const MODE_LABEL: Record<string, string> = {
+  qcm: 'Quiz', buzz: 'Buzz Quiz',
+  quiz: 'Quiz', blind_test: 'Blind Test', buzz_quiz: 'Buzz Quiz', buzz_blind_test: 'Buzz Blind Test',
+};
 const LABELS = ['A', 'B', 'C', 'D'];
 const TIER_COLORS: Record<SubscriptionTier, { bg: string; text: string; label: string }> = {
   decouverte: { bg: 'rgba(255,255,255,0.06)',  text: 'rgba(240,244,255,0.5)', label: 'Découverte' },
@@ -108,7 +111,7 @@ export default function QuestionsPage() {
   // Formulaire pack
   const [showPackForm, setShowPackForm] = useState(false);
   const [packName, setPackName] = useState('');
-  const [packMode, setPackMode] = useState<'qcm' | 'buzz'>('qcm');
+  const [packMode, setPackMode] = useState<GameMode>('quiz');
   const [packSaving, setPackSaving] = useState(false);
 
   // Formulaire question manuelle
@@ -213,7 +216,7 @@ export default function QuestionsPage() {
     const { data } = await supabase.from('question_packs').insert({
       owner_id: userId, name: packName.trim(), mode: packMode,
     }).select('*').single();
-    if (data) { await loadPacks(userId); setShowPackForm(false); setPackName(''); setPackMode('qcm'); }
+    if (data) { await loadPacks(userId); setShowPackForm(false); setPackName(''); setPackMode('quiz'); }
     setPackSaving(false);
   };
 
@@ -525,16 +528,22 @@ export default function QuestionsPage() {
                     placeholder="Nom du pack (ex: Cinéma années 80)" style={inputStyle()} />
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>Mode de jeu</p>
-                    <div className="flex gap-2">
-                      {(['qcm', 'buzz'] as const).map(m => (
-                        <button key={m} onClick={() => setPackMode(m)}
-                          className="flex-1 py-2 rounded-xl text-sm font-bold transition-all"
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { value: 'quiz'            as GameMode, label: 'Quiz',           icon: '❓', desc: 'Questions texte / image' },
+                        { value: 'blind_test'      as GameMode, label: 'Blind Test',     icon: '🎵', desc: 'Identification musicale' },
+                        { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',      icon: '🔔', desc: 'Quiz avec buzzer' },
+                        { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test',icon: '🎶', desc: 'Blind Test avec buzzer' },
+                      ]).map(m => (
+                        <button key={m.value} onClick={() => setPackMode(m.value)}
+                          className="flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
                           style={{
-                            background: packMode === m ? '#8B5CF6' : 'rgba(255,255,255,0.06)',
-                            color: packMode === m ? 'white' : 'rgba(240,244,255,0.5)',
-                            border: `1px solid ${packMode === m ? 'transparent' : 'rgba(255,255,255,0.08)'}`,
+                            background: packMode === m.value ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.04)',
+                            color: packMode === m.value ? '#8B5CF6' : 'rgba(240,244,255,0.5)',
+                            border: `1.5px solid ${packMode === m.value ? '#8B5CF6' : 'rgba(255,255,255,0.08)'}`,
                           }}>
-                          {MODE_LABEL[m]}
+                          <span>{m.icon} {m.label}</span>
+                          <span className="text-xs font-normal" style={{ color: packMode === m.value ? 'rgba(139,92,246,0.7)' : 'rgba(240,244,255,0.3)' }}>{m.desc}</span>
                         </button>
                       ))}
                     </div>
@@ -708,11 +717,14 @@ export default function QuestionsPage() {
                 </div>
                 <div className="flex flex-col gap-3">
                   <textarea value={qText} onChange={e => setQText(e.target.value)}
-                    placeholder="La question..." rows={2}
+                    placeholder={selectedPack && isBlindTestMode(selectedPack.mode)
+                      ? 'Quel est cet artiste / ce titre ?'
+                      : 'La question...'}
+                    rows={2}
                     style={{ ...inputStyle(), resize: 'none' }} />
 
-                  {/* Sélecteur type de question */}
-                  <div>
+                  {/* Sélecteur type de question — masqué pour les packs blind test */}
+                  {selectedPack && !isBlindTestMode(selectedPack.mode) && <div>
                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>
                       Type de question
                     </p>
@@ -748,10 +760,10 @@ export default function QuestionsPage() {
                         <a href="/pricing" className="underline" style={{ color: '#8B5CF6' }}>Voir les formules →</a>
                       </p>
                     )}
-                  </div>
+                  </div>}
 
-                  {/* Upload image (si type image ou blur_reveal) */}
-                  {(qType === 'image' || qType === 'blur_reveal') && (
+                  {/* Upload image (si type image ou blur_reveal, hors blind test) */}
+                  {selectedPack && !isBlindTestMode(selectedPack.mode) && (qType === 'image' || qType === 'blur_reveal') && (
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>
                         {qType === 'blur_reveal' ? 'Image (floue au départ, se révèle avec le temps)' : 'Image de la question'}
@@ -789,7 +801,7 @@ export default function QuestionsPage() {
                   )}
 
                   {/* Upload audio (pour packs blind test) */}
-                  {selectedPack && (selectedPack.mode === 'blind_test' || selectedPack.mode === 'buzz_blind_test') && (
+                  {selectedPack && isBlindTestMode(selectedPack.mode) && (
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(0,229,209,0.6)' }}>
                         ♪ Fichier audio (musique à identifier)
@@ -846,7 +858,9 @@ export default function QuestionsPage() {
                   )}
 
                   <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                    Réponses (clique sur la lettre pour marquer comme correcte)
+                    {selectedPack && isBlindTestMode(selectedPack.mode)
+                      ? 'Propositions — ex: noms d\'artistes ou de titres (clique sur la lettre pour la bonne réponse)'
+                      : 'Réponses (clique sur la lettre pour marquer comme correcte)'}
                   </p>
                   {qChoices.map((c, i) => (
                     <div key={i} className="flex items-center gap-2">
