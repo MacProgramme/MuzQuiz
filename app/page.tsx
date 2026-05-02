@@ -100,7 +100,13 @@ export default function Home() {
     loadMini();
   }, []);
 
-  const genCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+  // Exclut le 0 (zéro) et le O (lettre) pour éviter la confusion
+  const genCode = () => {
+    const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  };
 
   const createRoom = async () => {
     if (!nickname.trim()) { setErr('Entre ton pseudo !'); return; }

@@ -138,7 +138,10 @@ export default function ResultsPage() {
       const userId = session?.user?.id;
       if (!userId) { setReplaying(false); return; }
 
-      const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      // Exclut le 0 (zéro) et le O (lettre) pour éviter la confusion
+      const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
+      let newCode = '';
+      for (let i = 0; i < 6; i++) newCode += chars[Math.floor(Math.random() * chars.length)];
 
       const { data: newRoom, error } = await supabase
         .from('rooms')

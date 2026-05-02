@@ -347,7 +347,8 @@ export default function RoomPage() {
 
   // --- MODE ÉCRAN PUBLIC ---
   if (room.public_screen) {
-    if (!myPlayer.is_host) {
+    // Non-hôte en attente → laisse tomber sur la salle d'attente normale ci-dessous
+    if (!myPlayer.is_host && room.status !== 'waiting') {
       return (
         <PhoneControllerView
           room={room}
