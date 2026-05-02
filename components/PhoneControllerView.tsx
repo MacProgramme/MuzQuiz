@@ -250,14 +250,39 @@ export function PhoneControllerView({
                   <p className="font-black text-xl" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts</p>
                 </>
               ) : (
-                <>
-                  <MustacheIcon color="#8B5CF6" size={64} animate />
-                  <p className="text-xl font-black" style={{ color: '#F0F4FF' }}>Réponse envoyée !</p>
-                  <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>En attente…</p>
+                /* Réponse envoyée — afficher la bonne réponse en attendant la révélation */
+                <div className="flex-1 flex flex-col gap-3 w-full">
                   {questionStartedAt !== undefined && (
-                    <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
+                    <div className="flex justify-center mb-1">
+                      <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
+                    </div>
                   )}
-                </>
+                  <p className="text-center text-sm font-black mb-1"
+                    style={{ color: myAnswer?.is_correct ? '#00E5D1' : '#FF00AA' }}>
+                    {myAnswer?.is_correct ? '✓ Bonne réponse !' : '✗ Mauvaise réponse'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {currentQuestion.choices.map((choice, i) => {
+                      const isCorrect  = i === currentQuestion.correct;
+                      const isSelected = i === myAnswer?.answer_index;
+                      const isWrong    = isSelected && !isCorrect;
+                      let bg = 'rgba(255,255,255,0.04)'; let border = 'rgba(255,255,255,0.08)';
+                      let textColor = 'rgba(240,244,255,0.3)'; let opacity = 0.4;
+                      if (isCorrect)     { bg = 'rgba(0,229,209,0.15)';  border = '#00E5D1'; textColor = '#00E5D1'; opacity = 1; }
+                      else if (isWrong)  { bg = 'rgba(255,0,170,0.12)';  border = '#FF00AA'; textColor = '#FF00AA'; opacity = 1; }
+                      return (
+                        <div key={i} className="flex items-center gap-2 px-3 py-3 rounded-2xl"
+                          style={{ background: bg, border: `1.5px solid ${border}`, opacity }}>
+                          <span className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0"
+                            style={{ background: isCorrect ? '#00E5D1' : isWrong ? '#FF00AA' : 'rgba(255,255,255,0.08)', color: (isCorrect || isWrong) ? '#0D1B3E' : 'rgba(240,244,255,0.4)' }}>
+                            {isCorrect ? '✓' : isWrong ? '✗' : LABELS[i]}
+                          </span>
+                          <span className="text-xs font-bold leading-tight break-words" style={{ color: textColor }}>{choice}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </div>
           ) : (
@@ -345,17 +370,44 @@ export function PhoneControllerView({
     );
   }
 
-  // Réponse envoyée, en attente de la révélation
-  if (answered) {
+  // Réponse envoyée, en attente de la révélation — afficher la bonne réponse
+  if (answered && currentQuestion) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 gap-4"
+      <div className="min-h-screen flex flex-col p-6 gap-4"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-        <MustacheIcon color="#8B5CF6" size={80} animate />
-        <h1 className="text-xl font-black" style={{ color: '#F0F4FF' }}>Réponse enregistrée !</h1>
-        <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>En attente des autres joueurs…</p>
         {questionStartedAt !== undefined && (
-          <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
+          <div className="flex justify-center mt-4">
+            <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
+          </div>
         )}
+        <p className="text-center text-base font-black"
+          style={{ color: myAnswer?.is_correct ? '#00E5D1' : '#FF00AA' }}>
+          {myAnswer?.is_correct ? '✓ Bonne réponse !' : '✗ Mauvaise réponse'}
+        </p>
+        <div className="grid grid-cols-2 gap-3 flex-1">
+          {currentQuestion.choices.map((choice, i) => {
+            const isCorrect  = i === currentQuestion.correct;
+            const isSelected = i === myAnswer?.answer_index;
+            const isWrong    = isSelected && !isCorrect;
+            let bg = 'rgba(255,255,255,0.04)'; let border = 'rgba(255,255,255,0.08)';
+            let textColor = 'rgba(240,244,255,0.3)'; let opacity = 0.35;
+            if (isCorrect)    { bg = 'rgba(0,229,209,0.15)';  border = '#00E5D1'; textColor = '#00E5D1'; opacity = 1; }
+            else if (isWrong) { bg = 'rgba(255,0,170,0.12)';  border = '#FF00AA'; textColor = '#FF00AA'; opacity = 1; }
+            return (
+              <div key={i} className="flex items-center gap-2 px-3 py-3 rounded-2xl"
+                style={{ background: bg, border: `1.5px solid ${border}`, opacity }}>
+                <span className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0"
+                  style={{ background: isCorrect ? '#00E5D1' : isWrong ? '#FF00AA' : 'rgba(255,255,255,0.08)', color: (isCorrect || isWrong) ? '#0D1B3E' : 'rgba(240,244,255,0.4)' }}>
+                  {isCorrect ? '✓' : isWrong ? '✗' : LABELS[i]}
+                </span>
+                <span className="text-xs font-bold leading-tight break-words" style={{ color: textColor }}>{choice}</span>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-center text-xs pb-2" style={{ color: 'rgba(240,244,255,0.25)' }}>
+          En attente des autres joueurs…
+        </p>
       </div>
     );
   }
