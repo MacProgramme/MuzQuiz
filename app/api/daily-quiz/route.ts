@@ -127,11 +127,12 @@ Règles :
     }
   }
 
-  // 4. Retourner les questions SANS correct_index
+  // 4. Retourner les questions avec la bonne réponse (le scoring reste serveur)
   const safeQuestions = (quiz.questions as any[]).map((q: any, i: number) => ({
     id: i,
     question: q.question,
     choices: q.choices,
+    correct: q.correct,
   }));
 
   return NextResponse.json({

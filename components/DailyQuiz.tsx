@@ -8,7 +8,7 @@ import { MustacheMedal } from '@/components/MustacheMedal';
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 const TIMER_DURATION = 20; // secondes par question
-const FEEDBACK_DELAY = 1500; // ms d'affichage avant de passer à la question suivante
+const FEEDBACK_DELAY = 2200; // ms d'affichage avant de passer à la question suivante
 const LABELS       = ['A', 'B', 'C', 'D'];
 const CHOICE_COLORS = ['#8B5CF6', '#FF00AA', '#00E5D1', '#F59E0B'];
 
@@ -68,6 +68,7 @@ interface DailyQuestion {
   id: number;
   question: string;
   choices: [string, string, string, string];
+  correct: number;
 }
 
 interface LeaderboardEntry {
@@ -446,28 +447,36 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
         <div className="flex flex-col gap-2.5">
           {q.choices.map((choice, i) => {
             const isSelected = selectedIdx === i;
-            const showFeedback = locked && isSelected;
-            const isTimeout = locked && timedOut;
+            const isCorrect  = i === q.correct;
+            const isWrong    = locked && isSelected && !isCorrect;
+            const highlight  = locked && isCorrect;
+
+            let bg     = 'rgba(255,255,255,0.05)';
+            let border = 'rgba(255,255,255,0.1)';
+            let color  = '#F0F4FF';
+            let badgeBg    = 'rgba(255,255,255,0.08)';
+            let badgeColor = 'rgba(240,244,255,0.5)';
+            let opacity    = locked && !isCorrect && !isSelected ? 0.35 : 1;
+
+            if (locked && isCorrect) {
+              bg = 'rgba(0,229,209,0.15)'; border = '#00E5D1'; color = '#00E5D1';
+              badgeBg = '#00E5D1'; badgeColor = '#0D1B3E';
+            } else if (isWrong) {
+              bg = 'rgba(255,0,170,0.12)'; border = '#FF00AA'; color = '#FF00AA';
+              badgeBg = '#FF00AA'; badgeColor = '#0D1B3E';
+            }
+
             return (
               <button key={i}
                 onClick={() => selectAnswer(i)}
                 disabled={locked}
                 className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left transition-all active:scale-[0.98] disabled:cursor-default"
-                style={{
-                  background:  showFeedback ? `${CHOICE_COLORS[i]}22` : 'rgba(255,255,255,0.05)',
-                  border:      `1.5px solid ${showFeedback ? CHOICE_COLORS[i] : 'rgba(255,255,255,0.1)'}`,
-                  opacity:     locked && !isSelected ? 0.45 : 1,
-                }}>
+                style={{ background: bg, border: `1.5px solid ${border}`, opacity }}>
                 <span className="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
-                  style={{
-                    background: showFeedback ? CHOICE_COLORS[i] : 'rgba(255,255,255,0.08)',
-                    color: showFeedback ? '#0D1B3E' : 'rgba(240,244,255,0.5)',
-                  }}>
-                  {LABELS[i]}
+                  style={{ background: badgeBg, color: badgeColor }}>
+                  {locked && isCorrect ? '✓' : locked && isWrong ? '✗' : LABELS[i]}
                 </span>
-                <span className="font-bold text-sm" style={{ color: showFeedback ? CHOICE_COLORS[i] : '#F0F4FF' }}>
-                  {choice}
-                </span>
+                <span className="font-bold text-sm" style={{ color }}>{choice}</span>
               </button>
             );
           })}
@@ -475,10 +484,12 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
 
         {/* Feedback bas de page */}
         {locked && (
-          <div className="text-center muz-pop">
+          <div className="text-center py-1 muz-pop">
             {timedOut
               ? <p className="text-sm font-black" style={{ color: '#FF00AA' }}>⏱ Temps écoulé !</p>
-              : <p className="text-sm font-black" style={{ color: '#00E5D1' }}>✓ Réponse enregistrée</p>
+              : selectedIdx === q.correct
+              ? <p className="text-sm font-black" style={{ color: '#00E5D1' }}>✓ Bonne réponse !</p>
+              : <p className="text-sm font-black" style={{ color: '#FF00AA' }}>✗ Mauvaise réponse</p>
             }
           </div>
         )}
