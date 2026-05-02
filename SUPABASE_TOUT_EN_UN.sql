@@ -1,26 +1,8 @@
--- ════════════════════════════════════════════════════════════════════════
---  MUZQUIZ — FICHIER SQL UNIQUE (tout-en-un)
---  À coller dans Supabase > SQL Editor > Run
---
---  CONTENU :
---    Partie 1 — Schéma complet (tables, RLS, Storage, triggers, fonctions)
---    Partie 2 — Données Quiz du Jour : Mai 2026 (310 questions)
---    Partie 3 — Corrections factorielles Mai 2026 (10 corrections)
---
---  IDEMPOTENT : safe à re-exécuter sur une base déjà peuplée.
---  (IF NOT EXISTS / ON CONFLICT DO NOTHING / CREATE OR REPLACE)
---
---  CHECKLIST après exécution :
---  □ Authentication > Providers > Anonymous Sign Ins → activé
---  □ Authentication > Providers > Google OAuth → configuré
---  □ Authentication > URL Configuration → domaine Vercel ajouté
---  □ Storage > Buckets "avatars" et "question-images" → vérifiés
--- ════════════════════════════════════════════════════════════════════════
-
-
--- ════════════════════════════════════════════════════════════════════════
--- PARTIE 1 — SCHÉMA COMPLET
--- ════════════════════════════════════════════════════════════════════════
+-- ================================================================
+-- SUPABASE_TOUT_EN_UN.sql — Fichier unique à injecter dans Supabase
+-- Généré le 2026-05-01
+-- Contient : schéma complet + données quiz mai 2026 + corrections
+-- ================================================================
 
 
 
@@ -93,8 +75,14 @@ CREATE TABLE IF NOT EXISTS profiles (
   avatar_url        TEXT,
   subscription_tier TEXT  NOT NULL DEFAULT 'decouverte'
                           CHECK (subscription_tier IN ('decouverte','essentiel','pro','expert')),
+  ai_uses_count     INT   NOT NULL DEFAULT 0,       -- nb de générations IA utilisées ce mois
+  ai_uses_month     TEXT  NOT NULL DEFAULT '',       -- mois de référence format 'YYYY-MM'
   created_at        TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ajout des colonnes IA sur les profils existants (idempotent)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ai_uses_count INT  NOT NULL DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ai_uses_month TEXT NOT NULL DEFAULT '';
 
 
 -- ================================================================
@@ -556,11 +544,9 @@ CREATE POLICY "promo_code_uses: lecture personnelle"
 --  □ Vérifier les buckets "avatars" et "question-images" dans Storage
 -- ================================================================
 
-
--- ════════════════════════════════════════════════════════════════════════
--- PARTIE 2 — DONNÉES QUIZ DU JOUR : MAI 2026 (31 jours × 10 questions)
--- ════════════════════════════════════════════════════════════════════════
-
+-- ================================================================
+-- DONNÉES : DAILY_QUIZ_MAI_2026
+-- ================================================================
 INSERT INTO daily_quizzes (date, theme, questions) VALUES
 
 -- ─────────────────────────────────────────────────────────────────────
@@ -1067,11 +1053,9 @@ ON CONFLICT (date) DO NOTHING;
 -- les questions, puis exécuter dans l''éditeur SQL Supabase.
 -- ═══════════════════════════════════════════════════════════════════════
 
-
--- ════════════════════════════════════════════════════════════════════════
--- PARTIE 3 — CORRECTIONS FACTORIELLES MAI 2026 (10 corrections)
--- ════════════════════════════════════════════════════════════════════════
-
+-- ================================================================
+-- CORRECTIONS MAI 2026
+-- ================================================================
 -- ─────────────────────────────────────────────────────────────────────
 -- 1er MAI — Q9 (index 8) : Le plus long fleuve du monde
 -- ERREUR : correct=1 (Nil) → CORRECTION : correct=0 (Amazone)
@@ -1198,8 +1182,3 @@ WHERE date = '2026-05-31';
 -- ═══════════════════════════════════════════════════════════════════════
 -- FIN — 10 corrections appliquées
 -- ═══════════════════════════════════════════════════════════════════════
-
-
--- ════════════════════════════════════════════════════════════════════════
--- ✅ FIN — MUZQUIZ TOUT-EN-UN
--- ════════════════════════════════════════════════════════════════════════

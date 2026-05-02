@@ -13,7 +13,7 @@ import { Scoreboard } from '@/components/Scoreboard';
 import { SettingsModal } from '@/components/SettingsModal';
 import { InterLeaderboard } from '@/components/InterLeaderboard';
 import { PublicScreenView } from '@/components/PublicScreenView';
-import { PhoneControllerView, ScorePreview } from '@/components/PhoneControllerView';
+import { PhoneControllerView, ScorePreview, RemainingTimer } from '@/components/PhoneControllerView';
 import { FREE_QUESTION_LIMIT, getQuestionsForMode } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player, isBuzzMechanic, isBlindTestMode } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
@@ -657,7 +657,7 @@ export default function RoomPage() {
             </span>
           </div>
           <Timer key={timerKey} duration={room.timer_duration}
-            running={room.is_paused ? false : qcmRevealed ? false : isBuzzMechanic(room.mode) ? !buzz : !myQCMAnswer}
+            running={room.is_paused ? false : qcmRevealed ? false : isBuzzMechanic(room.mode) ? !buzz : true}
             onExpire={() => {
               if (myPlayer.is_host && !qcmRevealed && !room.is_paused) revealQCMAndNext();
             }} />
@@ -812,7 +812,9 @@ export default function RoomPage() {
                 <div className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
                   {answeredCount} / {players.length} joueur{players.length > 1 ? 's' : ''} ont répondu
                 </div>
-                {!myQCMAnswer && (
+                {myQCMAnswer ? (
+                  <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
+                ) : (
                   <ScorePreview questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
                 )}
               </>

@@ -119,10 +119,23 @@ export default function Home() {
       }
       if (!userId) { setErr("Erreur d'authentification. Recharge la page."); setLoading(false); return; }
 
+      // Relire le tier en DB au moment de la création pour éviter tout problème de timing
+      let currentTier = userTier;
+      if (session?.user && !session.user.is_anonymous) {
+        const { data: freshProfile } = await supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', userId)
+          .single();
+        if (freshProfile?.subscription_tier) {
+          currentTier = normalizeTier(freshProfile.subscription_tier);
+        }
+      }
+
       const roomCode = genCode();
       const { data: room, error } = await supabase
         .from('rooms')
-        .insert({ code: roomCode, host_id: userId, mode, timer_duration: 20, max_players: TIER_LIMITS[userTier].maxPlayers, sound_enabled: true, pack_id: null, public_screen: publicScreen })
+        .insert({ code: roomCode, host_id: userId, mode, timer_duration: 20, max_players: TIER_LIMITS[currentTier].maxPlayers, sound_enabled: true, pack_id: null, public_screen: publicScreen })
         .select('*')
         .single();
 

@@ -87,6 +87,45 @@ export function ScorePreview({ questionStartedAt, timerDuration, isPaused = fals
   );
 }
 
+/* ---- Compte à rebours visible après avoir répondu ---- */
+export function RemainingTimer({ questionStartedAt, timerDuration, isPaused = false }: { questionStartedAt: number; timerDuration: number; isPaused?: boolean }) {
+  const [remaining, setRemaining] = useState(timerDuration);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const tick = () => {
+      const elapsed = (Date.now() - questionStartedAt) / 1000;
+      setRemaining(Math.max(0, Math.ceil(timerDuration - elapsed)));
+    };
+    tick();
+    const id = setInterval(tick, 200);
+    return () => clearInterval(id);
+  }, [questionStartedAt, timerDuration, isPaused]);
+
+  const ratio = remaining / timerDuration;
+  const color = remaining <= 5 ? '#FF00AA' : remaining <= 10 ? '#F59E0B' : '#00E5D1';
+
+  return (
+    <div className="flex flex-col items-center gap-1 mt-2">
+      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
+        Temps restant
+      </p>
+      <span
+        className={`font-black tabular-nums text-4xl ${remaining <= 5 ? 'animate-pulse' : ''}`}
+        style={{ color, textShadow: remaining <= 5 ? `0 0 20px ${color}` : 'none', fontFamily: 'var(--font-black-han)' }}
+      >
+        {remaining}s
+      </span>
+      <div className="h-2 rounded-full overflow-hidden mt-1" style={{ width: 160, background: 'rgba(255,255,255,0.08)' }}>
+        <div
+          className="h-full rounded-full transition-all duration-200"
+          style={{ width: `${ratio * 100}%`, background: color, boxShadow: `0 0 8px ${color}88` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function PhoneControllerView({
   room, myPlayer, players, buzz, qcmAnswers, qcmRevealed, showLeaderboard,
   currentQuestion, pressBuzzer, submitQCMAnswer, questionStartedAt,
@@ -165,12 +204,16 @@ export function PhoneControllerView({
     // Quelqu'un d'autre a buzzé
     if (someoneBuzzed && !hasBuzzed) {
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-8"
+        <div className="min-h-screen flex flex-col items-center justify-center p-8 gap-4"
           style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-          <div className="mb-4"><MuzquizLogo width={80} showText={false} /></div>
+          <div className="mb-2"><MuzquizLogo width={80} showText={false} /></div>
           <p className="text-2xl font-black text-center" style={{ color: '#FF00AA' }}>
             {buzzerName} a buzzé en premier !
           </p>
+          <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>En attente de sa réponse…</p>
+          {questionStartedAt !== undefined && (
+            <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
+          )}
         </div>
       );
     }
@@ -211,12 +254,20 @@ export function PhoneControllerView({
                   <MustacheIcon color="#8B5CF6" size={64} animate />
                   <p className="text-xl font-black" style={{ color: '#F0F4FF' }}>Réponse envoyée !</p>
                   <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>En attente…</p>
+                  {questionStartedAt !== undefined && (
+                    <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
+                  )}
                 </>
               )}
             </div>
           ) : (
             <>
-              <p className="text-center font-bold mb-6" style={{ color: 'rgba(240,244,255,0.5)' }}>
+              {questionStartedAt !== undefined && (
+                <div className="flex justify-center mb-2">
+                  <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
+                </div>
+              )}
+              <p className="text-center font-bold mb-4" style={{ color: 'rgba(240,244,255,0.5)' }}>
                 Choisissez votre réponse
               </p>
               <div className="grid grid-cols-2 gap-4 flex-1">
@@ -303,6 +354,9 @@ export function PhoneControllerView({
         <MustacheIcon color="#8B5CF6" size={80} animate />
         <h1 className="text-xl font-black" style={{ color: '#F0F4FF' }}>Réponse enregistrée !</h1>
         <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>En attente des autres joueurs…</p>
+        {questionStartedAt !== undefined && (
+          <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
+        )}
       </div>
     );
   }

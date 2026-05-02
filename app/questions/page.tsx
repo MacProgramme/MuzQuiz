@@ -145,6 +145,9 @@ export default function QuestionsPage() {
   const [aiError, setAiError] = useState('');
   const [aiImporting, setAiImporting] = useState(false);
 
+  // Quota IA mensuel
+  const [aiUsesThisMonth, setAiUsesThisMonth] = useState(0);
+
   const limits = TIER_LIMITS[tier];
 
   useEffect(() => {
@@ -154,12 +157,23 @@ export default function QuestionsPage() {
       if (!user || user.is_anonymous) { router.push('/login'); return; }
       setUserId(user.id);
 
-      const { data: profile } = await supabase.from('profiles').select('subscription_tier').eq('id', user.id).single();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_tier, ai_uses_count, ai_uses_month')
+        .eq('id', user.id)
+        .single();
+
       const userTier = normalizeTier(profile?.subscription_tier);
-
-      if (!TIER_LIMITS[userTier].canCreate) { router.replace('/pricing'); return; }
-
       setTier(userTier);
+
+      // Calculer les utilisations IA du mois en cours
+      const nowMonth = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+      if (profile?.ai_uses_month === nowMonth) {
+        setAiUsesThisMonth(profile.ai_uses_count ?? 0);
+      } else {
+        setAiUsesThisMonth(0);
+      }
+
       await loadPacks(user.id);
       setLoading(false);
     };
@@ -195,7 +209,6 @@ export default function QuestionsPage() {
   // === CRUD PACKS ===
   const createPack = async () => {
     if (!packName.trim() || !userId) return;
-    if (limits.maxPacks !== Infinity && packs.length >= limits.maxPacks) return;
     setPackSaving(true);
     const { data } = await supabase.from('question_packs').insert({
       owner_id: userId, name: packName.trim(), mode: packMode,
@@ -281,7 +294,7 @@ export default function QuestionsPage() {
 
   const saveQuestion = async () => {
     if (!selectedPack || !userId || !qText.trim() || qChoices.some(c => !c.trim())) return;
-    if (!editingQ && limits.maxQuestionsPerPack !== Infinity && questions.length >= limits.maxQuestionsPerPack) return;
+    // Pas de limite de questions par pack
     setQSaving(true);
     setQSaveError(null);
     const payload: any = {
@@ -374,7 +387,14 @@ export default function QuestionsPage() {
 
   // === IA ===
   const generateAI = async () => {
-    if (!aiTheme.trim() || !selectedPack) return;
+    if (!aiTheme.trim() || !selectedPack || !userId) return;
+
+    // Vérifier le quota mensuel
+    if (limits.maxAiPerMonth > 0 && aiUsesThisMonth >= limits.maxAiPerMonth) {
+      setAiError(`Quota IA atteint pour ce mois (${limits.maxAiPerMonth} générations). Repassez le mois prochain !`);
+      return;
+    }
+
     setAiGenerating(true);
     setAiError('');
     setAiPreview([]);
@@ -389,6 +409,14 @@ export default function QuestionsPage() {
         setAiError(data.error ?? 'Erreur inconnue');
       } else {
         setAiPreview((data.questions ?? []).map((q: any) => ({ ...q, _selected: true })));
+        // Incrémenter le quota en DB
+        const nowMonth = new Date().toISOString().slice(0, 7);
+        const newCount = aiUsesThisMonth + 1;
+        await supabase.from('profiles').update({
+          ai_uses_count: newCount,
+          ai_uses_month: nowMonth,
+        }).eq('id', userId);
+        setAiUsesThisMonth(newCount);
       }
     } catch (e: any) {
       setAiError(e.message ?? 'Erreur réseau');
@@ -421,7 +449,8 @@ export default function QuestionsPage() {
   );
 
   const tc = TIER_COLORS[tier];
-  const canAddMore = limits.maxQuestionsPerPack === Infinity || questions.length < limits.maxQuestionsPerPack;
+  const canAddMore = true; // pas de limite de questions par pack
+  const aiRemaining = limits.maxAiPerMonth > 0 ? limits.maxAiPerMonth - aiUsesThisMonth : 0;
 
   // Packs filtrés + triés
   const sortedPacks = [...packs]
@@ -478,33 +507,15 @@ export default function QuestionsPage() {
         {/* ===== VUE PACKS ===== */}
         {view === 'packs' && (
           <>
-            {!limits.canCreate && (
-              <div className="muz-card p-6 mb-6 text-center"
-                style={{ border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.06)' }}>
-                <div className="flex justify-center mb-2"><MuzquizLogo width={48} showText={false} /></div>
-                <h3 className="font-black text-lg mb-1" style={{ color: '#F59E0B' }}>Fonctionnalité Pro & Premium</h3>
-                <p className="text-sm mb-4" style={{ color: 'rgba(240,244,255,0.5)' }}>
-                  Passe à un abonnement supérieur pour créer tes propres packs de questions.
-                </p>
-                <Link href="/pricing" className="muz-btn-pink px-6 py-3 rounded-xl font-black text-sm inline-block">
-                  Voir les abonnements →
-                </Link>
-              </div>
-            )}
-
-            {limits.canCreate && (
-              <div className="flex items-center justify-between mb-5 px-1">
-                <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
-                  <span style={{ color: '#F0F4FF', fontWeight: 700 }}>{packs.length}</span>
-                  {limits.maxPacks !== Infinity ? ` / ${limits.maxPacks}` : ''} pack{packs.length !== 1 ? 's' : ''}
-                </p>
-                {(limits.maxPacks === Infinity || packs.length < limits.maxPacks) && (
-                  <button onClick={() => setShowPackForm(true)} className="muz-btn-pink px-4 py-2 rounded-xl font-black text-sm">
-                    + Nouveau pack
-                  </button>
-                )}
-              </div>
-            )}
+            <div className="flex items-center justify-between mb-5 px-1">
+              <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                <span style={{ color: '#F0F4FF', fontWeight: 700 }}>{packs.length}</span>
+                {' '}pack{packs.length !== 1 ? 's' : ''}
+              </p>
+              <button onClick={() => setShowPackForm(true)} className="muz-btn-pink px-4 py-2 rounded-xl font-black text-sm">
+                + Nouveau pack
+              </button>
+            </div>
 
             {showPackForm && (
               <div className="muz-card p-5 mb-4 muz-pop">
@@ -578,7 +589,7 @@ export default function QuestionsPage() {
               </>
             )}
 
-            {packs.length === 0 && limits.canCreate && !showPackForm && (
+            {packs.length === 0 && !showPackForm && (
               <div className="muz-card p-8 text-center">
                 <div className="flex justify-center mb-3"><MuzquizLogo width={60} showText={false} /></div>
                 <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>Aucun pack pour l'instant</p>
@@ -627,34 +638,62 @@ export default function QuestionsPage() {
             <div className="flex items-center justify-between mb-4 px-1">
               <p className="text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
                 <span style={{ color: '#F0F4FF', fontWeight: 700 }}>{questions.length}</span>
-                {limits.maxQuestionsPerPack !== Infinity ? ` / ${limits.maxQuestionsPerPack}` : ''} question{questions.length !== 1 ? 's' : ''}
+                {' '}question{questions.length !== 1 ? 's' : ''}
               </p>
             </div>
 
-            {/* 3 boutons mode d'ajout */}
+            {/* Boutons d'ajout */}
             {canAddMore && addMode === null && (
-              <div className="grid grid-cols-3 gap-2 mb-5">
-                <button onClick={() => { openQForm(); }}
-                  className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02]"
-                  style={{ background: 'rgba(255,0,170,0.1)', border: '1.5px solid rgba(255,0,170,0.3)' }}>
-                  <MuzquizLogo width={32} showText={false} color="#FF00AA" />
-                  <span className="text-xs font-black" style={{ color: '#FF00AA' }}>Manuel</span>
-                  <span className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>Question par question</span>
-                </button>
-                <button onClick={() => { setAddMode('csv'); setCsvPreview([]); setCsvError(''); }}
-                  className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02]"
-                  style={{ background: 'rgba(0,229,209,0.08)', border: '1.5px solid rgba(0,229,209,0.25)' }}>
-                  <MuzquizLogo width={32} showText={false} color="#00E5D1" />
-                  <span className="text-xs font-black" style={{ color: '#00E5D1' }}>Importer CSV</span>
-                  <span className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>Depuis Excel</span>
-                </button>
-                <button onClick={() => { setAddMode('ai'); setAiPreview([]); setAiError(''); }}
-                  className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02]"
-                  style={{ background: 'rgba(139,92,246,0.12)', border: '1.5px solid rgba(139,92,246,0.35)' }}>
-                  <MuzquizLogo width={32} showText={false} color="#8B5CF6" />
-                  <span className="text-xs font-black" style={{ color: '#8B5CF6' }}>Générer par IA</span>
-                  <span className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>Tape un thème</span>
-                </button>
+              <div className="flex flex-col gap-3 mb-5">
+                <div className={`grid gap-2 ${limits.canUseCSV ? 'grid-cols-3' : 'grid-cols-1'}`}>
+                  {/* Manuel — disponible pour tous */}
+                  <button onClick={() => { openQForm(); }}
+                    className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02]"
+                    style={{ background: 'rgba(255,0,170,0.1)', border: '1.5px solid rgba(255,0,170,0.3)' }}>
+                    <MuzquizLogo width={32} showText={false} color="#FF00AA" />
+                    <span className="text-xs font-black" style={{ color: '#FF00AA' }}>Manuel</span>
+                    <span className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>Question par question</span>
+                  </button>
+
+                  {/* CSV — Essentiel+ */}
+                  {limits.canUseCSV && (
+                    <button onClick={() => { setAddMode('csv'); setCsvPreview([]); setCsvError(''); }}
+                      className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02]"
+                      style={{ background: 'rgba(0,229,209,0.08)', border: '1.5px solid rgba(0,229,209,0.25)' }}>
+                      <MuzquizLogo width={32} showText={false} color="#00E5D1" />
+                      <span className="text-xs font-black" style={{ color: '#00E5D1' }}>Importer CSV</span>
+                      <span className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.4)' }}>Depuis Excel</span>
+                    </button>
+                  )}
+
+                  {/* IA — Essentiel+ */}
+                  {limits.maxAiPerMonth > 0 && (
+                    <button onClick={() => { setAddMode('ai'); setAiPreview([]); setAiError(''); }}
+                      disabled={aiRemaining <= 0}
+                      className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{ background: 'rgba(139,92,246,0.12)', border: '1.5px solid rgba(139,92,246,0.35)' }}>
+                      <MuzquizLogo width={32} showText={false} color="#8B5CF6" />
+                      <span className="text-xs font-black" style={{ color: '#8B5CF6' }}>Générer par IA</span>
+                      <span className="text-xs text-center" style={{ color: aiRemaining <= 0 ? '#FF00AA' : 'rgba(240,244,255,0.4)' }}>
+                        {aiRemaining > 0 ? `${aiRemaining}/${limits.maxAiPerMonth} ce mois` : 'Quota atteint'}
+                      </span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Bandeau Découverte — inviter à passer à Essentiel */}
+                {!limits.canUseCSV && (
+                  <div className="flex items-center justify-between px-4 py-2.5 rounded-xl"
+                    style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                    <span className="text-xs" style={{ color: 'rgba(240,244,255,0.45)' }}>
+                      Import CSV et génération IA disponibles à partir de l'abonnement Essentiel
+                    </span>
+                    <Link href="/pricing" className="text-xs font-black px-3 py-1 rounded-lg flex-shrink-0 ml-3"
+                      style={{ background: 'rgba(139,92,246,0.2)', color: '#8B5CF6' }}>
+                      Voir →
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 
@@ -933,6 +972,15 @@ export default function QuestionsPage() {
                 {aiPreview.length === 0 ? (
                   <>
                     <div className="flex flex-col gap-3">
+                      {/* Quota restant */}
+                      <div className="flex items-center justify-between px-3 py-2 rounded-xl"
+                        style={{ background: aiRemaining > 0 ? 'rgba(139,92,246,0.08)' : 'rgba(255,0,170,0.08)', border: `1px solid ${aiRemaining > 0 ? 'rgba(139,92,246,0.25)' : 'rgba(255,0,170,0.25)'}` }}>
+                        <span className="text-xs font-bold" style={{ color: aiRemaining > 0 ? 'rgba(139,92,246,0.8)' : '#FF00AA' }}>
+                          {aiRemaining > 0 ? `${aiRemaining} génération${aiRemaining > 1 ? 's' : ''} restante${aiRemaining > 1 ? 's' : ''} ce mois` : 'Quota mensuel atteint'}
+                        </span>
+                        <span className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.35)' }}>{aiUsesThisMonth}/{limits.maxAiPerMonth}</span>
+                      </div>
+
                       <div>
                         <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>Thème ou sujet</p>
                         <input value={aiTheme} onChange={e => setAiTheme(e.target.value)}
@@ -941,9 +989,11 @@ export default function QuestionsPage() {
                           style={inputStyle()} />
                       </div>
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>Nombre de questions</p>
+                        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                          Nombre de questions (max {limits.maxAiQuestionsPerGen})
+                        </p>
                         <div className="flex gap-2">
-                          {[5, 10, 15, 20].map(n => (
+                          {[5, 10, 15, 20].filter(n => n <= limits.maxAiQuestionsPerGen).map(n => (
                             <button key={n} onClick={() => setAiCount(n)}
                               className="flex-1 py-2 rounded-xl text-sm font-bold transition-all"
                               style={{

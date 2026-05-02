@@ -90,8 +90,14 @@ CREATE TABLE IF NOT EXISTS profiles (
   avatar_url        TEXT,
   subscription_tier TEXT  NOT NULL DEFAULT 'decouverte'
                           CHECK (subscription_tier IN ('decouverte','essentiel','pro','expert')),
+  ai_uses_count     INT   NOT NULL DEFAULT 0,       -- nb de générations IA utilisées ce mois
+  ai_uses_month     TEXT  NOT NULL DEFAULT '',       -- mois de référence format 'YYYY-MM'
   created_at        TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ajout des colonnes IA sur les profils existants (idempotent)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ai_uses_count INT  NOT NULL DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ai_uses_month TEXT NOT NULL DEFAULT '';
 
 
 -- ================================================================
