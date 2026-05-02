@@ -45,6 +45,7 @@ interface ParsedQuestion {
   choice_c: string;
   choice_d: string;
   correct_index: 0 | 1 | 2 | 3;
+  audio_url?: string;   // colonne optionnelle pour les packs blind test
   _selected: boolean;
 }
 
@@ -57,12 +58,13 @@ function parseCSV(text: string): ParsedQuestion[] {
   const header = lines[0].split(sep).map(h => h.trim().toLowerCase().replace(/^["']|["']$/g, ''));
 
   const idx = {
-    q: header.findIndex(h => ['question', 'q'].includes(h)),
-    a: header.findIndex(h => ['choix_a', 'choice_a', 'a', 'reponse_a'].includes(h)),
-    b: header.findIndex(h => ['choix_b', 'choice_b', 'b', 'reponse_b'].includes(h)),
-    c: header.findIndex(h => ['choix_c', 'choice_c', 'c', 'reponse_c'].includes(h)),
-    d: header.findIndex(h => ['choix_d', 'choice_d', 'd', 'reponse_d'].includes(h)),
+    q:       header.findIndex(h => ['question', 'q'].includes(h)),
+    a:       header.findIndex(h => ['choix_a', 'choice_a', 'a', 'reponse_a'].includes(h)),
+    b:       header.findIndex(h => ['choix_b', 'choice_b', 'b', 'reponse_b'].includes(h)),
+    c:       header.findIndex(h => ['choix_c', 'choice_c', 'c', 'reponse_c'].includes(h)),
+    d:       header.findIndex(h => ['choix_d', 'choice_d', 'd', 'reponse_d'].includes(h)),
     correct: header.findIndex(h => ['correct', 'correct_index', 'bonne_reponse', 'answer'].includes(h)),
+    audio:   header.findIndex(h => ['audio_url', 'audio', 'youtube_url', 'url_audio', 'musique'].includes(h)),
   };
 
   // Fallback : ordre positionnel si les colonnes ne sont pas trouvées
@@ -72,6 +74,7 @@ function parseCSV(text: string): ParsedQuestion[] {
   if (idx.c < 0) idx.c = 3;
   if (idx.d < 0) idx.d = 4;
   if (idx.correct < 0) idx.correct = 5;
+  // idx.audio reste -1 si absent → champ optionnel
 
   return lines.slice(1).map(line => {
     const cols = line.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
@@ -82,6 +85,7 @@ function parseCSV(text: string): ParsedQuestion[] {
     else if (['b', '1'].includes(raw.toLowerCase())) ci = 1;
     else if (['c', '2'].includes(raw.toLowerCase())) ci = 2;
     else if (['d', '3'].includes(raw.toLowerCase())) ci = 3;
+    const audioVal = idx.audio >= 0 ? (cols[idx.audio] ?? '').trim() : '';
     return {
       question: cols[idx.q] ?? '',
       choice_a: cols[idx.a] ?? '',
@@ -89,6 +93,7 @@ function parseCSV(text: string): ParsedQuestion[] {
       choice_c: cols[idx.c] ?? '',
       choice_d: cols[idx.d] ?? '',
       correct_index: ci,
+      ...(audioVal ? { audio_url: audioVal } : {}),
       _selected: true,
     };
   }).filter(q => q.question.trim() && q.choice_a.trim());
@@ -379,6 +384,7 @@ export default function QuestionsPage() {
       pack_id: selectedPack.id, owner_id: userId,
       question: q.question, choice_a: q.choice_a, choice_b: q.choice_b,
       choice_c: q.choice_c, choice_d: q.choice_d, correct_index: q.correct_index,
+      ...(q.audio_url ? { youtube_url: q.audio_url } : {}),
     }));
     await supabase.from('custom_questions').insert(payload);
     await loadQuestions(selectedPack.id);
@@ -917,7 +923,9 @@ export default function QuestionsPage() {
                       <span className="text-3xl">📄</span>
                       <span className="font-bold text-sm" style={{ color: '#00E5D1' }}>Cliquer pour choisir un fichier .csv</span>
                       <span className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                        Colonnes : question, choix_a, choix_b, choix_c, choix_d, correct (0-3)
+                        {selectedPack && isBlindTestMode(selectedPack.mode)
+                          ? 'Colonnes : question, choix_a→d, correct (0-3), audio_url (optionnel)'
+                          : 'Colonnes : question, choix_a, choix_b, choix_c, choix_d, correct (0-3)'}
                       </span>
                     </button>
                     <input ref={csvInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleCSVFile} />
@@ -925,10 +933,14 @@ export default function QuestionsPage() {
                     {/* Modèle CSV à télécharger */}
                     <button
                       onClick={() => {
-                        const csv = 'question,choix_a,choix_b,choix_c,choix_d,correct\nQuelle est la capitale de la France?,Paris,Lyon,Marseille,Nice,0\nEn quelle année a été fondée Apple?,1976,1984,1992,2001,0';
+                        const isBlind = selectedPack && isBlindTestMode(selectedPack.mode);
+                        const csv = isBlind
+                          ? 'question,choix_a,choix_b,choix_c,choix_d,correct,audio_url\nQuel est cet artiste ?,Michael Jackson,Madonna,Prince,Whitney Houston,0,https://exemple.com/audio1.mp3\nQuel est ce titre ?,Thriller,Beat It,Billie Jean,Bad,2,'
+                          : 'question,choix_a,choix_b,choix_c,choix_d,correct\nQuelle est la capitale de la France?,Paris,Lyon,Marseille,Nice,0\nEn quelle année a été fondée Apple?,1976,1984,1992,2001,0';
+                        const filename = isBlind ? 'modele_blind_test.csv' : 'modele_questions.csv';
                         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                         const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a'); a.href = url; a.download = 'modele_questions.csv'; a.click();
+                        const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
                         URL.revokeObjectURL(url);
                       }}
                       className="w-full mt-3 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-80"
@@ -964,7 +976,15 @@ export default function QuestionsPage() {
                             {q._selected && <span className="text-xs font-black">✓</span>}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold truncate" style={{ color: '#F0F4FF' }}>{q.question}</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-xs font-bold truncate" style={{ color: '#F0F4FF' }}>{q.question}</p>
+                              {q.audio_url && (
+                                <span className="text-xs px-1.5 py-0.5 rounded-full font-bold flex-shrink-0"
+                                  style={{ background: 'rgba(0,229,209,0.12)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.25)' }}>
+                                  ♪
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs mt-0.5 truncate" style={{ color: '#00E5D1' }}>
                               ✓ {[q.choice_a, q.choice_b, q.choice_c, q.choice_d][q.correct_index]}
                             </p>
