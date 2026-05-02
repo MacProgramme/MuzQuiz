@@ -225,10 +225,7 @@ export function PhoneControllerView({
         <div className="min-h-screen flex flex-col p-4"
           style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
           <div className="flex items-center justify-between pt-4 pb-6">
-            <div>
-              <p className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>{myPlayer.nickname}</p>
-              <p className="font-black text-xl" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts</p>
-            </div>
+            <p className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>{myPlayer.nickname}</p>
             <div className="px-3 py-1.5 rounded-full"
               style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.3)' }}>
               <p className="text-xs font-black">Vous avez buzzé !</p>
@@ -241,13 +238,11 @@ export function PhoneControllerView({
                 <>
                   <MustacheIcon color="#00E5D1" size={80} animate />
                   <p className="text-2xl font-black" style={{ color: '#00E5D1' }}>Bonne réponse !</p>
-                  <p className="font-black text-xl" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts</p>
                 </>
               ) : qcmRevealed ? (
                 <>
                   <MuzquizLogo width={80} showText={false} />
                   <p className="text-2xl font-black" style={{ color: '#FF00AA' }}>Pas tout à fait…</p>
-                  <p className="font-black text-xl" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts</p>
                 </>
               ) : (
                 /* Réponse envoyée — afficher la bonne réponse en attendant la révélation */
@@ -321,10 +316,7 @@ export function PhoneControllerView({
       <div className="min-h-screen flex flex-col items-center justify-center p-8"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
         <div className="flex items-center justify-between w-full max-w-sm mb-10">
-          <div>
-            <p className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>{myPlayer.nickname}</p>
-            <p className="font-black text-xl" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts · #{myRank}</p>
-          </div>
+          <p className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>{myPlayer.nickname}</p>
         </div>
         <button
           onClick={pressBuzzer}
@@ -365,7 +357,6 @@ export function PhoneControllerView({
             <h1 className="text-2xl font-black" style={{ color: '#FF00AA' }}>Pas tout à fait…</h1>
           </>
         )}
-        <p className="font-black text-2xl" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts</p>
       </div>
     );
   }
@@ -420,7 +411,6 @@ export function PhoneControllerView({
       <div className="flex items-center justify-between pt-4 pb-6">
         <div>
           <p className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>{myPlayer.nickname}</p>
-          <p className="font-black text-xl" style={{ color: '#8B5CF6' }}>{myPlayer.score} pts · #{myRank}</p>
         </div>
         <p className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
           Q{(room.current_question ?? 0) + 1}
