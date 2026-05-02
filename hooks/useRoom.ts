@@ -67,6 +67,7 @@ export function useRoom(code: string, nickname: string) {
           a: q.choice_a,
           image_url: q.image_url ?? null,
           question_type: q.question_type ?? 'normal',
+          youtube_url: q.youtube_url ?? null,
         }));
         setCustomQuestions(formatted as any);
         customQuestionsRef.current = formatted as any;

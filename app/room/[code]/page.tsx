@@ -347,8 +347,29 @@ export default function RoomPage() {
 
   // --- MODE ÉCRAN PUBLIC ---
   if (room.public_screen) {
-    // Non-hôte en attente → laisse tomber sur la salle d'attente normale ci-dessous
-    if (!myPlayer.is_host && room.status !== 'waiting') {
+    if (!myPlayer.is_host) {
+      // Non-hôte en attente → écran téléphone d'attente (pas l'écran public TV)
+      if (room.status === 'waiting') {
+        return (
+          <div
+            className="min-h-screen flex flex-col items-center justify-center gap-6 p-8 muz-fade-in"
+            style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}
+          >
+            <MuzquizLogo width={80} showText={false} />
+            <p className="font-black text-2xl" style={{ color: '#F0F4FF' }}>Prêt à jouer !</p>
+            <p className="text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>
+              En attente du lancement par l'hôte…
+            </p>
+            <div
+              className="px-5 py-2 rounded-full font-bold text-sm"
+              style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.3)' }}
+            >
+              {myPlayer.nickname}
+            </div>
+          </div>
+        );
+      }
+      // Partie en cours → contrôleur téléphone
       return (
         <PhoneControllerView
           room={room}
