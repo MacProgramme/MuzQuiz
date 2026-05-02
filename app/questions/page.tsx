@@ -536,22 +536,25 @@ export default function QuestionsPage() {
                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>Mode de jeu</p>
                     <div className="grid grid-cols-2 gap-2">
                       {([
-                        { value: 'quiz'            as GameMode, label: 'Quiz',           icon: '❓', desc: 'Questions texte / image' },
-                        { value: 'blind_test'      as GameMode, label: 'Blind Test',     icon: '🎵', desc: 'Identification musicale' },
-                        { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',      icon: '🔔', desc: 'Quiz avec buzzer' },
-                        { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test',icon: '🎶', desc: 'Blind Test avec buzzer' },
-                      ]).map(m => (
-                        <button key={m.value} onClick={() => setPackMode(m.value)}
-                          className="flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
-                          style={{
-                            background: packMode === m.value ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.04)',
-                            color: packMode === m.value ? '#8B5CF6' : 'rgba(240,244,255,0.5)',
-                            border: `1.5px solid ${packMode === m.value ? '#8B5CF6' : 'rgba(255,255,255,0.08)'}`,
-                          }}>
-                          <span>{m.icon} {m.label}</span>
-                          <span className="text-xs font-normal" style={{ color: packMode === m.value ? 'rgba(139,92,246,0.7)' : 'rgba(240,244,255,0.3)' }}>{m.desc}</span>
-                        </button>
-                      ))}
+                        { value: 'quiz'            as GameMode, label: 'Quiz',            color: '#8B5CF6', desc: 'Questions texte / image' },
+                        { value: 'blind_test'      as GameMode, label: 'Blind Test',      color: '#00E5D1', desc: 'Identification musicale' },
+                        { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',       color: '#FF00AA', desc: 'Quiz avec buzzer' },
+                        { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test', color: '#F59E0B', desc: 'Blind Test avec buzzer' },
+                      ]).map(m => {
+                        const active = packMode === m.value;
+                        return (
+                          <button key={m.value} onClick={() => setPackMode(m.value)}
+                            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-sm font-bold transition-all"
+                            style={{
+                              background: active ? `${m.color}20` : 'rgba(255,255,255,0.04)',
+                              border: `1.5px solid ${active ? m.color : 'rgba(255,255,255,0.08)'}`,
+                            }}>
+                            <MuzquizLogo width={28} showText={false} color={active ? m.color : 'rgba(240,244,255,0.3)'} />
+                            <span style={{ color: active ? m.color : 'rgba(240,244,255,0.5)' }}>{m.label}</span>
+                            <span className="text-xs font-normal text-center" style={{ color: active ? `${m.color}99` : 'rgba(240,244,255,0.3)' }}>{m.desc}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   <div className="flex gap-2 mt-1">
@@ -681,8 +684,8 @@ export default function QuestionsPage() {
                     </button>
                   )}
 
-                  {/* IA — Essentiel+ */}
-                  {limits.maxAiPerMonth > 0 && (
+                  {/* IA — Essentiel+ et uniquement pour les packs non-blind-test */}
+                  {limits.maxAiPerMonth > 0 && selectedPack && !isBlindTestMode(selectedPack.mode) && (
                     <button onClick={() => { setAddMode('ai'); setAiPreview([]); setAiError(''); }}
                       disabled={aiRemaining <= 0}
                       className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed"

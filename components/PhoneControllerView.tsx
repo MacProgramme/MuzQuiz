@@ -329,11 +329,6 @@ export function PhoneControllerView({
           <MuzquizLogo width={56} showText={false} />
           <span className="text-2xl font-black">BUZZ !</span>
         </button>
-        {questionStartedAt !== undefined && (
-          <div className="mt-6">
-            <ScorePreview questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
-          </div>
-        )}
       </div>
     );
   }
@@ -416,12 +411,6 @@ export function PhoneControllerView({
           Q{(room.current_question ?? 0) + 1}
         </p>
       </div>
-
-      {questionStartedAt !== undefined && (
-        <div className="mb-3">
-          <ScorePreview questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} />
-        </div>
-      )}
 
       <p className="text-center font-bold mb-5" style={{ color: 'rgba(240,244,255,0.5)' }}>
         Choisissez votre réponse

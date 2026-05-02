@@ -217,6 +217,11 @@ export function PublicScreenView({
                         {!room.pack_id && <span className="ml-auto text-xs font-black" style={{ color: '#8B5CF6' }}>✓</span>}
                       </button>
                       {hostPacks
+                        .filter(p => {
+                          const roomIsBlind = isBlindTestMode(room.mode as any);
+                          const packIsBlind = isBlindTestMode(p.mode as any);
+                          return roomIsBlind === packIsBlind;
+                        })
                         .filter(p => packSearch.trim() === '' || p.name.toLowerCase().includes(packSearch.toLowerCase()))
                         .map(pack => (
                           <button key={pack.id}

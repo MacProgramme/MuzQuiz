@@ -522,8 +522,13 @@ export default function RoomPage() {
                         </span>
                         {!room.pack_id && <span className="ml-auto text-xs font-black" style={{ color: '#8B5CF6' }}>✓</span>}
                       </button>
-                      {/* Packs filtrés */}
+                      {/* Packs filtrés — uniquement ceux compatibles avec le mode de la salle */}
                       {hostPacks
+                        .filter(p => {
+                          const roomIsBlind = isBlindTestMode(room.mode as any);
+                          const packIsBlind = isBlindTestMode(p.mode as any);
+                          return roomIsBlind === packIsBlind;
+                        })
                         .filter(p => packSearch.trim() === '' || p.name.toLowerCase().includes(packSearch.toLowerCase()))
                         .map(pack => (
                           <button key={pack.id}
@@ -535,7 +540,7 @@ export default function RoomPage() {
                                 {pack.name}
                               </p>
                               <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                                {pack.question_count}q · {pack.mode === 'qcm' ? 'Quiz' : 'Blind Test'}
+                                {pack.question_count}q · {pack.mode}
                               </p>
                             </div>
                             {room.pack_id === pack.id && <span className="text-xs font-black flex-shrink-0" style={{ color: '#FF00AA' }}>✓</span>}
@@ -717,9 +722,6 @@ export default function RoomPage() {
         )}
       </div>
 
-      {/* Scoreboard */}
-      <Scoreboard players={players} buzzedId={buzz?.player_id} />
-
       {/* Zone de jeu */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
 
@@ -825,10 +827,8 @@ export default function RoomPage() {
                 <div className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
                   {answeredCount} / {players.length} joueur{players.length > 1 ? 's' : ''} ont répondu
                 </div>
-                {myQCMAnswer ? (
+                {myQCMAnswer && (
                   <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
-                ) : (
-                  <ScorePreview questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
                 )}
               </>
             )}
