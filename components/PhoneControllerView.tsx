@@ -274,15 +274,14 @@ export function PhoneControllerView({
                 {currentQuestion.choices.map((choice, i) => (
                   <button key={i}
                     onClick={() => submitQCMAnswer(i)}
-                    className="flex flex-col items-center justify-center gap-3 rounded-2xl p-4 font-black text-white active:scale-95 transition-all"
+                    className="flex flex-col items-center justify-center gap-2 rounded-2xl p-4 font-black text-white active:scale-95 transition-all"
                     style={{
                       background: `linear-gradient(135deg, ${COLORS[i]}cc, ${COLORS[i]})`,
-                      minHeight: '120px',
+                      minHeight: '90px',
                       boxShadow: `0 4px 24px ${COLORS[i]}55`,
                     }}>
-                    <MustacheIcon color="white" size={44} />
                     <span className="text-xs font-black uppercase tracking-wider opacity-80">{LABELS[i]}</span>
-                    <span className="text-sm text-center leading-tight">{choice}</span>
+                    <span className="text-sm text-center leading-tight break-words w-full">{choice}</span>
                   </button>
                 ))}
               </div>
@@ -394,12 +393,11 @@ export function PhoneControllerView({
             className="flex flex-col items-center justify-center gap-2 rounded-2xl p-4 font-black text-white active:scale-95 transition-all"
             style={{
               background: `linear-gradient(135deg, ${COLORS[i]}cc, ${COLORS[i]})`,
-              minHeight: '130px',
+              minHeight: '90px',
               boxShadow: `0 4px 24px ${COLORS[i]}55`,
             }}>
-            <MustacheIcon color="white" size={48} />
             <span className="text-xs font-black uppercase tracking-wider opacity-70">{LABELS[i]}</span>
-            <span className="text-sm text-center leading-tight">{choice}</span>
+            <span className="text-sm text-center leading-tight break-words w-full">{choice}</span>
           </button>
         ))}
       </div>

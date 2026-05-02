@@ -430,16 +430,18 @@ export function PublicScreenView({
             const isWrong = qcmRevealed && i !== currentQuestion.correct;
             const count = answerCounts[i];
             return (
-              <div key={i} className="flex items-center gap-5 rounded-2xl px-8 py-6 transition-all"
+              <div key={i} className="flex items-center gap-4 rounded-2xl px-8 py-5 transition-all"
                 style={{
                   background: isCorrect ? 'rgba(0,229,209,0.25)' : isWrong ? 'rgba(255,255,255,0.04)' : COLORS[i] + 'cc',
                   opacity: isWrong ? 0.35 : 1,
                   border: `3px solid ${isCorrect ? '#00E5D1' : 'transparent'}`,
                   boxShadow: isCorrect ? '0 0 30px rgba(0,229,209,0.4)' : 'none',
-                  minHeight: '110px',
+                  minHeight: '90px',
                 }}>
-                <MustacheIcon color={isCorrect ? '#00E5D1' : 'white'} size={56} />
-                <span className="flex-1 font-black text-white" style={{ fontSize: '1.4rem', lineHeight: 1.2 }}>
+                <span className="font-black text-white opacity-70 flex-shrink-0" style={{ fontSize: '1.6rem' }}>
+                  {LABELS[i]}
+                </span>
+                <span className="flex-1 font-black text-white break-words" style={{ fontSize: '1.4rem', lineHeight: 1.2 }}>
                   {choice}
                 </span>
                 {(qcmRevealed || count > 0) && (
@@ -563,15 +565,14 @@ export function PublicScreenView({
                   const isCorrect = qcmRevealed && i === currentQuestion.correct;
                   const isWrong = qcmRevealed && isChosen && !isCorrect;
                   return (
-                    <div key={i} className="flex items-center gap-4 px-6 py-4 rounded-2xl font-bold text-white"
+                    <div key={i} className="flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-white"
                       style={{
                         background: isCorrect ? 'rgba(0,229,209,0.25)' : isWrong ? 'rgba(255,0,170,0.2)' : isChosen ? COLORS[i] : COLORS[i] + '66',
-                        fontSize: '1.2rem',
                         border: isChosen ? '3px solid white' : isCorrect ? '3px solid #00E5D1' : '3px solid transparent',
                         boxShadow: isCorrect ? '0 0 20px rgba(0,229,209,0.4)' : 'none',
                       }}>
-                      <MustacheIcon color={isCorrect ? '#00E5D1' : 'white'} size={40} />
-                      <span>{choice}</span>
+                      <span className="opacity-70 flex-shrink-0 font-black" style={{ fontSize: '1.3rem' }}>{LABELS[i]}</span>
+                      <span className="break-words" style={{ fontSize: '1.2rem' }}>{choice}</span>
                     </div>
                   );
                 })}

@@ -138,6 +138,7 @@ export default function RoomPage() {
   const [hostPacks, setHostPacks] = useState<{ id: string; name: string; mode: string; question_count: number }[]>([]);
   const [packDropdownOpen, setPackDropdownOpen] = useState(false);
   const [packSearch, setPackSearch] = useState('');
+  const [playersOpen, setPlayersOpen] = useState(true);
 
   // Refs pour l'auto-fermeture (évite les stale closures dans le cleanup)
   const roomRef = useRef<typeof room>(null);
@@ -428,23 +429,34 @@ export default function RoomPage() {
         </div>
 
         <div className="muz-card w-full max-w-md p-5">
-          <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'rgba(240,244,255,0.4)' }}>
-            Joueurs ({players.length})
-          </p>
-          <div className="flex flex-col gap-2">
-            {players.map(p => (
-              <div key={p.id} className="flex items-center gap-3 py-2 rounded-xl px-3"
-                style={{ background: 'rgba(255,255,255,0.04)' }}>
-                <div className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ background: p.is_host ? '#FF00AA' : '#00E5D1', boxShadow: `0 0 8px ${p.is_host ? '#FF00AA' : '#00E5D1'}` }} />
-                <span className="font-bold flex-1" style={{ color: '#F0F4FF' }}>{p.nickname}</span>
-                {p.is_host && (
-                  <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-                    style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA' }}>hôte</span>
-                )}
-              </div>
-            ))}
-          </div>
+          <button
+            onClick={() => setPlayersOpen(o => !o)}
+            className="w-full flex items-center justify-between"
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
+              Joueurs ({players.length})
+            </p>
+            <span className="text-xs transition-transform"
+              style={{ color: 'rgba(240,244,255,0.4)', display: 'inline-block', transform: playersOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+              ▼
+            </span>
+          </button>
+          {playersOpen && (
+            <div className="flex flex-col gap-2 mt-4">
+              {players.map(p => (
+                <div key={p.id} className="flex items-center gap-3 py-2 rounded-xl px-3"
+                  style={{ background: 'rgba(255,255,255,0.04)' }}>
+                  <div className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ background: p.is_host ? '#FF00AA' : '#00E5D1', boxShadow: `0 0 8px ${p.is_host ? '#FF00AA' : '#00E5D1'}` }} />
+                  <span className="font-bold flex-1" style={{ color: '#F0F4FF' }}>{p.nickname}</span>
+                  {p.is_host && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                      style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA' }}>hôte</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {myPlayer.is_host ? (
