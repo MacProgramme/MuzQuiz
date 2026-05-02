@@ -38,25 +38,26 @@ export const MODE_DISPLAY: Record<GameMode, string> = {
 export const TIER_LIMITS: Record<SubscriptionTier, {
   canCreate: boolean;           // tous les tiers peuvent créer des packs (illimités)
   canUseCSV: boolean;           // peut importer depuis un fichier CSV/Excel
+  canUseImage: boolean;         // peut créer des questions avec image (image / flou→net)
   maxAiPerMonth: number;        // nombre de générations IA autorisées par mois (0 = aucune)
   maxAiQuestionsPerGen: number; // questions max par génération IA
   maxPlayers: number;           // joueurs max dans une salle
 }> = {
   //  Moustachu Découverte — Gratuit
-  //  Packs illimités · Création manuelle uniquement · 10 joueurs max
-  decouverte: { canCreate: true, canUseCSV: false, maxAiPerMonth: 0,  maxAiQuestionsPerGen: 0,  maxPlayers: 10  },
+  //  Packs illimités · Création manuelle texte uniquement · 10 joueurs max
+  decouverte: { canCreate: true, canUseCSV: false, canUseImage: false, maxAiPerMonth: 0,  maxAiQuestionsPerGen: 0,  maxPlayers: 10  },
 
   //  Moustachu Essentiel — 9,99 €/mois
-  //  Packs illimités · Manuel + CSV + IA (10 q, 10 fois/mois) · 20 joueurs max
-  essentiel:  { canCreate: true, canUseCSV: true,  maxAiPerMonth: 10, maxAiQuestionsPerGen: 10, maxPlayers: 20  },
+  //  Packs illimités · Manuel + CSV + Image + IA (10 q, 10 fois/mois) · 20 joueurs max
+  essentiel:  { canCreate: true, canUseCSV: true,  canUseImage: true,  maxAiPerMonth: 10, maxAiQuestionsPerGen: 10, maxPlayers: 20  },
 
   //  Moustachu Pro — 19,99 €/mois
-  //  Packs illimités · Manuel + CSV + IA (20 q, 40 fois/mois) · 100 joueurs max
-  pro:        { canCreate: true, canUseCSV: true,  maxAiPerMonth: 40, maxAiQuestionsPerGen: 20, maxPlayers: 100 },
+  //  Packs illimités · Manuel + CSV + Image + IA (20 q, 40 fois/mois) · 100 joueurs max
+  pro:        { canCreate: true, canUseCSV: true,  canUseImage: true,  maxAiPerMonth: 40, maxAiQuestionsPerGen: 20, maxPlayers: 100 },
 
   //  Moustachu Expert — 29,99 €/mois
-  //  Packs illimités · Manuel + CSV + IA (20 q, 80 fois/mois) · 250 joueurs max
-  expert:     { canCreate: true, canUseCSV: true,  maxAiPerMonth: 80, maxAiQuestionsPerGen: 20, maxPlayers: 250 },
+  //  Packs illimités · Manuel + CSV + Image + IA (20 q, 80 fois/mois) · 250 joueurs max
+  expert:     { canCreate: true, canUseCSV: true,  canUseImage: true,  maxAiPerMonth: 80, maxAiQuestionsPerGen: 20, maxPlayers: 250 },
 };
 
 export interface QuestionPack {

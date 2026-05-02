@@ -30,6 +30,7 @@ Règles :
 - Une seule bonne réponse, 3 mauvaises plausibles
 - Questions courtes (max 120 caractères)
 - Réponses courtes (max 60 caractères)
+- INTERDIT : la bonne réponse ne doit JAMAIS apparaître textuellement dans la question. Par exemple : ne pas demander "Dans quel film apparaît Forrest Gump ?" si la réponse est "Forrest Gump". Reformule pour éviter tout mot de la réponse dans la question.
 ${mode === 'buzz' ? '- Style blind test : artiste, chanson, film, année…' : ''}
 
 Exemple de sortie attendue :

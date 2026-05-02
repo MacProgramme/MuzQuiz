@@ -718,23 +718,36 @@ export default function QuestionsPage() {
                     </p>
                     <div className="grid grid-cols-3 gap-2">
                       {([
-                        { value: 'normal'     as QuestionType, label: 'Texte',      color: '#8B5CF6' },
-                        { value: 'image'      as QuestionType, label: 'Image',      color: '#00E5D1' },
-                        { value: 'blur_reveal'as QuestionType, label: 'Flou → Net', color: '#FF00AA' },
-                      ]).map(opt => (
-                        <button key={opt.value} onClick={() => { setQType(opt.value); if (opt.value === 'normal') setQImageUrl(null); }}
-                          className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl transition-all"
-                          style={{
-                            background: qType === opt.value ? `${opt.color}20` : 'rgba(255,255,255,0.04)',
-                            border: `1.5px solid ${qType === opt.value ? opt.color : 'rgba(255,255,255,0.08)'}`,
-                          }}>
-                          <MuzquizLogo width={28} showText={false} color={qType === opt.value ? opt.color : 'rgba(240,244,255,0.3)'} />
-                          <span className="text-xs font-black" style={{ color: qType === opt.value ? opt.color : 'rgba(240,244,255,0.5)' }}>
-                            {opt.label}
-                          </span>
-                        </button>
-                      ))}
+                        { value: 'normal'      as QuestionType, label: 'Texte',      color: '#8B5CF6', needsImage: false },
+                        { value: 'image'       as QuestionType, label: 'Image',      color: '#00E5D1', needsImage: true  },
+                        { value: 'blur_reveal' as QuestionType, label: 'Flou → Net', color: '#FF00AA', needsImage: true  },
+                      ]).map(opt => {
+                        const locked = opt.needsImage && !limits.canUseImage;
+                        return (
+                          <button key={opt.value}
+                            onClick={() => { if (locked) return; setQType(opt.value); if (opt.value === 'normal') setQImageUrl(null); }}
+                            className="flex flex-col items-center gap-1 py-3 px-2 rounded-xl transition-all relative"
+                            style={{
+                              background: locked ? 'rgba(255,255,255,0.02)' : qType === opt.value ? `${opt.color}20` : 'rgba(255,255,255,0.04)',
+                              border: `1.5px solid ${locked ? 'rgba(255,255,255,0.06)' : qType === opt.value ? opt.color : 'rgba(255,255,255,0.08)'}`,
+                              cursor: locked ? 'not-allowed' : 'pointer',
+                              opacity: locked ? 0.4 : 1,
+                            }}>
+                            <MuzquizLogo width={28} showText={false} color={locked ? 'rgba(240,244,255,0.2)' : qType === opt.value ? opt.color : 'rgba(240,244,255,0.3)'} />
+                            <span className="text-xs font-black" style={{ color: locked ? 'rgba(240,244,255,0.3)' : qType === opt.value ? opt.color : 'rgba(240,244,255,0.5)' }}>
+                              {opt.label}
+                            </span>
+                            {locked && <span className="text-xs leading-none" style={{ color: 'rgba(240,244,255,0.3)' }}>🔒</span>}
+                          </button>
+                        );
+                      })}
                     </div>
+                    {!limits.canUseImage && (
+                      <p className="text-xs mt-1.5" style={{ color: 'rgba(240,244,255,0.3)' }}>
+                        Questions image disponibles à partir de l'abonnement Essentiel.{' '}
+                        <a href="/pricing" className="underline" style={{ color: '#8B5CF6' }}>Voir les formules →</a>
+                      </p>
+                    )}
                   </div>
 
                   {/* Upload image (si type image ou blur_reveal) */}
