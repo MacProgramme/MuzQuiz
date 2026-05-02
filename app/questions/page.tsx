@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { QuestionPack, CustomQuestion, QuestionType, SubscriptionTier, TIER_LIMITS, normalizeTier, GameMode, isBlindTestMode } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
+import { extractYoutubeId } from '@/components/YouTubePlayer';
 
 type View = 'packs' | 'questions';
 type AddMode = 'manual' | 'csv' | 'ai';
@@ -126,11 +127,9 @@ export default function QuestionsPage() {
   const [qCorrect, setQCorrect] = useState<0|1|2|3>(0);
   const [qType, setQType] = useState<QuestionType>('normal');
   const [qImageUrl, setQImageUrl] = useState<string | null>(null);
-  const [qYoutubeUrl, setQYoutubeUrl] = useState<string>('');  // réutilisé pour l'URL audio
+  const [qYoutubeUrl, setQYoutubeUrl] = useState<string>('');  // URL YouTube pour les packs blind test
   const [qImageUploading, setQImageUploading] = useState(false);
-  const [qAudioUploading, setQAudioUploading] = useState(false);
   const qImageInputRef = useRef<HTMLInputElement>(null);
-  const qAudioInputRef = useRef<HTMLInputElement>(null);
   const [qSaving, setQSaving] = useState(false);
   const [qSaveError, setQSaveError] = useState<string | null>(null);
 
@@ -275,30 +274,6 @@ export default function QuestionsPage() {
     e.target.value = '';
   };
 
-  const uploadAudio = async (file: File): Promise<string | null> => {
-    if (!userId) return null;
-    setQAudioUploading(true);
-    try {
-      const ext = file.name.split('.').pop()?.toLowerCase() ?? 'mp3';
-      const path = `audio/${userId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage
-        .from('question-images')
-        .upload(path, file, { contentType: file.type, upsert: false });
-      if (error) { console.error('Upload audio:', error.message); return null; }
-      const { data: urlData } = supabase.storage.from('question-images').getPublicUrl(path);
-      return urlData.publicUrl;
-    } finally {
-      setQAudioUploading(false);
-    }
-  };
-
-  const handleQAudioChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = await uploadAudio(file);
-    if (url) setQYoutubeUrl(url);  // stocké dans la colonne youtube_url
-    e.target.value = '';
-  };
 
   const saveQuestion = async () => {
     if (!selectedPack || !userId || !qText.trim() || qChoices.some(c => !c.trim())) return;
@@ -809,60 +784,69 @@ export default function QuestionsPage() {
                     </div>
                   )}
 
-                  {/* Upload audio (pour packs blind test) */}
+                  {/* URL YouTube (pour packs blind test) — aucun stockage de musique */}
                   {selectedPack && isBlindTestMode(selectedPack.mode) && (
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(0,229,209,0.6)' }}>
-                        ♪ Fichier audio (musique à identifier)
+                        ♪ Lien YouTube (musique à identifier)
                       </p>
+
+                      {/* Champ de saisie */}
                       <input
-                        ref={qAudioInputRef}
-                        type="file"
-                        accept=".mp3,.ogg,.wav,.aac,.m4a,audio/*"
-                        className="hidden"
-                        onChange={handleQAudioChange}
+                        type="url"
+                        placeholder="https://www.youtube.com/watch?v=…"
+                        value={qYoutubeUrl}
+                        onChange={e => setQYoutubeUrl(e.target.value)}
+                        style={{
+                          ...inputStyle(),
+                          borderColor: qYoutubeUrl
+                            ? (extractYoutubeId(qYoutubeUrl) ? 'rgba(0,229,209,0.6)' : 'rgba(255,0,170,0.5)')
+                            : 'rgba(139,92,246,0.25)',
+                        }}
                       />
-                      {qYoutubeUrl ? (
-                        /* Aperçu : fichier chargé */
-                        <div
-                          className="flex items-center gap-3 px-4 py-3 rounded-xl"
-                          style={{ background: 'rgba(0,229,209,0.07)', border: '1.5px solid rgba(0,229,209,0.4)' }}
-                        >
-                          <span style={{ color: '#00E5D1', fontSize: '1.3rem' }}>♪</span>
-                          <span className="flex-1 min-w-0 text-xs font-bold truncate" style={{ color: '#00E5D1' }}>
-                            Fichier audio chargé ✓
-                          </span>
-                          <button
-                            onClick={() => setQYoutubeUrl('')}
-                            className="text-xs font-black px-2 py-1 rounded-lg flex-shrink-0"
-                            style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}
-                          >
-                            ✕ Supprimer
-                          </button>
-                        </div>
-                      ) : (
-                        /* Zone d'upload */
-                        <button
-                          onClick={() => qAudioInputRef.current?.click()}
-                          disabled={qAudioUploading}
-                          className="w-full py-6 rounded-xl flex flex-col items-center gap-2 transition-all hover:opacity-80 disabled:opacity-50"
-                          style={{ border: '2px dashed rgba(0,229,209,0.3)', background: 'rgba(0,229,209,0.04)', color: 'rgba(240,244,255,0.4)' }}
-                        >
-                          {qAudioUploading ? (
-                            <>
-                              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
-                                style={{ borderColor: '#00E5D1', borderTopColor: 'transparent' }} />
-                              <span className="text-xs font-bold" style={{ color: '#00E5D1' }}>Envoi en cours…</span>
-                            </>
+
+                      {/* Feedback validation */}
+                      {qYoutubeUrl && (
+                        <div className="mt-2">
+                          {extractYoutubeId(qYoutubeUrl) ? (
+                            /* URL valide — miniature de prévisualisation */
+                            <div
+                              className="flex items-center gap-3 px-3 py-2 rounded-xl"
+                              style={{ background: 'rgba(0,229,209,0.07)', border: '1px solid rgba(0,229,209,0.35)' }}
+                            >
+                              <img
+                                src={`https://img.youtube.com/vi/${extractYoutubeId(qYoutubeUrl)}/mqdefault.jpg`}
+                                alt="preview"
+                                className="rounded-lg flex-shrink-0"
+                                style={{ width: 64, height: 36, objectFit: 'cover' }}
+                                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold" style={{ color: '#00E5D1' }}>✓ URL YouTube valide</p>
+                                <p className="text-xs truncate" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                                  ID : {extractYoutubeId(qYoutubeUrl)}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => setQYoutubeUrl('')}
+                                className="text-xs font-black px-2 py-1 rounded-lg flex-shrink-0"
+                                style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}
+                              >
+                                ✕
+                              </button>
+                            </div>
                           ) : (
-                            <>
-                              <span className="text-2xl">🎵</span>
-                              <span className="text-xs font-bold" style={{ color: '#00E5D1' }}>Cliquer pour choisir un fichier audio</span>
-                              <span className="text-xs" style={{ color: 'rgba(240,244,255,0.3)' }}>MP3, OGG, WAV, AAC, M4A</span>
-                            </>
+                            /* URL invalide */
+                            <p className="text-xs font-bold" style={{ color: '#FF00AA' }}>
+                              ⚠ URL YouTube non reconnue — formats acceptés : youtube.com/watch?v=… · youtu.be/… · shorts/…
+                            </p>
                           )}
-                        </button>
+                        </div>
                       )}
+
+                      <p className="text-xs mt-2" style={{ color: 'rgba(240,244,255,0.25)' }}>
+                        La musique streame depuis YouTube — aucun fichier stocké.
+                      </p>
                     </div>
                   )}
 

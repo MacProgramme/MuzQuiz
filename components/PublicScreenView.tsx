@@ -7,7 +7,7 @@ import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { MustacheMedal } from '@/components/MustacheMedal';
 import { RoomQRCode } from '@/components/RoomQRCode';
 import { QuestionImage } from '@/components/QuestionImage';
-import { AudioPlayer } from '@/components/AudioPlayer';
+import { YouTubePlayer } from '@/components/YouTubePlayer';
 
 const COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B'];
 const LABELS = ['A', 'B', 'C', 'D'];
@@ -394,7 +394,7 @@ export function PublicScreenView({
         {/* Lecteur audio (blind test) */}
         {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && (
           <div className="px-12 pb-2 max-w-xl mx-auto w-full">
-            <AudioPlayer url={(currentQuestion as any).youtube_url} />
+            <YouTubePlayer url={(currentQuestion as any).youtube_url} />
           </div>
         )}
 
@@ -530,7 +530,7 @@ export function PublicScreenView({
         {/* Lecteur audio (buzz blind test) */}
         {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && (
           <div className="px-12 pb-2 max-w-xl mx-auto w-full">
-            <AudioPlayer url={(currentQuestion as any).youtube_url} />
+            <YouTubePlayer url={(currentQuestion as any).youtube_url} />
           </div>
         )}
 
