@@ -403,7 +403,7 @@ export default function Home() {
                   </p>
                 </div>
                 <p className="text-xs mt-0.5" style={{ color: 'rgba(240,244,255,0.4)' }}>
-                  Bar / salle de jeux — question sur grand écran, boutons sur téléphone
+                  Bar / salle de jeux — question sur grand écran
                 </p>
               </div>
               <div className="w-12 h-6 rounded-full transition-all relative ml-4 flex-shrink-0"
