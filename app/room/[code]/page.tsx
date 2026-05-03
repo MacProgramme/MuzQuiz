@@ -15,7 +15,7 @@ import { InterLeaderboard } from '@/components/InterLeaderboard';
 import { PublicScreenView } from '@/components/PublicScreenView';
 import { PhoneControllerView, ScorePreview, RemainingTimer } from '@/components/PhoneControllerView';
 import { FREE_QUESTION_LIMIT, getQuestionsForMode } from '@/lib/questions';
-import { Buzz, QCMAnswer, Player, isBuzzMechanic, isBlindTestMode } from '@/types';
+import { Buzz, QCMAnswer, Player, GameMode, isBuzzMechanic, isBlindTestMode } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
 import { QuestionImage } from '@/components/QuestionImage';
@@ -130,6 +130,7 @@ export default function RoomPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const nickname = searchParams.get('nickname') ?? 'Joueur';
+  const isReplay = searchParams.get('replay') === '1';
   const [showSettings, setShowSettings] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -214,6 +215,12 @@ export default function RoomPage() {
       }
     }
     await supabase.from('rooms').update(updates).eq('id', room.id);
+  };
+
+  // Changer le mode de jeu (hôte, salle d'attente replay uniquement)
+  const changeMode = async (newMode: GameMode) => {
+    if (!room) return;
+    await supabase.from('rooms').update({ mode: newMode }).eq('id', room.id);
   };
 
   useRealtime({
@@ -570,6 +577,45 @@ export default function RoomPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Sélecteur de mode — affiché uniquement dans une salle de replay */}
+            {isReplay && (
+              <div className="muz-card w-full p-4">
+                <p className="text-xs font-bold uppercase tracking-widest mb-3 text-center"
+                  style={{ color: 'rgba(240,244,255,0.35)' }}>
+                  Mode de jeu
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { value: 'quiz'            as GameMode, label: 'Quiz',            sub: '4 choix simultané', color: '#8B5CF6' },
+                    { value: 'blind_test'      as GameMode, label: 'Blind Test',      sub: 'Musique, 4 choix',  color: '#00E5D1' },
+                    { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',       sub: 'Buzz + répondre',   color: '#FF00AA' },
+                    { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test', sub: 'Musique + buzz',    color: '#F59E0B' },
+                  ] as const).map(m => {
+                    const active = room.mode === m.value;
+                    return (
+                      <button
+                        key={m.value}
+                        onClick={() => changeMode(m.value)}
+                        className="flex flex-col items-start gap-0.5 p-3 rounded-xl text-left transition-all"
+                        style={{
+                          border: `2px solid ${active ? m.color : 'rgba(255,255,255,0.08)'}`,
+                          background: active ? `${m.color}18` : 'rgba(255,255,255,0.03)',
+                        }}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <MuzquizLogo width={16} showText={false} color={active ? m.color : 'rgba(240,244,255,0.2)'} />
+                          <span className="font-black text-xs" style={{ color: active ? m.color : '#F0F4FF' }}>
+                            {m.label}
+                          </span>
+                        </div>
+                        <span className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>{m.sub}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
