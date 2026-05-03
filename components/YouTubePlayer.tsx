@@ -55,13 +55,15 @@ function loadYTAPI(): Promise<void> {
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
   url: string;
+  /** Lance la musique automatiquement dès que le player YouTube est prêt */
+  autoPlay?: boolean;
   onPlay?: () => void;
 }
 
 type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
-export function YouTubePlayer({ url, onPlay }: Props) {
+export function YouTubePlayer({ url, autoPlay = false, onPlay }: Props) {
   const [status, setStatus]           = useState<Status>('idle');
   const [videoVisible, setVideoVisible] = useState(false);
   const playerRef    = useRef<any>(null);
@@ -84,9 +86,10 @@ export function YouTubePlayer({ url, onPlay }: Props) {
     try { playerRef.current?.destroy?.(); } catch {}
     playerRef.current = null;
     readyRef.current  = false;
-    pendingPlay.current = false;
+    // Si autoPlay demandé, déclencher playVideo() dès que onReady se déclenche
+    pendingPlay.current = autoPlay;
     if (containerRef.current) containerRef.current.innerHTML = '';
-    setStatus('idle');
+    setStatus(autoPlay ? 'loading' : 'idle');
     setVideoVisible(false);
 
     const slot = document.createElement('div');
@@ -100,7 +103,7 @@ export function YouTubePlayer({ url, onPlay }: Props) {
         width: '100%',
         height: '100%',
         playerVars: {
-          autoplay: 0,
+          autoplay: autoPlay ? 1 : 0,
           controls: 1,
           rel: 0,
           playsinline: 1,
@@ -142,7 +145,7 @@ export function YouTubePlayer({ url, onPlay }: Props) {
       pendingPlay.current = false;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoId]);
+  }, [videoId, autoPlay]);
 
   // ── Contrôles (dans le handler de clic → autoplay autorisé) ───────────────
   const handlePlay = useCallback(() => {
