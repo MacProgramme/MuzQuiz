@@ -320,7 +320,8 @@ export default function QuestionsPage() {
 
   const deleteQuestion = async (qId: string) => {
     if (!confirm('Supprimer cette question ?')) return;
-    await supabase.from('custom_questions').delete().eq('id', qId);
+    const { error } = await supabase.from('custom_questions').delete().eq('id', qId);
+    if (error) { alert('Erreur : impossible de supprimer cette question.'); return; }
     if (selectedPack) await loadQuestions(selectedPack.id);
   };
 
@@ -511,22 +512,27 @@ export default function QuestionsPage() {
                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>Mode de jeu</p>
                     <div className="grid grid-cols-2 gap-2">
                       {([
-                        { value: 'quiz'            as GameMode, label: 'Quiz',            color: '#8B5CF6', desc: 'Questions texte / image' },
-                        { value: 'blind_test'      as GameMode, label: 'Blind Test',      color: '#00E5D1', desc: 'Identification musicale' },
-                        { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',       color: '#FF00AA', desc: 'Quiz avec buzzer' },
-                        { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test', color: '#F59E0B', desc: 'Blind Test avec buzzer' },
+                        { value: 'quiz'       as GameMode, label: 'Quiz',       color: '#8B5CF6', desc: 'Questions texte / image', minTier: 'decouverte' as SubscriptionTier },
+                        { value: 'blind_test' as GameMode, label: 'Blind Test', color: '#00E5D1', desc: 'Identification musicale',  minTier: 'pro'        as SubscriptionTier },
                       ]).map(m => {
+                        const tierOrder: SubscriptionTier[] = ['decouverte', 'essentiel', 'pro', 'expert'];
+                        const locked = tierOrder.indexOf(tier) < tierOrder.indexOf(m.minTier);
                         const active = packMode === m.value;
                         return (
-                          <button key={m.value} onClick={() => setPackMode(m.value)}
-                            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-sm font-bold transition-all"
+                          <button key={m.value}
+                            onClick={() => { if (!locked) setPackMode(m.value); }}
+                            className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-sm font-bold transition-all relative"
                             style={{
                               background: active ? `${m.color}20` : 'rgba(255,255,255,0.04)',
-                              border: `1.5px solid ${active ? m.color : 'rgba(255,255,255,0.08)'}`,
+                              border: `1.5px solid ${locked ? 'rgba(255,255,255,0.06)' : active ? m.color : 'rgba(255,255,255,0.08)'}`,
+                              opacity: locked ? 0.5 : 1,
+                              cursor: locked ? 'not-allowed' : 'pointer',
                             }}>
-                            <MuzquizLogo width={28} showText={false} color={active ? m.color : 'rgba(240,244,255,0.3)'} />
-                            <span style={{ color: active ? m.color : 'rgba(240,244,255,0.5)' }}>{m.label}</span>
-                            <span className="text-xs font-normal text-center" style={{ color: active ? `${m.color}99` : 'rgba(240,244,255,0.3)' }}>{m.desc}</span>
+                            <MuzquizLogo width={28} showText={false} color={locked ? 'rgba(240,244,255,0.15)' : active ? m.color : 'rgba(240,244,255,0.3)'} />
+                            <span style={{ color: locked ? 'rgba(240,244,255,0.3)' : active ? m.color : 'rgba(240,244,255,0.5)' }}>{m.label}</span>
+                            <span className="text-xs font-normal text-center" style={{ color: locked ? 'rgba(240,244,255,0.2)' : active ? `${m.color}99` : 'rgba(240,244,255,0.3)' }}>
+                              {locked ? '🔒 Pro' : m.desc}
+                            </span>
                           </button>
                         );
                       })}
@@ -869,6 +875,7 @@ export default function QuestionsPage() {
                       </button>
                       <input value={c} onChange={e => setQChoices(prev => prev.map((x, j) => j === i ? e.target.value : x))}
                         placeholder={`Réponse ${LABELS[i]}`}
+                        maxLength={80}
                         style={{ ...inputStyle(), flex: 1 }} />
                     </div>
                   ))}

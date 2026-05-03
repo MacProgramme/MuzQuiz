@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { Player } from '@/types';
+import { Player, GameMode } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { MustacheMedal } from '@/components/MustacheMedal';
 
@@ -28,6 +28,7 @@ export default function ResultsPage() {
   const [myNickname, setMyNickname] = useState<string>('Joueur');
   const [replaying, setReplaying] = useState(false);
   const [replayCode, setReplayCode] = useState<string | null>(null);
+  const [replayMode, setReplayMode] = useState<GameMode | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const navigatedRef = useRef(false); // évite la double navigation
@@ -47,6 +48,7 @@ export default function ResultsPage() {
 
       if (!room) { setLoading(false); return; }
       setRoomInfo(room as any);
+      setReplayMode(room.mode as GameMode);
 
       const { data } = await supabase
         .from('room_players')
@@ -148,7 +150,7 @@ export default function ResultsPage() {
         .insert({
           code: newCode,
           host_id: userId,
-          mode: roomInfo.mode,
+          mode: replayMode ?? roomInfo.mode,
           timer_duration: 20,
           max_players: 100,
           sound_enabled: true,
@@ -308,17 +310,49 @@ export default function ResultsPage() {
 
         {/* Rejouer — hôte uniquement */}
         {isHost && (
-          <button
-            onClick={replayGame}
-            disabled={replaying}
-            className="w-full py-4 rounded-xl text-base font-black transition-all disabled:opacity-60"
-            style={{
-              background: 'linear-gradient(135deg, #00E5D1 0%, #8B5CF6 100%)',
-              color: 'white',
-              boxShadow: '0 0 20px rgba(0,229,209,0.25)',
-            }}>
-            {replaying ? 'Création de la salle…' : '🔄 Rejouer avec les mêmes joueurs'}
-          </button>
+          <div className="w-full flex flex-col gap-3">
+            {/* Sélecteur de mode pour le replay */}
+            {replayMode && (
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest mb-2 text-center" style={{ color: 'rgba(240,244,255,0.35)' }}>Mode du prochain tour</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { value: 'quiz'            as GameMode, label: 'Quiz',           sub: '4 choix simultané',  color: '#8B5CF6' },
+                    { value: 'blind_test'      as GameMode, label: 'Blind Test',     sub: 'Musique, 4 choix',   color: '#00E5D1' },
+                    { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',      sub: 'Buzz + répondre',    color: '#FF00AA' },
+                    { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test',sub: 'Musique + buzz',     color: '#F59E0B' },
+                  ] as const).map(m => (
+                    <button
+                      key={m.value}
+                      onClick={() => setReplayMode(m.value)}
+                      className="flex flex-col items-start gap-0.5 p-3 rounded-xl text-left transition-all"
+                      style={{
+                        border: `2px solid ${replayMode === m.value ? m.color : 'rgba(255,255,255,0.08)'}`,
+                        background: replayMode === m.value ? `${m.color}18` : 'rgba(255,255,255,0.03)',
+                      }}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <MuzquizLogo width={18} showText={false} color={replayMode === m.value ? m.color : 'rgba(240,244,255,0.2)'} />
+                        <span className="font-black text-xs" style={{ color: replayMode === m.value ? m.color : '#F0F4FF' }}>{m.label}</span>
+                      </div>
+                      <span className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>{m.sub}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <button
+              onClick={replayGame}
+              disabled={replaying}
+              className="w-full py-4 rounded-xl text-base font-black transition-all disabled:opacity-60"
+              style={{
+                background: 'linear-gradient(135deg, #00E5D1 0%, #8B5CF6 100%)',
+                color: 'white',
+                boxShadow: '0 0 20px rgba(0,229,209,0.25)',
+              }}>
+              {replaying ? 'Création de la salle…' : '🔄 Rejouer avec les mêmes joueurs'}
+            </button>
+          </div>
         )}
 
         {/* Message attente non-hôte */}

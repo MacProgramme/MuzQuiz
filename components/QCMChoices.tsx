@@ -119,7 +119,7 @@ export function QCMChoices({
             </span>
 
             {/* Texte avec padding droit pour laisser place à la moustache */}
-            <span className="text-sm leading-tight flex-1" style={{ paddingRight: isCorrect ? '3rem' : '0' }}>
+            <span className="text-sm leading-tight flex-1" style={{ paddingRight: isCorrect ? '3rem' : '0', wordBreak: 'break-word', overflowWrap: 'break-word', minWidth: 0 }}>
               {choice}
             </span>
 

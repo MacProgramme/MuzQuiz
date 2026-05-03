@@ -286,8 +286,22 @@ CREATE POLICY "custom_questions: lecture publique"
   ON custom_questions FOR SELECT USING (true);
 CREATE POLICY "custom_questions: gestion par le propriétaire"
   ON custom_questions FOR ALL
-  USING (auth.uid() = owner_id)
-  WITH CHECK (auth.uid() = owner_id);
+  USING (
+    auth.uid() = owner_id
+    OR EXISTS (
+      SELECT 1 FROM question_packs
+      WHERE question_packs.id = custom_questions.pack_id
+        AND question_packs.owner_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    auth.uid() = owner_id
+    OR EXISTS (
+      SELECT 1 FROM question_packs
+      WHERE question_packs.id = pack_id
+        AND question_packs.owner_id = auth.uid()
+    )
+  );
 
 -- ── daily_quizzes ──────────────────────────────────────────────
 DROP POLICY IF EXISTS "daily_quizzes: lecture publique"      ON daily_quizzes;
