@@ -29,7 +29,7 @@ export default function Home() {
   const [avatarColor, setAvatarColor] = useState('#8B5CF6');
 
   // Salle active (hôte revenant du menu principal après un replay)
-  const [activeWaitingRoom, setActiveWaitingRoom] = useState<{ id: string; code: string; mode: GameMode } | null>(null);
+  const [activeWaitingRoom, setActiveWaitingRoom] = useState<{ id: string; code: string; mode: GameMode; inviteCode: string | null } | null>(null);
 
   // Classement journalier (mini — top 3 sur la home)
   type MiniEntry = { user_id: string; nickname: string; avatar_color: string; score: number; rank: number };
@@ -53,7 +53,7 @@ export default function Home() {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('nickname, subscription_tier, avatar_color')
+          .select('nickname, subscription_tier, avatar_color, invite_code')
           .eq('id', uid)
           .single();
         if (profile?.nickname) setNickname(profile.nickname);
@@ -72,7 +72,10 @@ export default function Home() {
           .limit(1)
           .maybeSingle();
         if (waitingRoom) {
-          setActiveWaitingRoom(waitingRoom as { id: string; code: string; mode: GameMode });
+          setActiveWaitingRoom({
+            ...(waitingRoom as { id: string; code: string; mode: GameMode }),
+            inviteCode: (profile as any)?.invite_code ?? null,
+          });
           setMode((waitingRoom as any).mode as GameMode);
           setTab('create'); // on reste sur l'onglet "créer" qui sera remplacé par "Ma salle"
         } else {
@@ -428,10 +431,12 @@ export default function Home() {
               style={{ background: 'rgba(0,229,209,0.06)', border: '1px solid rgba(0,229,209,0.2)' }}>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#00E5D1' }} />
-                <span className="text-xs font-bold" style={{ color: 'rgba(0,229,209,0.6)' }}>Salle en attente</span>
+                <span className="text-xs font-bold" style={{ color: 'rgba(0,229,209,0.6)' }}>
+                  {activeWaitingRoom.inviteCode ? 'Code permanent' : 'Salle en attente'}
+                </span>
               </div>
               <span className="font-mono font-black text-sm tracking-widest" style={{ color: '#00E5D1' }}>
-                {activeWaitingRoom.code}
+                {activeWaitingRoom.inviteCode ?? activeWaitingRoom.code}
               </span>
             </div>
           )}
