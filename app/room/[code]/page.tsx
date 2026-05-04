@@ -18,6 +18,7 @@ import { FREE_QUESTION_LIMIT, getQuestionsForMode } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player, GameMode, isBuzzMechanic, isBlindTestMode } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
+import { InviteQRCode } from '@/components/InviteQRCode';
 import { QuestionImage } from '@/components/QuestionImage';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 import Link from 'next/link';
@@ -140,6 +141,10 @@ export default function RoomPage() {
   const [packDropdownOpen, setPackDropdownOpen] = useState(false);
   const [packSearch, setPackSearch] = useState('');
   const [playersOpen, setPlayersOpen] = useState(true);
+  // Lien d'invitation permanent (hôte connecté uniquement)
+  const [hostInviteCode, setHostInviteCode] = useState<string | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [showInviteQR, setShowInviteQR] = useState(false);
 
   // Refs pour l'auto-fermeture (évite les stale closures dans le cleanup)
   const roomRef = useRef<typeof room>(null);
@@ -172,6 +177,23 @@ export default function RoomPage() {
     router.push('/');
   };
   const isFreeLimit = room ? room.current_question >= FREE_QUESTION_LIMIT : false;
+
+  // Charger le code d'invitation permanent de l'hôte
+  useEffect(() => {
+    if (!myPlayer?.is_host || !room || room.status !== 'waiting') return;
+    const loadInviteCode = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user || session.user.is_anonymous) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('invite_code')
+        .eq('id', session.user.id)
+        .single();
+      setHostInviteCode((data as any)?.invite_code ?? null);
+    };
+    loadInviteCode();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myPlayer?.is_host, room?.status]);
 
   // Charger les packs de l'hôte quand on est en salle d'attente
   useEffect(() => {
@@ -454,6 +476,60 @@ export default function RoomPage() {
             <p className="text-xs" style={{ color: 'rgba(240,244,255,0.25)' }}>
               Scanne le QR ou partage le code
             </p>
+
+            {/* Lien permanent — hôte connecté uniquement */}
+            {myPlayer.is_host && hostInviteCode && (
+              <div className="w-full mt-1 rounded-2xl p-3 flex flex-col gap-2"
+                style={{ background: 'rgba(255,0,170,0.05)', border: '1.5px solid rgba(255,0,170,0.2)' }}>
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-bold" style={{ color: 'rgba(255,0,170,0.7)' }}>
+                      🔗 Lien permanent
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                      Partagez-le une fois, vos amis sont redirigés à chaque partie
+                    </p>
+                  </div>
+                  <div className="font-mono font-black tracking-widest text-sm flex-shrink-0"
+                    style={{ color: '#FF00AA' }}>
+                    {hostInviteCode}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/j/${hostInviteCode}`);
+                      setInviteCopied(true);
+                      setTimeout(() => setInviteCopied(false), 2000);
+                    }}
+                    className="flex-1 py-2 rounded-xl font-bold text-xs transition-all"
+                    style={{
+                      background: inviteCopied ? 'rgba(0,229,209,0.12)' : 'rgba(255,0,170,0.1)',
+                      color: inviteCopied ? '#00E5D1' : '#FF00AA',
+                      border: `1px solid ${inviteCopied ? 'rgba(0,229,209,0.3)' : 'rgba(255,0,170,0.25)'}`,
+                    }}
+                  >
+                    {inviteCopied ? '✓ Copié !' : '🔗 Copier le lien'}
+                  </button>
+                  <button
+                    onClick={() => setShowInviteQR(v => !v)}
+                    className="py-2 px-3 rounded-xl font-bold text-xs transition-all"
+                    style={{
+                      background: showInviteQR ? 'rgba(255,0,170,0.15)' : 'rgba(255,255,255,0.05)',
+                      color: showInviteQR ? '#FF00AA' : 'rgba(240,244,255,0.4)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                    }}
+                  >
+                    QR
+                  </button>
+                </div>
+                {showInviteQR && (
+                  <div className="flex justify-center pt-1">
+                    <InviteQRCode inviteCode={hostInviteCode} size={160} />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

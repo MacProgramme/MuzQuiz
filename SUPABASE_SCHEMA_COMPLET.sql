@@ -99,6 +99,10 @@ CREATE TABLE IF NOT EXISTS profiles (
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ai_uses_count INT  NOT NULL DEFAULT 0;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ai_uses_month TEXT NOT NULL DEFAULT '';
 
+-- Code d'invitation permanent (unique par utilisateur)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS invite_code TEXT UNIQUE;
+CREATE UNIQUE INDEX IF NOT EXISTS profiles_invite_code_idx ON profiles(invite_code);
+
 
 -- ================================================================
 -- 3. TABLES QUESTIONS PERSONNALISÉES
@@ -198,6 +202,29 @@ EXCEPTION WHEN others THEN NULL; END $$;
 
 
 -- ================================================================
+-- 5b. AMITIÉS
+-- ================================================================
+
+CREATE TABLE IF NOT EXISTS friendships (
+  id            UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  requester_id  UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  addressee_id  UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  status        TEXT        NOT NULL DEFAULT 'pending'
+                            CHECK (status IN ('pending', 'accepted', 'declined')),
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(requester_id, addressee_id),
+  CONSTRAINT no_self_friend CHECK (requester_id <> addressee_id)
+);
+
+CREATE INDEX IF NOT EXISTS friendships_requester_idx ON friendships(requester_id);
+CREATE INDEX IF NOT EXISTS friendships_addressee_idx ON friendships(addressee_id);
+
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE friendships;
+EXCEPTION WHEN others THEN NULL; END $$;
+
+
+-- ================================================================
 -- 6. ROW LEVEL SECURITY
 -- ================================================================
 
@@ -208,6 +235,7 @@ ALTER TABLE qcm_answers       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE question_packs    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE custom_questions  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE friendships       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_quizzes     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_quiz_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE monthly_winners   ENABLE ROW LEVEL SECURITY;
@@ -509,6 +537,29 @@ CREATE INDEX IF NOT EXISTS idx_daily_quiz_scores_user  ON daily_quiz_scores(user
 CREATE INDEX IF NOT EXISTS idx_daily_quiz_scores_month ON daily_quiz_scores(completed_at);
 CREATE INDEX IF NOT EXISTS idx_rooms_code              ON rooms(code);
 CREATE INDEX IF NOT EXISTS idx_room_players_room       ON room_players(room_id);
+
+-- ── friendships ──────────────────────────────────────────────────────────────
+DROP POLICY IF EXISTS "friendships: lecture"      ON friendships;
+DROP POLICY IF EXISTS "friendships: envoi"        ON friendships;
+DROP POLICY IF EXISTS "friendships: réponse"      ON friendships;
+DROP POLICY IF EXISTS "friendships: suppression"  ON friendships;
+
+CREATE POLICY "friendships: lecture"
+  ON friendships FOR SELECT
+  USING (auth.uid() = requester_id OR auth.uid() = addressee_id);
+
+CREATE POLICY "friendships: envoi"
+  ON friendships FOR INSERT
+  WITH CHECK (auth.uid() = requester_id AND auth.uid() <> addressee_id);
+
+CREATE POLICY "friendships: réponse"
+  ON friendships FOR UPDATE
+  USING (auth.uid() = addressee_id)
+  WITH CHECK (auth.uid() = addressee_id);
+
+CREATE POLICY "friendships: suppression"
+  ON friendships FOR DELETE
+  USING (auth.uid() = requester_id OR auth.uid() = addressee_id);
 
 
 -- ================================================================

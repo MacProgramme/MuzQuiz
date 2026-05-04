@@ -10,6 +10,7 @@ import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { MustacheMedal, MEDAL_COLORS } from '@/components/MustacheMedal';
 import { QRScanner } from '@/components/QRScanner';
 import { DailyQuiz } from '@/components/DailyQuiz';
+import { InviteQRCode } from '@/components/InviteQRCode';
 
 export default function Home() {
   const router = useRouter();
@@ -27,6 +28,10 @@ export default function Home() {
   // Pour le Quiz du Jour
   const [userId, setUserId] = useState<string | null>(null);
   const [avatarColor, setAvatarColor] = useState('#8B5CF6');
+  // Code d'invitation permanent
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [showInviteQR, setShowInviteQR] = useState(false);
 
   // Classement journalier (mini — top 3 sur la home)
   type MiniEntry = { user_id: string; nickname: string; avatar_color: string; score: number; rank: number };
@@ -50,7 +55,7 @@ export default function Home() {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('nickname, subscription_tier, avatar_color')
+          .select('nickname, subscription_tier, avatar_color, invite_code')
           .eq('id', uid)
           .single();
         if (profile?.nickname) setNickname(profile.nickname);
@@ -58,6 +63,24 @@ export default function Home() {
         setUserTier(tier);
         setAvatarColor(profile?.avatar_color ?? '#8B5CF6');
         setUserId(uid);
+
+        // Générer un invite_code s'il n'en a pas encore
+        let code: string = (profile as any)?.invite_code ?? null;
+        if (!code) {
+          const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+          let attempts = 0;
+          while (!code && attempts < 5) {
+            let candidate = '';
+            for (let i = 0; i < 7; i++) candidate += chars[Math.floor(Math.random() * chars.length)];
+            const { error } = await supabase
+              .from('profiles')
+              .update({ invite_code: candidate })
+              .eq('id', uid);
+            if (!error) code = candidate;
+            attempts++;
+          }
+        }
+        if (code) setInviteCode(code);
       } catch (e) {
         console.error('Erreur chargement profil:', e);
       } finally {
@@ -80,6 +103,7 @@ export default function Home() {
         setUserTier('decouverte');
         setUserId(null);
         setAvatarColor('#8B5CF6');
+        setInviteCode(null);
         setProfileLoading(false);
       }
     });
@@ -210,6 +234,69 @@ export default function Home() {
       </div>
       {/* Séparateur décoratif */}
       <div className="muz-divider w-48 mb-8" />
+
+      {/* Lien d'invitation permanent — comptes connectés uniquement */}
+      {isLoggedIn && inviteCode && (
+        <div className="w-full max-w-md mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <MuzquizLogo width={20} showText={false} color="rgba(255,0,170,0.7)" />
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
+              Mon lien d'invitation
+            </p>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full ml-auto"
+              style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.25)' }}>
+              Permanent
+            </span>
+          </div>
+
+          <div className="rounded-2xl p-4 flex flex-col gap-3"
+            style={{ background: 'rgba(255,0,170,0.05)', border: '1.5px solid rgba(255,0,170,0.2)' }}>
+
+            <p className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.45)' }}>
+              Partagez ce lien une seule fois — vos amis seront redirigés automatiquement à chaque partie
+            </p>
+
+            {/* Code texte + bouton copier */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 px-3 py-2.5 rounded-xl font-mono font-black tracking-[0.2em] text-center"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,0,170,0.2)', color: '#FF00AA', fontSize: '1.1rem' }}>
+                {inviteCode}
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/j/${inviteCode}`);
+                  setInviteCopied(true);
+                  setTimeout(() => setInviteCopied(false), 2000);
+                }}
+                className="px-3 py-2.5 rounded-xl font-bold text-sm transition-all flex-shrink-0"
+                style={{
+                  background: inviteCopied ? 'rgba(0,229,209,0.15)' : 'rgba(255,0,170,0.12)',
+                  color: inviteCopied ? '#00E5D1' : '#FF00AA',
+                  border: `1px solid ${inviteCopied ? 'rgba(0,229,209,0.3)' : 'rgba(255,0,170,0.3)'}`,
+                  minWidth: 80,
+                }}
+              >
+                {inviteCopied ? '✓ Copié !' : '🔗 Copier'}
+              </button>
+            </div>
+
+            {/* Toggle QR code */}
+            <button
+              onClick={() => setShowInviteQR(v => !v)}
+              className="text-xs font-bold text-center transition-all hover:opacity-80"
+              style={{ color: 'rgba(255,0,170,0.6)' }}
+            >
+              {showInviteQR ? '▲ Masquer le QR code' : '▼ Afficher le QR code'}
+            </button>
+
+            {showInviteQR && (
+              <div className="flex justify-center pt-1">
+                <InviteQRCode inviteCode={inviteCode} size={180} />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Quiz du Jour — accès rapide (essentiel et supérieur) */}
       {isLoggedIn && userId && (userTier === 'essentiel' || userTier === 'pro' || userTier === 'expert') && (

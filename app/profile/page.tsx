@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { DailyQuiz } from '@/components/DailyQuiz';
 import { LeaderboardQuizDuJour } from '@/components/LeaderboardQuizDuJour';
+import { InviteQRCode } from '@/components/InviteQRCode';
 
 interface Profile {
   id: string;
@@ -141,6 +142,27 @@ export default function ProfilePage() {
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoMsg, setPromoMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
+  // Invitation permanente
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
+
+  // Amis
+  type FriendEntry = {
+    id: string; // friendship id
+    friendId: string;
+    nickname: string;
+    avatar_color: string;
+    avatar_url: string | null;
+    invite_code: string | null;
+    status: 'accepted' | 'pending';
+    direction: 'sent' | 'received';
+  };
+  const [friends, setFriends] = useState<FriendEntry[]>([]);
+  const [friendsLoading, setFriendsLoading] = useState(false);
+  const [addFriendCode, setAddFriendCode] = useState('');
+  const [addFriendMsg, setAddFriendMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [addFriendLoading, setAddFriendLoading] = useState(false);
+
   // Edition profil
   const [isAdmin, setIsAdmin] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -170,17 +192,42 @@ export default function ProfilePage() {
           .eq('id', user.id)
           .single();
 
-        if (!prof) {
+        let activeProf = prof;
+        if (!activeProf) {
           // Créer un profil vide si inexistant
           const { data: newProf } = await supabase
             .from('profiles')
             .insert({ id: user.id, nickname: user.email?.split('@')[0] ?? 'Joueur', avatar_color: '#8B5CF6' })
             .select('*')
             .single();
-          if (newProf) setProfile({ ...newProf, subscription_tier: normalizeTier(newProf.subscription_tier) });
+          if (newProf) {
+            activeProf = newProf;
+            setProfile({ ...newProf, subscription_tier: normalizeTier(newProf.subscription_tier) });
+          }
         } else {
           setProfile({ ...prof, subscription_tier: normalizeTier(prof.subscription_tier) });
         }
+
+        // invite_code — générer si absent
+        let code: string = (activeProf as any)?.invite_code ?? null;
+        if (!code && activeProf) {
+          const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+          let attempts = 0;
+          while (!code && attempts < 5) {
+            let candidate = '';
+            for (let i = 0; i < 7; i++) candidate += chars[Math.floor(Math.random() * chars.length)];
+            const { error } = await supabase
+              .from('profiles')
+              .update({ invite_code: candidate })
+              .eq('id', user.id);
+            if (!error) code = candidate;
+            attempts++;
+          }
+        }
+        if (code) setInviteCode(code);
+
+        // Charger les amis
+        await loadFriends(user.id);
 
       } catch (e) {
         console.error('Erreur chargement profil:', e);
@@ -219,6 +266,92 @@ export default function ProfilePage() {
     setProfile(p => p ? { ...p, nickname: editNickname.trim(), avatar_color: editColor, avatar_url: editAvatarUrl } : p);
     setSaving(false);
     setEditing(false);
+  };
+
+  const loadFriends = async (uid: string) => {
+    setFriendsLoading(true);
+    const { data } = await supabase
+      .from('friendships')
+      .select(`
+        id, status, requester_id, addressee_id,
+        requester:profiles!requester_id(id, nickname, avatar_color, avatar_url, invite_code),
+        addressee:profiles!addressee_id(id, nickname, avatar_color, avatar_url, invite_code)
+      `)
+      .or(`requester_id.eq.${uid},addressee_id.eq.${uid}`)
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      const entries: FriendEntry[] = data.map((fs: any) => {
+        const isSender = fs.requester_id === uid;
+        const other = isSender ? fs.addressee : fs.requester;
+        return {
+          id: fs.id,
+          friendId: other?.id ?? '',
+          nickname: other?.nickname ?? 'Joueur',
+          avatar_color: other?.avatar_color ?? '#8B5CF6',
+          avatar_url: other?.avatar_url ?? null,
+          invite_code: other?.invite_code ?? null,
+          status: fs.status,
+          direction: isSender ? 'sent' : 'received',
+        };
+      });
+      setFriends(entries);
+    }
+    setFriendsLoading(false);
+  };
+
+  const addFriendByCode = async () => {
+    if (!addFriendCode.trim() || !profile) return;
+    setAddFriendLoading(true);
+    setAddFriendMsg(null);
+    const code = addFriendCode.trim().toUpperCase();
+
+    // Chercher le profil avec ce code
+    const { data: target } = await supabase
+      .from('profiles')
+      .select('id, nickname')
+      .eq('invite_code', code)
+      .maybeSingle();
+
+    if (!target) {
+      setAddFriendMsg({ text: 'Code introuvable. Vérifie et réessaie.', ok: false });
+      setAddFriendLoading(false);
+      return;
+    }
+    if (target.id === profile.id) {
+      setAddFriendMsg({ text: 'Tu ne peux pas t\'ajouter toi-même !', ok: false });
+      setAddFriendLoading(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('friendships')
+      .insert({ requester_id: profile.id, addressee_id: target.id, status: 'pending' });
+
+    if (error) {
+      setAddFriendMsg({ text: 'Demande déjà envoyée ou erreur.', ok: false });
+    } else {
+      setAddFriendMsg({ text: `Demande envoyée à ${target.nickname} !`, ok: true });
+      setAddFriendCode('');
+      await loadFriends(profile.id);
+    }
+    setAddFriendLoading(false);
+  };
+
+  const acceptFriend = async (friendshipId: string) => {
+    await supabase.from('friendships').update({ status: 'accepted' }).eq('id', friendshipId);
+    if (profile) await loadFriends(profile.id);
+  };
+
+  const declineFriend = async (friendshipId: string) => {
+    await supabase.from('friendships').delete().eq('id', friendshipId);
+    if (profile) await loadFriends(profile.id);
+  };
+
+  const removeFriend = async (friendshipId: string) => {
+    if (!confirm('Retirer cet ami ?')) return;
+    await supabase.from('friendships').delete().eq('id', friendshipId);
+    if (profile) await loadFriends(profile.id);
   };
 
   const logout = async () => {
@@ -325,6 +458,171 @@ export default function ProfilePage() {
             <p className="text-sm mt-0.5" style={{ color: 'rgba(240,244,255,0.4)' }}>
               Membre depuis {formatDate(profile.created_at)}
             </p>
+          </div>
+        </div>
+
+        {/* ═══ QR CODE PERMANENT ═══ */}
+        {inviteCode && (
+          <div className="mb-6 rounded-2xl p-5 flex flex-col items-center gap-4"
+            style={{ background: 'rgba(255,0,170,0.05)', border: '1.5px solid rgba(255,0,170,0.25)' }}>
+            <div className="flex items-center gap-2 self-start">
+              <MuzquizLogo width={18} showText={false} color="#FF00AA" />
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.7)' }}>
+                Mon code d'invitation
+              </p>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full ml-1"
+                style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
+                Permanent
+              </span>
+            </div>
+            <InviteQRCode inviteCode={inviteCode} size={180} variant="profile" />
+            <div className="flex items-center gap-3 w-full">
+              <div className="flex-1 text-center font-mono font-black tracking-[0.2em] text-xl px-3 py-2.5 rounded-xl"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,0,170,0.2)', color: '#FF00AA' }}>
+                {inviteCode}
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/u/${inviteCode}`);
+                  setInviteCopied(true);
+                  setTimeout(() => setInviteCopied(false), 2000);
+                }}
+                className="py-2.5 px-4 rounded-xl font-bold text-sm transition-all flex-shrink-0"
+                style={{
+                  background: inviteCopied ? 'rgba(0,229,209,0.15)' : 'rgba(255,0,170,0.12)',
+                  color: inviteCopied ? '#00E5D1' : '#FF00AA',
+                  border: `1px solid ${inviteCopied ? 'rgba(0,229,209,0.3)' : 'rgba(255,0,170,0.3)'}`,
+                }}>
+                {inviteCopied ? '✓ Copié' : '🔗 Copier'}
+              </button>
+            </div>
+            <p className="text-xs text-center" style={{ color: 'rgba(240,244,255,0.35)' }}>
+              Fais scanner ce QR à tes amis pour qu'ils t'ajoutent et rejoignent tes parties
+            </p>
+          </div>
+        )}
+
+        {/* ═══ AMIS ═══ */}
+        <div className="mb-6 muz-card p-5 flex flex-col gap-4">
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
+            Amis ({friends.filter(f => f.status === 'accepted').length})
+          </p>
+
+          {/* Demandes reçues */}
+          {friends.filter(f => f.status === 'pending' && f.direction === 'received').map(f => (
+            <div key={f.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+              style={{ background: 'rgba(0,229,209,0.06)', border: '1px solid rgba(0,229,209,0.2)' }}>
+              <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden"
+                style={{ background: f.avatar_color, boxShadow: `0 0 8px ${f.avatar_color}55` }}>
+                {f.avatar_url
+                  ? <img src={f.avatar_url} alt={f.nickname} className="w-full h-full object-cover" />
+                  : <span className="w-full h-full flex items-center justify-center font-black text-sm" style={{ color: '#0D1B3E' }}>{f.nickname[0]?.toUpperCase()}</span>
+                }
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm truncate" style={{ color: '#F0F4FF' }}>{f.nickname}</p>
+                <p className="text-xs" style={{ color: 'rgba(0,229,209,0.7)' }}>Demande d'ami</p>
+              </div>
+              <div className="flex gap-1.5 flex-shrink-0">
+                <button onClick={() => acceptFriend(f.id)}
+                  className="px-3 py-1.5 rounded-lg font-black text-xs transition-all hover:opacity-90"
+                  style={{ background: '#00E5D1', color: '#0D1B3E' }}>
+                  ✓
+                </button>
+                <button onClick={() => declineFriend(f.id)}
+                  className="px-3 py-1.5 rounded-lg font-bold text-xs transition-all hover:opacity-90"
+                  style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
+                  ✗
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {/* Amis acceptés */}
+          {friends.filter(f => f.status === 'accepted').map(f => (
+            <div key={f.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden"
+                style={{ background: f.avatar_color, boxShadow: `0 0 8px ${f.avatar_color}44` }}>
+                {f.avatar_url
+                  ? <img src={f.avatar_url} alt={f.nickname} className="w-full h-full object-cover" />
+                  : <span className="w-full h-full flex items-center justify-center font-black text-sm" style={{ color: '#0D1B3E' }}>{f.nickname[0]?.toUpperCase()}</span>
+                }
+              </div>
+              <span className="flex-1 font-bold text-sm truncate" style={{ color: '#F0F4FF' }}>{f.nickname}</span>
+              {f.invite_code && (
+                <a href={`/u/${f.invite_code}`}
+                  className="px-2 py-1.5 rounded-lg font-bold text-xs transition-all hover:opacity-80 flex-shrink-0"
+                  style={{ background: 'rgba(139,92,246,0.1)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.2)' }}>
+                  Profil
+                </a>
+              )}
+              <button onClick={() => removeFriend(f.id)}
+                className="px-2 py-1.5 rounded-lg font-bold text-xs transition-all hover:opacity-80 flex-shrink-0"
+                style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(240,244,255,0.3)' }}>
+                ✕
+              </button>
+            </div>
+          ))}
+
+          {/* Demandes envoyées en attente */}
+          {friends.filter(f => f.status === 'pending' && f.direction === 'sent').map(f => (
+            <div key={f.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+              style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}>
+              <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden"
+                style={{ background: f.avatar_color }}>
+                {f.avatar_url
+                  ? <img src={f.avatar_url} alt={f.nickname} className="w-full h-full object-cover" />
+                  : <span className="w-full h-full flex items-center justify-center font-black text-sm" style={{ color: '#0D1B3E' }}>{f.nickname[0]?.toUpperCase()}</span>
+                }
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm truncate" style={{ color: '#F0F4FF' }}>{f.nickname}</p>
+                <p className="text-xs" style={{ color: 'rgba(139,92,246,0.6)' }}>Demande envoyée…</p>
+              </div>
+              <button onClick={() => declineFriend(f.id)}
+                className="text-xs px-2 py-1.5 rounded-lg flex-shrink-0"
+                style={{ color: 'rgba(240,244,255,0.3)', background: 'rgba(255,255,255,0.04)' }}>
+                Annuler
+              </button>
+            </div>
+          ))}
+
+          {/* Aucun ami */}
+          {!friendsLoading && friends.length === 0 && (
+            <p className="text-sm text-center py-2" style={{ color: 'rgba(240,244,255,0.3)' }}>
+              Pas encore d'amis — partage ton QR pour commencer !
+            </p>
+          )}
+
+          {/* Ajouter par code */}
+          <div className="pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>
+              Ajouter un ami par code
+            </p>
+            <div className="flex gap-2">
+              <input
+                value={addFriendCode}
+                onChange={e => { setAddFriendCode(e.target.value.toUpperCase()); setAddFriendMsg(null); }}
+                placeholder="Code d'invitation…"
+                maxLength={10}
+                className="flex-1 min-w-0 px-3 py-2 rounded-xl font-mono font-bold text-sm outline-none"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,0,170,0.25)', color: '#F0F4FF' }}
+                onKeyDown={e => e.key === 'Enter' && !addFriendLoading && addFriendByCode()}
+              />
+              <button
+                onClick={addFriendByCode}
+                disabled={addFriendLoading || !addFriendCode.trim()}
+                className="shrink-0 px-4 py-2 rounded-xl font-black text-sm transition-all disabled:opacity-40"
+                style={{ background: '#FF00AA', color: 'white' }}>
+                {addFriendLoading ? '…' : '➕'}
+              </button>
+            </div>
+            {addFriendMsg && (
+              <p className="text-xs font-bold mt-2" style={{ color: addFriendMsg.ok ? '#00E5D1' : '#FF00AA' }}>
+                {addFriendMsg.ok ? '✓ ' : '✗ '}{addFriendMsg.text}
+              </p>
+            )}
           </div>
         </div>
 
