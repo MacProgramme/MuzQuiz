@@ -194,8 +194,8 @@ export default function ResultsPage() {
       // Afficher le code pour les joueurs qui auraient raté les deux mécanismes
       setReplayCode(newCode);
 
-      // Rediriger l'hôte
-      router.push(`/room/${newCode}?nickname=${encodeURIComponent(hostNickname)}&replay=1`);
+      // Rediriger l'hôte vers le menu principal (accès complet aux paramètres)
+      router.push('/');
     } catch {
       setReplaying(false);
     }
