@@ -28,6 +28,9 @@ export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
   const [avatarColor, setAvatarColor] = useState('#8B5CF6');
 
+  // Salle active (hôte revenant du menu principal après un replay)
+  const [activeWaitingRoom, setActiveWaitingRoom] = useState<{ code: string } | null>(null);
+
   // Classement journalier (mini — top 3 sur la home)
   type MiniEntry = { user_id: string; nickname: string; avatar_color: string; score: number; rank: number };
   const [miniLeaderboard, setMiniLeaderboard] = useState<MiniEntry[]>([]);
@@ -58,6 +61,17 @@ export default function Home() {
         setUserTier(tier);
         setAvatarColor(profile?.avatar_color ?? '#8B5CF6');
         setUserId(uid);
+
+        // Détecter une salle en attente dont l'hôte est cet utilisateur
+        const { data: waitingRoom } = await supabase
+          .from('rooms')
+          .select('code')
+          .eq('host_id', uid)
+          .eq('status', 'waiting')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        setActiveWaitingRoom(waitingRoom ?? null);
       } catch (e) {
         console.error('Erreur chargement profil:', e);
       } finally {
@@ -288,6 +302,26 @@ export default function Home() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Bandeau salle en attente — affiché si l'hôte a une salle waiting */}
+      {activeWaitingRoom && (
+        <div className="w-full max-w-md mb-5 rounded-2xl p-4 flex items-center gap-4"
+          style={{ background: 'rgba(0,229,209,0.07)', border: '1.5px solid rgba(0,229,209,0.35)' }}>
+          <div className="w-2 h-2 rounded-full flex-shrink-0 animate-pulse" style={{ background: '#00E5D1' }} />
+          <div className="flex-1 min-w-0">
+            <p className="font-black text-sm" style={{ color: '#00E5D1' }}>Votre salle est en attente</p>
+            <p className="font-mono text-xs font-bold tracking-widest mt-0.5" style={{ color: 'rgba(0,229,209,0.55)' }}>
+              {activeWaitingRoom.code}
+            </p>
+          </div>
+          <button
+            onClick={() => router.push(`/room/${activeWaitingRoom.code}?nickname=${encodeURIComponent(nickname || 'Hôte')}&replay=1`)}
+            className="flex-shrink-0 px-4 py-2 rounded-xl font-black text-sm transition-all hover:opacity-90"
+            style={{ background: '#00E5D1', color: '#0D1B3E' }}>
+            Rejoindre →
+          </button>
         </div>
       )}
 
