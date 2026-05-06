@@ -138,8 +138,8 @@ export default function ResultsPage() {
       const userId = session?.user?.id;
       if (!userId) { setReplaying(false); return; }
 
-      // Exclut le 0 (zéro) et le O (lettre) pour éviter la confusion
-      const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
+      // Exclut O/0 et I/1 pour éviter toute confusion visuelle
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
       let newCode = '';
       for (let i = 0; i < 6; i++) newCode += chars[Math.floor(Math.random() * chars.length)];
 

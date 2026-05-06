@@ -65,7 +65,7 @@ export default function Home() {
         // Détecter une salle en attente dont l'hôte est cet utilisateur
         const { data: waitingRoom } = await supabase
           .from('rooms')
-          .select('id, code, mode')
+          .select('id, code, mode, public_screen')
           .eq('host_id', uid)
           .eq('status', 'waiting')
           .order('created_at', { ascending: false })
@@ -77,6 +77,7 @@ export default function Home() {
             inviteCode: (profile as any)?.invite_code ?? null,
           });
           setMode((waitingRoom as any).mode as GameMode);
+          setPublicScreen((waitingRoom as any).public_screen ?? false);
           setTab('create'); // on reste sur l'onglet "créer" qui sera remplacé par "Ma salle"
         } else {
           setActiveWaitingRoom(null);
@@ -124,7 +125,8 @@ export default function Home() {
 
   // Exclut le 0 (zéro) et le O (lettre) pour éviter la confusion
   const genCode = () => {
-    const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
+    // Exclut O/0 (confusion visuelle) et I/1 (confusion visuelle)
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
     for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
     return code;
@@ -198,8 +200,8 @@ export default function Home() {
   const joinActiveRoom = async () => {
     if (!activeWaitingRoom || loading) return;
     setLoading(true);
-    // Appliquer le mode sélectionné sur la salle existante
-    await supabase.from('rooms').update({ mode }).eq('id', activeWaitingRoom.id);
+    // Appliquer le mode et l'écran public sélectionnés sur la salle existante
+    await supabase.from('rooms').update({ mode, public_screen: publicScreen }).eq('id', activeWaitingRoom.id);
     router.push(`/room/${activeWaitingRoom.code}?nickname=${encodeURIComponent(nickname.trim() || 'Hôte')}&replay=1`);
   };
 
@@ -441,8 +443,8 @@ export default function Home() {
             </div>
           )}
 
-          {/* Toggle mode écran public — masqué si salle déjà créée */}
-          {tab === 'create' && !activeWaitingRoom && (
+          {/* Toggle mode écran public */}
+          {tab === 'create' && (
             <button
               onClick={() => setPublicScreen(s => !s)}
               className="flex items-center justify-between px-4 py-3 rounded-xl w-full text-left transition-all"
