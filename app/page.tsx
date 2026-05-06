@@ -550,6 +550,16 @@ export default function Home() {
         style={{ color: 'rgba(139,92,246,0.55)', letterSpacing: '0.08em' }}>
         Formules & abonnements →
       </Link>
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-bold"
+        style={{ color: 'rgba(240,244,255,0.2)' }}>
+        <Link href="/mentions-legales" className="hover:opacity-70 transition-opacity">Mentions légales</Link>
+        <span style={{ color: 'rgba(240,244,255,0.1)' }}>·</span>
+        <Link href="/cgu" className="hover:opacity-70 transition-opacity">CGU</Link>
+        <span style={{ color: 'rgba(240,244,255,0.1)' }}>·</span>
+        <Link href="/cgv" className="hover:opacity-70 transition-opacity">CGV</Link>
+        <span style={{ color: 'rgba(240,244,255,0.1)' }}>·</span>
+        <Link href="/confidentialite" className="hover:opacity-70 transition-opacity">Confidentialité</Link>
+      </div>
 
       </div>{/* fin contenu centré */}
     </main>
