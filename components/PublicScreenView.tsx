@@ -77,6 +77,7 @@ interface Props {
   pauseGame: () => void;
   resumeGame: () => void;
   endGame: () => void;
+  hostInviteCode?: string | null;
 }
 
 /* ---- Timer intégré pour grand écran ---- */
@@ -109,7 +110,9 @@ export function PublicScreenView({
   room, players, myPlayer, currentQuestion, buzz, qcmAnswers, qcmRevealed,
   showLeaderboard, timerKey, totalQuestions, hostPacks, selectPack,
   startGame, revealQCMAndNext, pauseGame, resumeGame, endGame,
+  hostInviteCode,
 }: Props) {
+  const displayCode = hostInviteCode ?? room.code;
   // En mode écran public, l'hôte ne joue pas → exclure du classement
   const sorted = [...players].filter(p => !p.is_host).sort((a, b) => b.score - a.score);
   const answeredIds = new Set(qcmAnswers.map(a => a.player_id));
@@ -139,7 +142,7 @@ export function PublicScreenView({
               CODE DE LA SALLE
             </p>
             <p className="font-black font-mono tracking-[0.3em]" style={{ fontSize: '4.5rem', color: '#00E5D1', lineHeight: 1 }}>
-              {room.code}
+              {displayCode}
             </p>
             <p className="text-sm text-center mt-3" style={{ color: 'rgba(240,244,255,0.35)' }}>
               muzquiz.app
@@ -152,7 +155,7 @@ export function PublicScreenView({
           {/* QR code */}
           <div className="flex flex-col items-center gap-3 muz-zoom-in" style={{ animationDelay: '0.15s' }}>
             <div className="rounded-2xl p-3" style={{ background: '#F0F4FF' }}>
-              <RoomQRCode code={room.code} size={160} />
+              <RoomQRCode code={displayCode} size={160} />
             </div>
             <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(0,229,209,0.6)' }}>
               Scanner avec l'appareil photo

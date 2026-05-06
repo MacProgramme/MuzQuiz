@@ -431,6 +431,7 @@ export default function RoomPage() {
         pauseGame={pauseGame}
         resumeGame={resumeGame}
         endGame={endGame}
+        hostInviteCode={hostInviteCode}
       />
     );
   }
