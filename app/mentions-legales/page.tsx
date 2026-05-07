@@ -25,7 +25,10 @@ export default function MentionsLegales() {
 
           <section>
             <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>1. Éditeur du site</h2>
-            <p>Le site <strong style={{ color: '#F0F4FF' }}>MUZQUIZ</strong> (accessible à l&apos;adresse muz-quiz-one.vercel.app) est édité par :</p>
+            <p>
+              Le site <strong style={{ color: '#F0F4FF' }}>MUZQUIZ</strong> (accessible à l&apos;adresse
+              muz-quiz-one.vercel.app) est édité par :
+            </p>
             <div className="mt-3 p-4 rounded-xl text-sm" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <p><strong style={{ color: '#F0F4FF' }}>Nom :</strong> [NOM DE SOCIÉTÉ]</p>
               <p className="mt-1"><strong style={{ color: '#F0F4FF' }}>Statut :</strong> Auto-entrepreneur</p>
@@ -46,41 +49,53 @@ export default function MentionsLegales() {
               <p className="mt-1"><strong style={{ color: '#F0F4FF' }}>Site :</strong> vercel.com</p>
             </div>
             <p className="mt-3 text-sm" style={{ color: 'rgba(240,244,255,0.4)' }}>
-              La base de données et l'authentification sont gérées par Supabase (Supabase Inc., San Francisco, CA, États-Unis).
+              La base de données et l&apos;authentification sont gérées par Supabase (Supabase Inc.,
+              San Francisco, CA, États-Unis).
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>3. Propriété intellectuelle</h2>
             <p>
-              L'ensemble des contenus présents sur MUZQUIZ (textes, graphismes, logos, icônes, sons, logiciels) est la propriété exclusive de l'éditeur ou de ses partenaires et est protégé par les lois françaises et internationales relatives à la propriété intellectuelle.
+              L&apos;ensemble des contenus présents sur MUZQUIZ (textes, graphismes, logos, icônes, sons, logiciels)
+              est la propriété exclusive de l&apos;éditeur ou de ses partenaires et est protégé par les lois françaises
+              et internationales relatives à la propriété intellectuelle.
             </p>
             <p className="mt-3">
-              Toute reproduction, représentation, modification ou exploitation, totale ou partielle, du site ou de son contenu, par quelque procédé que ce soit, sans autorisation préalable et écrite de l'éditeur, est strictement interdite et constituerait une contrefaçon sanctionnée par les articles L.335-2 et suivants du Code de la propriété intellectuelle.
+              Toute reproduction, représentation, modification ou exploitation, totale ou partielle, du site ou de son
+              contenu, par quelque procédé que ce soit, sans autorisation préalable et écrite de l&apos;éditeur, est
+              strictement interdite et constituerait une contrefaçon sanctionnée par les articles L.335-2 et suivants
+              du Code de la propriété intellectuelle.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>4. Responsabilité</h2>
             <p>
-              L'éditeur s'efforce d'assurer l'exactitude et la mise à jour des informations diffusées sur le site. Toutefois, il ne peut garantir l'exactitude, la complétude ou l'actualité des informations.
+              L&apos;éditeur s&apos;efforce d&apos;assurer l&apos;exactitude et la mise à jour des informations
+              diffusées sur le site. Toutefois, il ne peut garantir l&apos;exactitude, la complétude ou
+              l&apos;actualité des informations.
             </p>
             <p className="mt-3">
-              L'éditeur ne saurait être tenu responsable des dommages directs ou indirects résultant de l'accès au site ou de l'utilisation de son contenu, ni des interruptions ou indisponibilités du service.
+              L&apos;éditeur ne saurait être tenu responsable des dommages directs ou indirects résultant de
+              l&apos;accès au site ou de l&apos;utilisation de son contenu, ni des interruptions ou
+              indisponibilités du service.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>5. Droit applicable</h2>
             <p>
-              Les présentes mentions légales sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents.
+              Les présentes mentions légales sont soumises au droit français. En cas de litige, les tribunaux
+              français seront seuls compétents.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>6. Contact</h2>
             <p>
-              Pour toute question relative au site, vous pouvez contacter l'éditeur à l'adresse suivante :{' '}
+              Pour toute question relative au site, vous pouvez contacter l&apos;éditeur à l&apos;adresse
+              suivante :{' '}
               <a href="mailto:antoine.gegedu27@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>
                 antoine.gegedu27@gmail.com
               </a>
