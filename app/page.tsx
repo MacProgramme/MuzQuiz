@@ -427,21 +427,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* Code de la salle active */}
-          {tab === 'create' && activeWaitingRoom && (
-            <div className="flex items-center justify-between px-4 py-2.5 rounded-xl"
-              style={{ background: 'rgba(0,229,209,0.06)', border: '1px solid rgba(0,229,209,0.2)' }}>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#00E5D1' }} />
-                <span className="text-xs font-bold" style={{ color: 'rgba(0,229,209,0.6)' }}>
-                  {activeWaitingRoom.inviteCode ? 'Code permanent' : 'Salle en attente'}
-                </span>
-              </div>
-              <span className="font-mono font-black text-sm tracking-widest" style={{ color: '#00E5D1' }}>
-                {activeWaitingRoom.inviteCode ?? activeWaitingRoom.code}
-              </span>
-            </div>
-          )}
 
           {/* Toggle mode écran public */}
           {tab === 'create' && (
