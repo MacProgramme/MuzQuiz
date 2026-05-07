@@ -1,0 +1,411 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   MUZQUIZ — Design System
+   ============================================================ */
+:root {
+  --muz-navy:   #0D1B3E;
+  --muz-navy2:  #112247;
+  --muz-card:   #162856;
+  --muz-pink:   #FF00AA;
+  --muz-cyan:   #00E5D1;
+  --muz-violet: #8B5CF6;
+  --muz-white:  #F0F4FF;
+}
+
+body {
+  background-color: var(--muz-navy);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% 40%, rgba(139,92,246,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 15%, rgba(255,0,170,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 65% 85%, rgba(0,229,209,0.04) 0%, transparent 55%);
+  color: var(--muz-white);
+  font-family: inherit;
+}
+
+/* Grain cinématique — le détail qui change tout */
+.muz-grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.032;
+  pointer-events: none;
+  z-index: 9990;
+  animation: muz-grain-shift 10s steps(8) infinite;
+}
+
+@keyframes muz-grain-shift {
+  0%   { transform: translate(0%, 0%); }
+  12%  { transform: translate(-2%, -3%); }
+  25%  { transform: translate(3%, 1%); }
+  37%  { transform: translate(-1%, 4%); }
+  50%  { transform: translate(2%, -2%); }
+  62%  { transform: translate(-3%, 2%); }
+  75%  { transform: translate(4%, -1%); }
+  87%  { transform: translate(-2%, 3%); }
+  100% { transform: translate(0%, 0%); }
+}
+
+/* Gradient texte logo */
+.muz-logo {
+  background: linear-gradient(135deg, #FF00AA 0%, #8B5CF6 50%, #00E5D1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Carte sombre — avec vrai relief */
+.muz-card {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.04) 0%, transparent 50%),
+    var(--muz-card);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 1.15rem;
+  box-shadow:
+    0 2px 20px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(255, 255, 255, 0.035) inset;
+}
+
+/* Carte avec hover lift */
+.muz-card-lift {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  cursor: pointer;
+}
+.muz-card-lift:hover {
+  transform: translateY(-3px) scale(1.005);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(139, 92, 246, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.05) inset;
+}
+
+/* Variante accent — bordure colorée en haut */
+.muz-card-pink  { border-top: 2px solid rgba(255, 0, 170, 0.45); }
+.muz-card-cyan  { border-top: 2px solid rgba(0, 229, 209, 0.4); }
+.muz-card-gold  { border-top: 2px solid rgba(245, 158, 11, 0.45); }
+
+/* Bouton principal pink — effet tactile */
+.muz-btn-pink {
+  background: linear-gradient(160deg, #FF22BB 0%, #CC0088 100%);
+  color: white;
+  font-weight: 900;
+  border-radius: 0.875rem;
+  transition: all 0.12s ease;
+  box-shadow:
+    0 4px 20px rgba(255, 0, 170, 0.4),
+    0 -1px 0 rgba(255,255,255,0.1) inset,
+    0 3px 0 #880055;
+  position: relative;
+  top: 0;
+}
+.muz-btn-pink:hover {
+  background: linear-gradient(160deg, #FF33CC 0%, #DD0099 100%);
+  box-shadow: 0 6px 28px rgba(255, 0, 170, 0.5), 0 -1px 0 rgba(255,255,255,0.12) inset, 0 3px 0 #880055;
+  transform: translateY(-1px);
+}
+.muz-btn-pink:active {
+  top: 2px;
+  box-shadow: 0 2px 10px rgba(255, 0, 170, 0.3), 0 1px 0 #880055;
+  transform: translateY(0);
+}
+
+/* Bouton cyan — effet tactile */
+.muz-btn-cyan {
+  background: linear-gradient(160deg, #00EED8 0%, #00B8A8 100%);
+  color: #0D1B3E;
+  font-weight: 900;
+  border-radius: 0.875rem;
+  transition: all 0.12s ease;
+  box-shadow:
+    0 4px 20px rgba(0, 229, 209, 0.35),
+    0 -1px 0 rgba(255,255,255,0.2) inset,
+    0 3px 0 #007A6E;
+  position: relative;
+  top: 0;
+}
+.muz-btn-cyan:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(0, 229, 209, 0.45), 0 -1px 0 rgba(255,255,255,0.2) inset, 0 3px 0 #007A6E;
+}
+.muz-btn-cyan:active {
+  top: 2px;
+  box-shadow: 0 2px 10px rgba(0, 229, 209, 0.25), 0 1px 0 #007A6E;
+  transform: translateY(0);
+}
+
+/* Buzzer */
+.muz-buzzer {
+  background: radial-gradient(circle at 40% 35%, #FF44CC, #CC0088);
+  box-shadow: 0 0 0 6px rgba(255,0,170,0.25), 0 8px 32px rgba(255,0,170,0.5);
+  transition: all 0.12s;
+}
+.muz-buzzer:hover:not(:disabled) {
+  transform: scale(1.07);
+  box-shadow: 0 0 0 10px rgba(255,0,170,0.2), 0 12px 40px rgba(255,0,170,0.6);
+}
+.muz-buzzer:active:not(:disabled) { transform: scale(0.94); }
+.muz-buzzer:disabled { background: #2a3a5c; box-shadow: none; color: #4a5a7a; }
+.muz-buzzer.buzzed {
+  background: radial-gradient(circle at 40% 35%, #00E5D1, #00A898);
+  box-shadow: 0 0 0 10px rgba(0,229,209,0.25), 0 8px 32px rgba(0,229,209,0.5);
+}
+
+/* Animation moustache */
+@keyframes muz-shake {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  15%  { transform: rotate(-4deg) scale(1.08); }
+  30%  { transform: rotate(4deg) scale(1.08); }
+  45%  { transform: rotate(-3deg) scale(1.05); }
+  60%  { transform: rotate(3deg) scale(1.05); }
+  75%  { transform: rotate(-1deg) scale(1.02); }
+}
+.muz-shake { animation: muz-shake 0.6s ease-in-out; }
+
+@keyframes muz-pop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.muz-pop { animation: muz-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes muz-pulse-glow {
+  0%, 100% { box-shadow: 0 0 12px rgba(255, 0, 170, 0.4); }
+  50%       { box-shadow: 0 0 28px rgba(255, 0, 170, 0.8); }
+}
+.muz-glow { animation: muz-pulse-glow 1.5s ease-in-out infinite; }
+
+/* Score +100 qui monte */
+@keyframes muz-score-float {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  60%  { transform: translateY(-28px) scale(1.2); opacity: 1; }
+  100% { transform: translateY(-48px) scale(0.9); opacity: 0; }
+}
+.muz-score-float { animation: muz-score-float 1.4s ease-out forwards; }
+
+/* Pulse de fond pendant le reveal */
+@keyframes muz-reveal-bg {
+  0%, 100% { opacity: 0.04; }
+  50%       { opacity: 0.10; }
+}
+.muz-reveal-bg { animation: muz-reveal-bg 1.2s ease-in-out infinite; }
+
+/* Animation moustache correcte (QCM) */
+@keyframes muz-mustache-in {
+  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+  25%  { transform: scale(1.4) rotate(8deg);  opacity: 1; }
+  40%  { transform: scale(0.9) rotate(-5deg); }
+  55%  { transform: scale(1.15) rotate(4deg); }
+  70%  { transform: scale(0.97) rotate(-2deg); }
+  85%  { transform: scale(1.03) rotate(1deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.muz-mustache-anim {
+  animation: muz-mustache-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Slide-in pour les lignes du classement inter-question */
+@keyframes muz-slide-in {
+  0%   { transform: translateX(-60px); opacity: 0; }
+  60%  { transform: translateX(8px); opacity: 1; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+.muz-slide-in { animation: muz-slide-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Podium rise (résultats finaux) */
+@keyframes muz-podium-rise {
+  0%   { transform: scaleY(0); opacity: 0; }
+  80%  { transform: scaleY(1.05); }
+  100% { transform: scaleY(1); opacity: 1; }
+}
+.muz-podium-rise { animation: muz-podium-rise 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both; transform-origin: bottom; }
+
+/* Crown bounce */
+@keyframes muz-crown-bounce {
+  0%   { transform: translateY(-20px) scale(0); opacity: 0; }
+  60%  { transform: translateY(4px) scale(1.2); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.muz-crown { animation: muz-crown-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Hue slider — color picker profil */
+.muz-hue-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  border-radius: 8px;
+  outline: none;
+  border: none;
+}
+.muz-hue-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: white;
+  border: 2.5px solid rgba(0,0,0,0.25);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  cursor: pointer;
+}
+.muz-hue-slider::-moz-range-thumb {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: white;
+  border: 2.5px solid rgba(0,0,0,0.25);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  cursor: pointer;
+}
+
+/* Confettis */
+@keyframes muz-confetti-drop {
+  0%   { transform: translateY(-20px) translateX(0px)  rotate(0deg);   opacity: 1; }
+  30%  { transform: translateY(30vh)  translateX(25px) rotate(200deg); opacity: 1; }
+  60%  { transform: translateY(60vh)  translateX(-20px) rotate(440deg); opacity: 0.7; }
+  100% { transform: translateY(110vh) translateX(10px) rotate(720deg); opacity: 0; }
+}
+.muz-confetti {
+  position: absolute;
+  pointer-events: none;
+  animation: muz-confetti-drop var(--cdur, 2s) var(--cdel, 0s) ease-in both;
+}
+
+/* Classement inter-question — apparition un par un */
+@keyframes muz-leaderboard-in {
+  0%   { transform: translateX(-70px) scale(0.85); opacity: 0; }
+  60%  { transform: translateX(8px)   scale(1.03); opacity: 1; }
+  100% { transform: translateX(0)     scale(1);    opacity: 1; }
+}
+.muz-lb-item {
+  animation: muz-leaderboard-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ── Entrée de page / section ── */
+@keyframes muz-fade-in {
+  0%   { opacity: 0; transform: translateY(12px) scale(0.99); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+.muz-fade-in {
+  animation: muz-fade-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Délais d'apparition en cascade */
+.muz-fade-in-1 { animation: muz-fade-in 0.45s 0.05s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.muz-fade-in-2 { animation: muz-fade-in 0.45s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.muz-fade-in-3 { animation: muz-fade-in 0.45s 0.20s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.muz-fade-in-4 { animation: muz-fade-in 0.45s 0.30s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes muz-slide-up {
+  0%   { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.muz-slide-up { animation: muz-slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Zoom de focus — apparition du QR code */
+@keyframes muz-zoom-in {
+  0%   { opacity: 0; transform: scale(0.85); }
+  70%  { transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.muz-zoom-in { animation: muz-zoom-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Pulse accent — code salle en attente */
+@keyframes muz-code-pulse {
+  0%, 100% { box-shadow: 0 0 60px rgba(0,229,209,0.08); }
+  50%       { box-shadow: 0 0 80px rgba(0,229,209,0.22); }
+}
+.muz-code-pulse { animation: muz-code-pulse 3s ease-in-out infinite; }
+
+/* ── Moustaches flottantes en arrière-plan ── */
+@keyframes muz-float-1 {
+  0%, 100% { transform: translateY(0px)   scale(1); }
+  33%       { transform: translateY(-18px) scale(1.04); }
+  66%       { transform: translateY(-8px)  scale(0.97); }
+}
+@keyframes muz-float-2 {
+  0%, 100% { transform: translateY(0px)   scale(1); }
+  40%       { transform: translateY(-24px) scale(1.05); }
+  75%       { transform: translateY(-10px) scale(0.98); }
+}
+@keyframes muz-float-3 {
+  0%, 100% { transform: translateY(0px)   scale(1); }
+  50%       { transform: translateY(-30px) scale(1.06); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #8B5CF6, #FF00AA);
+  border-radius: 3px;
+}
+
+/* Focus visible — pour l'accessibilité */
+:focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.6);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Image question — déflou progressif ── */
+@keyframes muz-deblur {
+  0%   { filter: blur(28px); }
+  100% { filter: blur(0px); }
+}
+.muz-deblur-img {
+  /* Remplit le conteneur 16:9 — bandes couleur fond site pour les images portrait */
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  background: #0D1B3E;
+}
+
+/* Séparateur décoratif */
+.muz-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139,92,246,0.25) 30%, rgba(255,0,170,0.2) 60%, transparent);
+  margin: 0.5rem 0;
+}
+
+/* Badge pill soigné */
+.muz-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  border: 1px solid;
+}
+
+/* Texte label section */
+.muz-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(240, 244, 255, 0.35);
+}
+
+/* Input soigné */
+.muz-input {
+  background: rgba(255,255,255,0.065);
+  border: 1.5px solid rgba(139,92,246,0.25);
+  border-bottom: 1.5px solid rgba(139,92,246,0.4);
+  color: #F0F4FF;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.muz-input:focus {
+  border-color: #FF00AA;
+  box-shadow: 0 0 0 3px rgba(255,0,170,0.1);
+}
