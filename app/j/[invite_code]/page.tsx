@@ -85,15 +85,17 @@ export default function JoinByInvitePage() {
     setStep('waiting-host');
 
     // Chercher la salle active de l'hôte
+    // Pour 'playing', on ne redirige que si la salle a été créée dans les 6 dernières heures
     const fetchRoom = async () => {
+      const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
       const { data } = await supabase
         .from('rooms')
-        .select('code, status')
+        .select('code, status, created_at')
         .eq('host_id', hostId)
-        .in('status', ['waiting', 'playing'])
+        .or(`status.eq.waiting,and(status.eq.playing,created_at.gte.${sixHoursAgo})`)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
       return data;
     };
 

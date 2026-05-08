@@ -603,8 +603,19 @@ ALTER TABLE promo_code_uses  ENABLE ROW LEVEL SECURITY;
 
 -- Les codes sont lisibles par tous (pour vérifier l'existence)
 DROP POLICY IF EXISTS "promo_codes: lecture publique"       ON promo_codes;
+DROP POLICY IF EXISTS "promo_codes: gestion admin"          ON promo_codes;
 CREATE POLICY "promo_codes: lecture publique"
   ON promo_codes FOR SELECT USING (true);
+CREATE POLICY "promo_codes: gestion admin"
+  ON promo_codes FOR ALL
+  USING (
+    (SELECT email FROM auth.users WHERE id = auth.uid())
+    IN ('antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr')
+  )
+  WITH CHECK (
+    (SELECT email FROM auth.users WHERE id = auth.uid())
+    IN ('antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr')
+  );
 
 -- Seuls les admins (service role) peuvent créer/modifier/supprimer
 -- (via l'API route qui utilise SUPABASE_SERVICE_ROLE_KEY)

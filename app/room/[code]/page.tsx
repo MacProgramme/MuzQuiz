@@ -373,7 +373,8 @@ export default function RoomPage() {
 
   // --- MODE ÉCRAN PUBLIC ---
   if (room.public_screen) {
-    if (!myPlayer.is_host) {
+    const isHostUser = myPlayer.is_host || myPlayer.user_id === room.host_id;
+    if (!isHostUser) {
       // Non-hôte en attente → écran téléphone d'attente (pas l'écran public TV)
       if (room.status === 'waiting') {
         return (

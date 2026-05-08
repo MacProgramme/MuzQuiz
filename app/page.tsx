@@ -194,7 +194,20 @@ export default function Home() {
   const joinRoom = async () => {
     if (!nickname.trim()) { setErr('Entre ton pseudo !'); return; }
     if (!code.trim()) { setErr('Entre le code de la salle !'); return; }
-    router.push(`/room/${code.toUpperCase()}?nickname=${encodeURIComponent(nickname.trim())}`);
+    const upperCode = code.toUpperCase();
+    // Vérifier si c'est un code éphémère de salle (rooms.code)
+    const { data: roomRow } = await supabase.from('rooms').select('code').eq('code', upperCode).maybeSingle();
+    if (roomRow) {
+      router.push(`/room/${upperCode}?nickname=${encodeURIComponent(nickname.trim())}`);
+      return;
+    }
+    // Sinon, essayer comme code permanent d'invitation (profiles.invite_code)
+    const { data: profileRow } = await supabase.from('profiles').select('id').eq('invite_code', upperCode).maybeSingle();
+    if (profileRow) {
+      router.push(`/j/${upperCode}?nickname=${encodeURIComponent(nickname.trim())}`);
+      return;
+    }
+    setErr('Code introuvable. Vérifie le code et réessaie.');
   };
 
   // Rejoindre la salle en attente existante après avoir choisi le mode depuis la home
