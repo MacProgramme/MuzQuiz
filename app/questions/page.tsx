@@ -226,7 +226,11 @@ export default function QuestionsPage() {
 
   const deletePack = async (packId: string) => {
     if (!confirm('Supprimer ce pack et toutes ses questions ?')) return;
-    await supabase.from('question_packs').delete().eq('id', packId);
+    // Refresh session pour s'assurer que le token est valide
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { alert('Session expirée, veuillez vous reconnecter.'); return; }
+    const { error } = await supabase.from('question_packs').delete().eq('id', packId);
+    if (error) { alert('Erreur suppression : ' + error.message); return; }
     if (userId) await loadPacks(userId);
   };
 
