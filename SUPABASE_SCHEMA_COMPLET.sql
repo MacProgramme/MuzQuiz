@@ -609,11 +609,11 @@ CREATE POLICY "promo_codes: lecture publique"
 CREATE POLICY "promo_codes: gestion admin"
   ON promo_codes FOR ALL
   USING (
-    (SELECT email FROM auth.users WHERE id = auth.uid())
+    (auth.jwt() ->> 'email')
     IN ('antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr')
   )
   WITH CHECK (
-    (SELECT email FROM auth.users WHERE id = auth.uid())
+    (auth.jwt() ->> 'email')
     IN ('antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr')
   );
 
