@@ -129,6 +129,7 @@ export default function QuestionsPage() {
   const [qImageUrl, setQImageUrl] = useState<string | null>(null);
   const [qYoutubeUrl, setQYoutubeUrl] = useState<string>('');  // URL YouTube pour les packs blind test
   const [qStartTime, setQStartTime] = useState<number>(0);     // Timestamp de démarrage (secondes)
+  const [qAiTarget, setQAiTarget] = useState<string>('');      // Ce que l'utilisateur veut trouver
   const [qAiSuggesting, setQAiSuggesting] = useState(false);
   const [qAiSuggestMsg, setQAiSuggestMsg] = useState<string>('');
   const [qImageUploading, setQImageUploading] = useState(false);
@@ -242,7 +243,7 @@ export default function QuestionsPage() {
       const res = await fetch('/api/suggest-start-time', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ youtubeUrl: qYoutubeUrl }),
+        body: JSON.stringify({ youtubeUrl: qYoutubeUrl, target: qAiTarget.trim() }),
       });
       const data = await res.json();
       if (data.suggestedTime !== undefined) {
@@ -292,6 +293,7 @@ export default function QuestionsPage() {
       setQText(''); setQChoices(['', '', '', '']); setQCorrect(0);
       setQYoutubeUrl('');
       setQStartTime(0);
+      setQAiTarget('');
       setQType('normal'); setQImageUrl(null);
     }
     setQAiSuggestMsg('');
@@ -364,7 +366,7 @@ export default function QuestionsPage() {
     }
     await loadQuestions(selectedPack.id);
     setAddMode(null);
-    setQType('normal'); setQImageUrl(null); setQYoutubeUrl(''); setQStartTime(0); setQAiSuggestMsg('');
+    setQType('normal'); setQImageUrl(null); setQYoutubeUrl(''); setQStartTime(0); setQAiTarget(''); setQAiSuggestMsg('');
     setQSaving(false);
   };
 
@@ -906,22 +908,58 @@ export default function QuestionsPage() {
                           className="mt-3 px-3 py-3 rounded-xl flex flex-col gap-2"
                           style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)' }}
                         >
-                          {/* En-tête avec bouton IA */}
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(139,92,246,0.8)' }}>
-                              ⏱ Point de départ
-                            </p>
-                            <button
-                              type="button"
-                              onClick={handleAiSuggest}
-                              disabled={qAiSuggesting}
-                              className="text-xs font-black px-3 py-1 rounded-lg flex-shrink-0 transition-all hover:opacity-90 disabled:opacity-50"
-                              style={{ background: 'rgba(139,92,246,0.2)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.35)' }}
-                            >
-                              {qAiSuggesting
-                                ? <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: '#8B5CF6', borderTopColor: 'transparent' }} /> Analyse…</span>
-                                : '✨ IA Suggère'}
-                            </button>
+                          {/* En-tête */}
+                          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(139,92,246,0.8)' }}>
+                            ⏱ Point de départ
+                          </p>
+
+                          {/* Champ texte libre + raccourcis rapides */}
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={qAiTarget}
+                                onChange={e => setQAiTarget(e.target.value)}
+                                placeholder="Ex : refrain, 2ème couplet, pont, fin…"
+                                maxLength={60}
+                                className="flex-1 px-3 py-1.5 rounded-lg text-xs outline-none"
+                                style={{
+                                  background: 'rgba(139,92,246,0.1)',
+                                  border: '1px solid rgba(139,92,246,0.3)',
+                                  color: '#F0F4FF',
+                                }}
+                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAiSuggest(); } }}
+                              />
+                              <button
+                                type="button"
+                                onClick={handleAiSuggest}
+                                disabled={qAiSuggesting}
+                                className="text-xs font-black px-3 py-1.5 rounded-lg flex-shrink-0 transition-all hover:opacity-90 disabled:opacity-50"
+                                style={{ background: 'rgba(139,92,246,0.25)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.4)' }}
+                              >
+                                {qAiSuggesting
+                                  ? <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: '#8B5CF6', borderTopColor: 'transparent' }} />Analyse…</span>
+                                  : '✨ IA Suggère'}
+                              </button>
+                            </div>
+                            {/* Raccourcis rapides */}
+                            <div className="flex flex-wrap gap-1.5">
+                              {['Refrain', '1er couplet', '2ème couplet', 'Pont', 'Intro', 'Drop', 'Fin'].map(label => (
+                                <button
+                                  key={label}
+                                  type="button"
+                                  onClick={() => setQAiTarget(label)}
+                                  className="text-xs px-2 py-0.5 rounded-full font-bold transition-all hover:opacity-80"
+                                  style={{
+                                    background: qAiTarget === label ? 'rgba(139,92,246,0.3)' : 'rgba(139,92,246,0.08)',
+                                    color: qAiTarget === label ? '#8B5CF6' : 'rgba(139,92,246,0.6)',
+                                    border: `1px solid ${qAiTarget === label ? 'rgba(139,92,246,0.5)' : 'rgba(139,92,246,0.2)'}`,
+                                  }}
+                                >
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
                           </div>
 
                           {/* Slider + affichage MM:SS */}

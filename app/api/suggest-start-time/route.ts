@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req: NextRequest) {
-  const { youtubeUrl } = await req.json();
+  const { youtubeUrl, target } = await req.json();
 
   if (!youtubeUrl?.trim()) {
     return NextResponse.json({ error: 'URL YouTube requise' }, { status: 400 });
@@ -34,24 +34,37 @@ export async function POST(req: NextRequest) {
     // oEmbed indisponible → on continue sans titre
   }
 
+  // Partie demandée par l'utilisateur (ex: "refrain", "2ème couplet", "pont")
+  // Si vide, on vise la partie la plus reconnaissable par défaut
+  const targetPart = target?.trim() || 'le refrain principal (ou la partie la plus reconnaissable)';
+
   if (!videoTitle) {
     // Impossible d'identifier la chanson, on retourne une valeur par défaut utile
     return NextResponse.json({
       suggestedTime: 30,
-      reason: 'Titre introuvable — suggestion par défaut à 0:30 (juste après l\'intro habituelle).',
+      reason: `Titre introuvable — suggestion par défaut à 0:30 (juste après l'intro habituelle).`,
     });
   }
 
-  // ── 2. Demander à Claude d'estimer le timestamp du refrain ──────────────────
-  const prompt = `Tu es un expert en musique.
+  // ── 2. Demander à Claude d'estimer le timestamp ──────────────────────────────
+  const prompt = `Tu es un expert en musique avec une connaissance encyclopédique des chansons.
 Pour la chanson dont le titre YouTube est : "${videoTitle}"
 
-Estime à quelle seconde commence le refrain principal (ou la partie la plus facilement reconnaissable, celle qu'on entend dans une intro de blind test).
+L'utilisateur veut que la musique démarre à : "${targetPart}"
+
+Estime à quelle seconde précise cette partie commence dans la chanson.
 
 Réponds UNIQUEMENT avec ce JSON valide, rien d'autre :
-{"seconds": <entier entre 0 et 300>, "reason": "<une phrase courte en français expliquant ton choix>"}
+{"seconds": <entier entre 0 et 300>, "reason": "<une phrase courte en français expliquant ton choix et ce qui se passe à ce moment>"}
 
-Si tu ne connais pas cette chanson précisément, estime une valeur typique selon la structure musicale habituelle (intro ~15-20s, premier couplet ~15-30s, refrain souvent vers 45-75s).`;
+Repères courants si tu n'es pas sûr :
+- Intro : 0–15s
+- 1er couplet : 15–40s
+- 1er refrain : 40–75s
+- 2ème couplet : 75–110s
+- 2ème refrain / pont : 110–160s
+- Drop (EDM) : 30–60s
+- Fin : dernières 30s de la chanson (estime une durée typique selon le genre)`;
 
   try {
     const message = await client.messages.create({
