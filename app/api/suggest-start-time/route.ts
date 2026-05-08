@@ -40,36 +40,36 @@ export async function POST(req: NextRequest) {
 
   if (!videoTitle) {
     // Impossible d'identifier la chanson, on retourne une valeur par défaut utile
+    const defaultTime = targetPart.toLowerCase().includes('fin') ? 210
+      : targetPart.toLowerCase().includes('pont') || targetPart.toLowerCase().includes('bridge') ? 120
+      : targetPart.toLowerCase().includes('2') ? 90
+      : targetPart.toLowerCase().includes('intro') ? 0
+      : 45;
     return NextResponse.json({
-      suggestedTime: 30,
-      reason: `Titre introuvable — suggestion par défaut à 0:30 (juste après l'intro habituelle).`,
+      suggestedTime: defaultTime,
+      reason: `Titre introuvable — estimation par défaut pour « ${targetPart} ».`,
     });
   }
 
   // ── 2. Demander à Claude d'estimer le timestamp ──────────────────────────────
-  const prompt = `Tu es un expert en musique avec une connaissance encyclopédique des chansons.
-Pour la chanson dont le titre YouTube est : "${videoTitle}"
+  const prompt = `Chanson : "${videoTitle}"
+Partie demandée : "${targetPart}"
 
-L'utilisateur veut que la musique démarre à : "${targetPart}"
+À combien de secondes du début de la vidéo commence "${targetPart}" dans cette chanson ?
 
-Estime à quelle seconde précise cette partie commence dans la chanson.
+Repères typiques si tu n'es pas certain :
+- Intro : 0–15s | 1er couplet : 15–40s | 1er refrain : 40–75s
+- 2ème couplet : 75–110s | Pont/Break : 110–160s | Drop EDM : 30–60s
+- Fin : ~210–240s pour une chanson de 3:30–4min
 
-Réponds UNIQUEMENT avec ce JSON valide, rien d'autre :
-{"seconds": <entier entre 0 et 300>, "reason": "<une phrase courte en français expliquant ton choix et ce qui se passe à ce moment>"}
-
-Repères courants si tu n'es pas sûr :
-- Intro : 0–15s
-- 1er couplet : 15–40s
-- 1er refrain : 40–75s
-- 2ème couplet : 75–110s
-- 2ème refrain / pont : 110–160s
-- Drop (EDM) : 30–60s
-- Fin : dernières 30s de la chanson (estime une durée typique selon le genre)`;
+Réponds UNIQUEMENT avec ce JSON (rien d'autre, pas de texte avant ni après) :
+{"seconds": <entier 0-300>, "reason": "<confirme la partie trouvée et explique en une phrase>"}`;
 
   try {
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 150,
+      max_tokens: 200,
+      system: 'Tu es un expert en musique. Tu réponds UNIQUEMENT avec un JSON valide, jamais de texte libre.',
       messages: [{ role: 'user', content: prompt }],
     });
 
