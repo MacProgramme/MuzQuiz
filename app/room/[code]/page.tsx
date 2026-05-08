@@ -756,7 +756,7 @@ export default function RoomPage() {
             <MuzquizLogo width={36} showText={false} />
             <span className="text-xs font-mono tracking-widest px-2 py-0.5 rounded"
               style={{ background: 'rgba(0,229,209,0.1)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.2)' }}>
-              {code}
+              {hostInviteCode ?? code}
             </span>
           </div>
           <Timer key={timerKey} duration={room.timer_duration}

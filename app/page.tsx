@@ -77,7 +77,8 @@ export default function Home() {
             inviteCode: (profile as any)?.invite_code ?? null,
           });
           setMode((waitingRoom as any).mode as GameMode);
-          setPublicScreen((waitingRoom as any).public_screen ?? false);
+          // Ne pas restaurer public_screen de l'ancienne salle — toujours démarrer à false
+          setPublicScreen(false);
           setTab('create'); // on reste sur l'onglet "créer" qui sera remplacé par "Ma salle"
         } else {
           setActiveWaitingRoom(null);
