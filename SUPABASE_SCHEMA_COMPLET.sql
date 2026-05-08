@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS custom_questions (
 
 -- Clé étrangère rooms → question_packs (ajoutée séparément car tables créées après rooms)
 ALTER TABLE rooms
-  ADD COLUMN IF NOT EXISTS pack_id UUID REFERENCES question_packs(id);
+  ADD COLUMN IF NOT EXISTS pack_id UUID REFERENCES question_packs(id) ON DELETE SET NULL;
 
 
 -- ================================================================

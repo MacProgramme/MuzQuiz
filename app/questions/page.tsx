@@ -229,6 +229,8 @@ export default function QuestionsPage() {
     // Refresh session pour s'assurer que le token est valide
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { alert('Session expirée, veuillez vous reconnecter.'); return; }
+    // Détacher le pack des salles qui le référencent (contrainte FK rooms_pack_id_fkey)
+    await supabase.from('rooms').update({ pack_id: null }).eq('pack_id', packId);
     const { error } = await supabase.from('question_packs').delete().eq('id', packId);
     if (error) { alert('Erreur suppression : ' + error.message); return; }
     if (userId) await loadPacks(userId);
