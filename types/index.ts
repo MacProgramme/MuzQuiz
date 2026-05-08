@@ -85,6 +85,8 @@ export interface CustomQuestion {
   image_url?: string | null;
   question_type?: QuestionType;
   youtube_url?: string | null;
+  /** Timestamp (secondes) où la musique démarre. 0 = début. */
+  audio_start_time?: number | null;
   created_at: string;
 }
 
@@ -140,6 +142,7 @@ export interface BuzzQuestion {
   image_url?: string | null;
   question_type?: QuestionType;
   youtube_url?: string | null;
+  audio_start_time?: number | null;
 }
 
 export interface QCMQuestion {
@@ -150,6 +153,7 @@ export interface QCMQuestion {
   image_url?: string | null;
   question_type?: QuestionType;
   youtube_url?: string | null;
+  audio_start_time?: number | null;
 }
 
 export type Question = BuzzQuestion | QCMQuestion;

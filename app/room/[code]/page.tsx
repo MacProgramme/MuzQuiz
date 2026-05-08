@@ -818,7 +818,11 @@ export default function RoomPage() {
         {/* Lecteur audio pour les blind tests */}
         {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && (
           <div className="w-full max-w-lg">
-            <YouTubePlayer url={(currentQ as any).youtube_url} autoPlay />
+            <YouTubePlayer
+              url={(currentQ as any).youtube_url}
+              autoPlay
+              startTime={(currentQ as any).audio_start_time ?? 0}
+            />
           </div>
         )}
 

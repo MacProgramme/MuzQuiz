@@ -133,8 +133,10 @@ CREATE TABLE IF NOT EXISTS custom_questions (
   image_url     TEXT  DEFAULT NULL,
   question_type TEXT  DEFAULT 'normal'
                 CHECK (question_type IN ('normal','image','blur_reveal')),
-  youtube_url   TEXT  DEFAULT NULL,
-  created_at    TIMESTAMPTZ DEFAULT NOW()
+  youtube_url       TEXT    DEFAULT NULL,
+  -- Timestamp (secondes) où la musique doit démarrer en blind test. 0 = début.
+  audio_start_time  INTEGER DEFAULT 0,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Clé étrangère rooms → question_packs (ajoutée séparément car tables créées après rooms)

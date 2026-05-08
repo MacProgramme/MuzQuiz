@@ -58,12 +58,14 @@ interface Props {
   /** Lance la musique automatiquement dès que le player YouTube est prêt */
   autoPlay?: boolean;
   onPlay?: () => void;
+  /** Timestamp (secondes) où la musique doit démarrer. 0 = début. */
+  startTime?: number;
 }
 
 type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
-export function YouTubePlayer({ url, autoPlay = false, onPlay }: Props) {
+export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: Props) {
   const [status, setStatus]           = useState<Status>('idle');
   const [videoVisible, setVideoVisible] = useState(false);
   const playerRef    = useRef<any>(null);
@@ -110,11 +112,17 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay }: Props) {
           modestbranding: 1,
           iv_load_policy: 3,
           fs: 0,
+          // Démarre la vidéo au timestamp voulu (pris en compte au premier chargement)
+          start: startTime > 0 ? startTime : 0,
         },
         events: {
           onReady: () => {
             if (!mountedRef.current) return;
             readyRef.current = true;
+            // Seek au bon timestamp avant de lancer
+            if (startTime > 0) {
+              playerRef.current?.seekTo?.(startTime, true);
+            }
             // L'utilisateur avait cliqué Play avant que l'API soit prête
             if (pendingPlay.current) {
               pendingPlay.current = false;
@@ -152,6 +160,10 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay }: Props) {
     if (!videoId) return;
     if (readyRef.current && playerRef.current) {
       // Appel SYNCHRONE dans le clic → navigateur autorise la lecture
+      // Si la lecture est relancée depuis l'état idle/stopped, on repositionne au timestamp
+      if (startTime > 0) {
+        playerRef.current.seekTo(startTime, true);
+      }
       playerRef.current.playVideo();
       setStatus('loading'); // sera confirmé par onStateChange → PLAYING
     } else {
@@ -161,7 +173,7 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay }: Props) {
       // S'assurer que l'API charge (cas rare où le script n'a pas encore fini)
       loadYTAPI();
     }
-  }, [videoId]);
+  }, [videoId, startTime]);
 
   const handlePause = useCallback(() => {
     playerRef.current?.pauseVideo?.();

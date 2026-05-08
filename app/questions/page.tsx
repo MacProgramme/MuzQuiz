@@ -128,6 +128,9 @@ export default function QuestionsPage() {
   const [qType, setQType] = useState<QuestionType>('normal');
   const [qImageUrl, setQImageUrl] = useState<string | null>(null);
   const [qYoutubeUrl, setQYoutubeUrl] = useState<string>('');  // URL YouTube pour les packs blind test
+  const [qStartTime, setQStartTime] = useState<number>(0);     // Timestamp de démarrage (secondes)
+  const [qAiSuggesting, setQAiSuggesting] = useState(false);
+  const [qAiSuggestMsg, setQAiSuggestMsg] = useState<string>('');
   const [qImageUploading, setQImageUploading] = useState(false);
   const qImageInputRef = useRef<HTMLInputElement>(null);
   const [qSaving, setQSaving] = useState(false);
@@ -213,6 +216,43 @@ export default function QuestionsPage() {
     setView('questions');
   };
 
+  // === UTILITAIRES TEMPS ===
+  const formatTime = (secs: number): string => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  };
+
+  const parseTime = (str: string): number => {
+    const parts = str.split(':');
+    if (parts.length === 2) {
+      const m = parseInt(parts[0], 10) || 0;
+      const s = parseInt(parts[1], 10) || 0;
+      return Math.max(0, Math.min(300, m * 60 + s));
+    }
+    const raw = parseInt(str, 10);
+    return isNaN(raw) ? 0 : Math.max(0, Math.min(300, raw));
+  };
+
+  const handleAiSuggest = async () => {
+    if (!qYoutubeUrl || !extractYoutubeId(qYoutubeUrl)) return;
+    setQAiSuggesting(true);
+    setQAiSuggestMsg('');
+    try {
+      const res = await fetch('/api/suggest-start-time', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ youtubeUrl: qYoutubeUrl }),
+      });
+      const data = await res.json();
+      if (data.suggestedTime !== undefined) {
+        setQStartTime(data.suggestedTime);
+        setQAiSuggestMsg(data.reason ?? '');
+      }
+    } catch {}
+    setQAiSuggesting(false);
+  };
+
   // === CRUD PACKS ===
   const createPack = async () => {
     if (!packName.trim() || !userId) return;
@@ -246,12 +286,15 @@ export default function QuestionsPage() {
       setQType(q.question_type ?? 'normal');
       setQImageUrl(q.image_url ?? null);
       setQYoutubeUrl(q.youtube_url ?? '');
+      setQStartTime(q.audio_start_time ?? 0);
     } else {
       setEditingQ(null);
       setQText(''); setQChoices(['', '', '', '']); setQCorrect(0);
       setQYoutubeUrl('');
+      setQStartTime(0);
       setQType('normal'); setQImageUrl(null);
     }
+    setQAiSuggestMsg('');
     setAddMode('manual');
   };
 
@@ -295,6 +338,7 @@ export default function QuestionsPage() {
       question_type: qType,
       image_url: (qType !== 'normal') ? (qImageUrl ?? null) : null,
       youtube_url: qYoutubeUrl.trim() || null,
+      audio_start_time: qStartTime > 0 ? qStartTime : 0,
     };
     let err: any = null;
     if (editingQ) {
@@ -320,7 +364,7 @@ export default function QuestionsPage() {
     }
     await loadQuestions(selectedPack.id);
     setAddMode(null);
-    setQType('normal'); setQImageUrl(null); setQYoutubeUrl('');
+    setQType('normal'); setQImageUrl(null); setQYoutubeUrl(''); setQStartTime(0); setQAiSuggestMsg('');
     setQSaving(false);
   };
 
@@ -840,7 +884,7 @@ export default function QuestionsPage() {
                                 </p>
                               </div>
                               <button
-                                onClick={() => setQYoutubeUrl('')}
+                                onClick={() => { setQYoutubeUrl(''); setQStartTime(0); setQAiSuggestMsg(''); }}
                                 className="text-xs font-black px-2 py-1 rounded-lg flex-shrink-0"
                                 style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}
                               >
@@ -851,6 +895,77 @@ export default function QuestionsPage() {
                             /* URL invalide */
                             <p className="text-xs font-bold" style={{ color: '#FF00AA' }}>
                               ⚠ URL YouTube non reconnue — formats acceptés : youtube.com/watch?v=… · youtu.be/… · shorts/…
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* ── Sélecteur de point de départ (refrain / meilleur moment) ── */}
+                      {qYoutubeUrl && extractYoutubeId(qYoutubeUrl) && (
+                        <div
+                          className="mt-3 px-3 py-3 rounded-xl flex flex-col gap-2"
+                          style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)' }}
+                        >
+                          {/* En-tête avec bouton IA */}
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(139,92,246,0.8)' }}>
+                              ⏱ Point de départ
+                            </p>
+                            <button
+                              type="button"
+                              onClick={handleAiSuggest}
+                              disabled={qAiSuggesting}
+                              className="text-xs font-black px-3 py-1 rounded-lg flex-shrink-0 transition-all hover:opacity-90 disabled:opacity-50"
+                              style={{ background: 'rgba(139,92,246,0.2)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.35)' }}
+                            >
+                              {qAiSuggesting
+                                ? <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: '#8B5CF6', borderTopColor: 'transparent' }} /> Analyse…</span>
+                                : '✨ IA Suggère'}
+                            </button>
+                          </div>
+
+                          {/* Slider + affichage MM:SS */}
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0} max={300} step={1}
+                              value={qStartTime}
+                              onChange={e => { setQStartTime(Number(e.target.value)); setQAiSuggestMsg(''); }}
+                              className="flex-1"
+                              style={{ accentColor: '#8B5CF6' }}
+                            />
+                            <input
+                              type="text"
+                              value={formatTime(qStartTime)}
+                              onChange={e => { setQStartTime(parseTime(e.target.value)); setQAiSuggestMsg(''); }}
+                              className="w-14 text-center font-mono font-black text-sm py-1 px-2 rounded-lg outline-none"
+                              style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.35)' }}
+                              placeholder="0:00"
+                            />
+                            {/* Bouton Tester — ouvre YouTube à ce timestamp */}
+                            <a
+                              href={`https://www.youtube.com/watch?v=${extractYoutubeId(qYoutubeUrl)}&t=${qStartTime}s`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs font-black px-2 py-1 rounded-lg flex-shrink-0 transition-all hover:opacity-90"
+                              style={{ background: 'rgba(0,229,209,0.1)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.25)' }}
+                            >
+                              ▶ Tester
+                            </a>
+                          </div>
+
+                          {/* Message sous le slider */}
+                          {qAiSuggestMsg ? (
+                            <p className="text-xs font-bold" style={{ color: '#8B5CF6' }}>
+                              ✨ {qAiSuggestMsg}
+                            </p>
+                          ) : qStartTime === 0 ? (
+                            <p className="text-xs" style={{ color: 'rgba(240,244,255,0.3)' }}>
+                              0:00 = début de la vidéo. Glisse le curseur ou clique sur « ✨ IA Suggère » pour sauter au refrain.
+                            </p>
+                          ) : (
+                            <p className="text-xs" style={{ color: 'rgba(139,92,246,0.7)' }}>
+                              La musique démarrera à <strong>{formatTime(qStartTime)}</strong> pendant la partie.
                             </p>
                           )}
                         </div>
@@ -1158,6 +1273,12 @@ export default function QuestionsPage() {
                           <span className="text-xs px-2 py-0.5 rounded-full font-bold flex-shrink-0"
                             style={{ background: 'rgba(0,229,209,0.12)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.25)' }}>
                             ♪ Audio
+                          </span>
+                        )}
+                        {q.youtube_url && (q.audio_start_time ?? 0) > 0 && (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-bold flex-shrink-0"
+                            style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.25)' }}>
+                            ▶ {Math.floor((q.audio_start_time ?? 0) / 60)}:{String((q.audio_start_time ?? 0) % 60).padStart(2, '0')}
                           </span>
                         )}
                       </div>
