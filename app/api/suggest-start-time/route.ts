@@ -52,44 +52,66 @@ export async function POST(req: NextRequest) {
   }
 
   // ── 2. Demander à Claude d'estimer le timestamp ──────────────────────────────
+  // On demande UNIQUEMENT un entier pour éviter tout problème de parsing JSON
   const prompt = `Chanson : "${videoTitle}"
 Partie demandée : "${targetPart}"
 
-À combien de secondes du début de la vidéo commence "${targetPart}" dans cette chanson ?
+À combien de secondes du début de cette chanson commence "${targetPart}" ?
 
-Repères typiques si tu n'es pas certain :
+Repères typiques :
 - Intro : 0–15s | 1er couplet : 15–40s | 1er refrain : 40–75s
 - 2ème couplet : 75–110s | Pont/Break : 110–160s | Drop EDM : 30–60s
 - Fin : ~210–240s pour une chanson de 3:30–4min
 
-Réponds UNIQUEMENT avec ce JSON (rien d'autre, pas de texte avant ni après) :
-{"seconds": <entier 0-300>, "reason": "<confirme la partie trouvée et explique en une phrase>"}`;
+Réponds UNIQUEMENT avec l'entier (nombre de secondes, entre 0 et 300), RIEN d'autre.
+Exemple de réponse correcte : 47`;
 
   try {
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      system: 'Tu es un expert en musique. Tu réponds UNIQUEMENT avec un JSON valide, jamais de texte libre.',
+      max_tokens: 20,
+      system: 'Tu es un expert en musique. Tu réponds UNIQUEMENT avec un entier (nombre de secondes). Aucun texte, aucune ponctuation, juste le chiffre.',
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const text = message.content[0]?.type === 'text' ? message.content[0].text : '';
-    // Extraire le JSON même si Claude ajoute du texte autour
-    const jsonMatch = text.match(/\{[\s\S]*?\}/);
-    if (!jsonMatch) throw new Error('No JSON in response');
+    const text = (message.content[0]?.type === 'text' ? message.content[0].text : '').trim();
 
-    const parsed = JSON.parse(jsonMatch[0]);
-    const seconds = Math.max(0, Math.min(300, Math.round(Number(parsed.seconds) || 30)));
+    // Extraire le premier nombre entier trouvé dans la réponse
+    const numMatch = text.match(/\d+/);
+    if (!numMatch) throw new Error(`No number in response: "${text}"`);
+
+    const seconds = Math.max(0, Math.min(300, parseInt(numMatch[0], 10)));
+
+    // Construire la raison côté serveur (pas de JSON à parser)
+    const targetLabel = target?.trim() || 'partie la plus reconnaissable';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+    const reason = `${targetLabel} estimé à ${timeStr} pour « ${videoTitle} »`;
 
     return NextResponse.json({
       suggestedTime: seconds,
-      reason: parsed.reason ?? '',
+      reason,
       videoTitle,
     });
   } catch (err: any) {
+    // Fallback basé sur la partie demandée (heuristique simple)
+    const t = targetPart.toLowerCase();
+    const fallbackTime = t.includes('fin') ? 210
+      : t.includes('pont') || t.includes('bridge') ? 120
+      : t.includes('2') ? 90
+      : t.includes('intro') ? 5
+      : t.includes('drop') ? 45
+      : 50; // refrain par défaut
+
+    const targetLabel = target?.trim() || 'Refrain';
+    const mins = Math.floor(fallbackTime / 60);
+    const secs = fallbackTime % 60;
+    const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+
     return NextResponse.json({
-      suggestedTime: 30,
-      reason: 'Estimation automatique à 0:30.',
+      suggestedTime: fallbackTime,
+      reason: `Estimation heuristique pour « ${targetLabel} » → ${timeStr}`,
       videoTitle,
     });
   }
