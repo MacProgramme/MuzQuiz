@@ -68,6 +68,7 @@ export function useRoom(code: string, nickname: string) {
           image_url: q.image_url ?? null,
           question_type: q.question_type ?? 'normal',
           youtube_url: q.youtube_url ?? null,
+          audio_start_time: q.audio_start_time ?? 0,
         }));
         setCustomQuestions(formatted as any);
         customQuestionsRef.current = formatted as any;
@@ -183,6 +184,7 @@ export function useRoom(code: string, nickname: string) {
           image_url: q.image_url ?? null,
           question_type: q.question_type ?? 'normal',
           youtube_url: q.youtube_url ?? null,
+          audio_start_time: q.audio_start_time ?? 0,
         }));
         setCustomQuestions(formatted as any);
         customQuestionsRef.current = formatted as any;

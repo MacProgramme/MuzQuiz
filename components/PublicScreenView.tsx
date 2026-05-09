@@ -464,6 +464,33 @@ export function PublicScreenView({
           })}
         </div>
 
+        {/* Révélation : moustaches des gagnants */}
+        {qcmRevealed && (() => {
+          const correctIds = new Set(qcmAnswers.filter(a => a.is_correct).map(a => a.player_id));
+          const nonHostPlayers = players.filter(p => !p.is_host);
+          return (
+            <div className="px-8 pb-4 flex flex-wrap gap-3 justify-center">
+              {nonHostPlayers.map(p => {
+                const ok = correctIds.has(p.id);
+                return (
+                  <div key={p.id} className="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all"
+                    style={{
+                      background: ok ? 'rgba(0,229,209,0.12)' : 'rgba(255,255,255,0.04)',
+                      border: `2px solid ${ok ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                    }}>
+                    {ok
+                      ? <MustacheMedal rank={1} width={36} />
+                      : <span style={{ fontSize: '1.4rem' }}>✗</span>}
+                    <span className="text-sm font-bold" style={{ color: ok ? '#00E5D1' : 'rgba(240,244,255,0.4)' }}>
+                      {p.nickname}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
         {/* Bouton révéler (hôte) */}
         {myPlayer.is_host && !qcmRevealed && (
           <div className="px-8 pb-8">
@@ -531,6 +558,10 @@ export function PublicScreenView({
                 Pause
               </button>
             )}
+            <button onClick={endGame} className="px-4 py-2 rounded-xl font-bold text-sm"
+              style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.6)', border: '1px solid rgba(255,0,170,0.2)' }}>
+              Terminer
+            </button>
           </div>
         </div>
 
@@ -601,6 +632,33 @@ export function PublicScreenView({
               </p>
             </div>
           )}
+
+          {/* Moustaches après révélation */}
+          {qcmRevealed && (() => {
+            const correctIds = new Set(qcmAnswers.filter(a => a.is_correct).map(a => a.player_id));
+            const nonHostPlayers = players.filter(p => !p.is_host);
+            return (
+              <div className="flex flex-wrap gap-3 justify-center mt-2 mb-4">
+                {nonHostPlayers.map(p => {
+                  const ok = correctIds.has(p.id);
+                  return (
+                    <div key={p.id} className="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl"
+                      style={{
+                        background: ok ? 'rgba(0,229,209,0.12)' : 'rgba(255,255,255,0.04)',
+                        border: `2px solid ${ok ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                      }}>
+                      {ok
+                        ? <MustacheMedal rank={1} width={36} />
+                        : <span style={{ fontSize: '1.4rem' }}>✗</span>}
+                      <span className="text-sm font-bold" style={{ color: ok ? '#00E5D1' : 'rgba(240,244,255,0.4)' }}>
+                        {p.nickname}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Timer */}
           {!buzz && !room.is_paused && (

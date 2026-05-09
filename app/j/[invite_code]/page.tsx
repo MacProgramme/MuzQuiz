@@ -58,6 +58,12 @@ export default function JoinByInvitePage() {
         return;
       }
 
+      // L'utilisateur connecté IS l'hôte → renvoyer à l'accueil (pas besoin de rejoindre sa propre salle)
+      if (session?.user && !session.user.is_anonymous && session.user.id === host.id) {
+        router.replace('/');
+        return;
+      }
+
       setHostId(host.id);
       setHostNickname(host.nickname || 'Hôte');
       setStep('enter-nickname');
