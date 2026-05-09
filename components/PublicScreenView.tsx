@@ -427,80 +427,82 @@ export function PublicScreenView({
           </p>
         </div>
 
-        {/* Timer */}
-        <div className="flex justify-center mb-6">
-          {!qcmRevealed && !room.is_paused && (
-            <BigTimer key={timerKey} duration={room.timer_duration} running={true}
-              onExpire={() => { if (myPlayer.is_host) revealQCMAndNext(); }} />
-          )}
-        </div>
+        {/* Zone flex-1 : timer + moustaches + grille + bouton — tout reste visible */}
+        <div className="flex-1 flex flex-col px-8 pb-6 gap-3 min-h-0">
 
-        {/* Grille de réponses 2×2 */}
-        <div className="grid grid-cols-2 gap-5 px-8 pb-6 flex-1">
-          {currentQuestion.choices.map((choice, i) => {
-            const isCorrect = qcmRevealed && i === currentQuestion.correct;
-            const isWrong = qcmRevealed && i !== currentQuestion.correct;
-            const count = answerCounts[i];
+          {/* Timer */}
+          {!qcmRevealed && !room.is_paused && (
+            <div className="flex justify-center">
+              <BigTimer key={timerKey} duration={room.timer_duration} running={true}
+                onExpire={() => { if (myPlayer.is_host) revealQCMAndNext(); }} />
+            </div>
+          )}
+
+          {/* Révélation : moustaches des gagnants — au-dessus de la grille */}
+          {qcmRevealed && (() => {
+            const correctIds = new Set(qcmAnswers.filter(a => a.is_correct).map(a => a.player_id));
+            const nonHostPlayers = players.filter(p => !p.is_host);
             return (
-              <div key={i} className="flex items-center gap-4 rounded-2xl px-8 py-5 transition-all"
-                style={{
-                  background: isCorrect ? 'rgba(0,229,209,0.25)' : isWrong ? 'rgba(255,255,255,0.04)' : COLORS[i] + 'cc',
-                  opacity: isWrong ? 0.35 : 1,
-                  border: `3px solid ${isCorrect ? '#00E5D1' : 'transparent'}`,
-                  boxShadow: isCorrect ? '0 0 30px rgba(0,229,209,0.4)' : 'none',
-                  minHeight: '90px',
-                }}>
-                <span className="font-black text-white opacity-70 flex-shrink-0" style={{ fontSize: '1.6rem' }}>
-                  {LABELS[i]}
-                </span>
-                <span className="flex-1 font-black text-white break-words" style={{ fontSize: '1.4rem', lineHeight: 1.2 }}>
-                  {choice}
-                </span>
-                {(qcmRevealed || count > 0) && (
-                  <span className="font-black text-white opacity-80" style={{ fontSize: '1.5rem' }}>{count}</span>
-                )}
+              <div className="flex flex-wrap gap-3 justify-center">
+                {nonHostPlayers.map(p => {
+                  const ok = correctIds.has(p.id);
+                  return (
+                    <div key={p.id} className="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all"
+                      style={{
+                        background: ok ? 'rgba(0,229,209,0.12)' : 'rgba(255,255,255,0.04)',
+                        border: `2px solid ${ok ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                      }}>
+                      {ok
+                        ? <MustacheMedal rank={1} width={36} />
+                        : <span style={{ fontSize: '1.4rem' }}>✗</span>}
+                      <span className="text-sm font-bold" style={{ color: ok ? '#00E5D1' : 'rgba(240,244,255,0.4)' }}>
+                        {p.nickname}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             );
-          })}
-        </div>
+          })()}
 
-        {/* Révélation : moustaches des gagnants */}
-        {qcmRevealed && (() => {
-          const correctIds = new Set(qcmAnswers.filter(a => a.is_correct).map(a => a.player_id));
-          const nonHostPlayers = players.filter(p => !p.is_host);
-          return (
-            <div className="px-8 pb-4 flex flex-wrap gap-3 justify-center">
-              {nonHostPlayers.map(p => {
-                const ok = correctIds.has(p.id);
-                return (
-                  <div key={p.id} className="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all"
-                    style={{
-                      background: ok ? 'rgba(0,229,209,0.12)' : 'rgba(255,255,255,0.04)',
-                      border: `2px solid ${ok ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                    }}>
-                    {ok
-                      ? <MustacheMedal rank={1} width={36} />
-                      : <span style={{ fontSize: '1.4rem' }}>✗</span>}
-                    <span className="text-sm font-bold" style={{ color: ok ? '#00E5D1' : 'rgba(240,244,255,0.4)' }}>
-                      {p.nickname}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
+          {/* Grille de réponses 2×2 — flex-1 dans la zone flex-1 */}
+          <div className="grid grid-cols-2 gap-5 flex-1 min-h-0">
+            {currentQuestion.choices.map((choice, i) => {
+              const isCorrect = qcmRevealed && i === currentQuestion.correct;
+              const isWrong = qcmRevealed && i !== currentQuestion.correct;
+              const count = answerCounts[i];
+              return (
+                <div key={i} className="flex items-center gap-4 rounded-2xl px-8 py-5 transition-all"
+                  style={{
+                    background: isCorrect ? 'rgba(0,229,209,0.25)' : isWrong ? 'rgba(255,255,255,0.04)' : COLORS[i] + 'cc',
+                    opacity: isWrong ? 0.35 : 1,
+                    border: `3px solid ${isCorrect ? '#00E5D1' : 'transparent'}`,
+                    boxShadow: isCorrect ? '0 0 30px rgba(0,229,209,0.4)' : 'none',
+                    minHeight: '80px',
+                  }}>
+                  <span className="font-black text-white opacity-70 flex-shrink-0" style={{ fontSize: '1.6rem' }}>
+                    {LABELS[i]}
+                  </span>
+                  <span className="flex-1 font-black text-white break-words" style={{ fontSize: '1.4rem', lineHeight: 1.2 }}>
+                    {choice}
+                  </span>
+                  {(qcmRevealed || count > 0) && (
+                    <span className="font-black text-white opacity-80" style={{ fontSize: '1.5rem' }}>{count}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
 
-        {/* Bouton révéler (hôte) */}
-        {myPlayer.is_host && !qcmRevealed && (
-          <div className="px-8 pb-8">
+          {/* Bouton révéler (hôte) */}
+          {myPlayer.is_host && !qcmRevealed && (
             <button onClick={revealQCMAndNext}
-              className="muz-btn-pink w-full rounded-2xl font-black"
+              className="muz-btn-pink w-full rounded-2xl font-black flex-shrink-0"
               style={{ padding: '1.25rem', fontSize: '1.3rem' }}>
               Révéler les réponses →
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     );
   }

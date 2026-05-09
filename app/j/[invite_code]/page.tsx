@@ -5,7 +5,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
@@ -14,6 +14,7 @@ type Step = 'loading' | 'enter-nickname' | 'waiting-host' | 'redirecting' | 'err
 export default function JoinByInvitePage() {
   const { invite_code } = useParams<{ invite_code: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const inviteCode = (invite_code as string)?.toUpperCase();
 
@@ -40,9 +41,15 @@ export default function JoinByInvitePage() {
           .single();
         if (me?.nickname) setNickname(me.nickname);
       } else {
-        // Pseudo anonyme sauvegardé localement
-        const saved = typeof window !== 'undefined' ? localStorage.getItem('muz_nickname') : null;
-        if (saved) setNickname(saved);
+        // Pseudo anonyme : priorité au param URL (?nickname=...) passé depuis la home,
+        // sinon on tente localStorage
+        const urlNickname = searchParams.get('nickname');
+        if (urlNickname) {
+          setNickname(urlNickname);
+        } else {
+          const saved = typeof window !== 'undefined' ? localStorage.getItem('muz_nickname') : null;
+          if (saved) setNickname(saved);
+        }
       }
 
       // Chercher l'hôte via son invite_code
@@ -71,7 +78,7 @@ export default function JoinByInvitePage() {
 
     if (inviteCode) load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inviteCode]);
+  }, [inviteCode, searchParams]);
 
   // ── Chercher la salle active et s'abonner ────────────────────────────────
   const goToRoom = (roomCode: string) => {
