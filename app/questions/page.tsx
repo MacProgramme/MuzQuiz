@@ -132,6 +132,7 @@ export default function QuestionsPage() {
   const [qAiTarget, setQAiTarget] = useState<string>('');      // Ce que l'utilisateur veut trouver
   const [qAiSuggesting, setQAiSuggesting] = useState(false);
   const [qAiSuggestMsg, setQAiSuggestMsg] = useState<string>('');
+  const [qAiSuggestError, setQAiSuggestError] = useState<string>('');
   const [qImageUploading, setQImageUploading] = useState(false);
   const qImageInputRef = useRef<HTMLInputElement>(null);
   const [qSaving, setQSaving] = useState(false);
@@ -239,6 +240,7 @@ export default function QuestionsPage() {
     if (!qYoutubeUrl || !extractYoutubeId(qYoutubeUrl)) return;
     setQAiSuggesting(true);
     setQAiSuggestMsg('');
+    setQAiSuggestError('');
     try {
       const res = await fetch('/api/suggest-start-time', {
         method: 'POST',
@@ -246,11 +248,18 @@ export default function QuestionsPage() {
         body: JSON.stringify({ youtubeUrl: qYoutubeUrl, target: qAiTarget.trim() }),
       });
       const data = await res.json();
-      if (data.suggestedTime !== undefined) {
+      if (data.error) {
+        setQAiSuggestError(`Erreur API : ${data.error}`);
+      } else if (typeof data.suggestedTime === 'number') {
         setQStartTime(data.suggestedTime);
-        setQAiSuggestMsg(data.reason ?? '');
+        const targetLabel = qAiTarget.trim() ? `« ${qAiTarget.trim()} »` : 'meilleur moment';
+        setQAiSuggestMsg(`${targetLabel} → ${formatTime(data.suggestedTime)}${data.reason ? ' · ' + data.reason : ''}`);
+      } else {
+        setQAiSuggestError('Réponse inattendue de l\'API. Réessaie.');
       }
-    } catch {}
+    } catch (e: any) {
+      setQAiSuggestError(`Erreur réseau : ${e?.message ?? 'inconnue'}`);
+    }
     setQAiSuggesting(false);
   };
 
@@ -297,6 +306,7 @@ export default function QuestionsPage() {
       setQType('normal'); setQImageUrl(null);
     }
     setQAiSuggestMsg('');
+    setQAiSuggestError('');
     setAddMode('manual');
   };
 
@@ -366,7 +376,7 @@ export default function QuestionsPage() {
     }
     await loadQuestions(selectedPack.id);
     setAddMode(null);
-    setQType('normal'); setQImageUrl(null); setQYoutubeUrl(''); setQStartTime(0); setQAiTarget(''); setQAiSuggestMsg('');
+    setQType('normal'); setQImageUrl(null); setQYoutubeUrl(''); setQStartTime(0); setQAiTarget(''); setQAiSuggestMsg(''); setQAiSuggestError('');
     setQSaving(false);
   };
 
@@ -993,8 +1003,12 @@ export default function QuestionsPage() {
                           </div>
 
                           {/* Message sous le slider */}
-                          {qAiSuggestMsg ? (
-                            <p className="text-xs font-bold" style={{ color: '#8B5CF6' }}>
+                          {qAiSuggestError ? (
+                            <p className="text-xs font-bold px-2 py-1 rounded-lg" style={{ color: '#FF00AA', background: 'rgba(255,0,170,0.08)', border: '1px solid rgba(255,0,170,0.2)' }}>
+                              ⚠ {qAiSuggestError}
+                            </p>
+                          ) : qAiSuggestMsg ? (
+                            <p className="text-xs font-bold px-2 py-1 rounded-lg" style={{ color: '#8B5CF6', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)' }}>
                               ✨ {qAiSuggestMsg}
                             </p>
                           ) : qStartTime === 0 ? (
