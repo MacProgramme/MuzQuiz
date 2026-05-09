@@ -73,12 +73,29 @@ export default function JoinByInvitePage() {
 
       setHostId(host.id);
       setHostNickname(host.nickname || 'Hôte');
-      setStep('enter-nickname');
+
+      // Si le pseudo vient de l'URL (depuis la home page), pas besoin du formulaire
+      const urlNickname = searchParams.get('nickname');
+      if (urlNickname?.trim()) {
+        // On passe directement à l'attente de l'hôte
+        setStep('waiting-host');
+      } else {
+        setStep('enter-nickname');
+      }
     };
 
     if (inviteCode) load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inviteCode, searchParams]);
+
+  // Auto-déclencher findAndWait() quand on arrive sur waiting-host avec un pseudo URL
+  // (hostId est async via setState, donc on attend qu'il soit défini)
+  useEffect(() => {
+    if (step === 'waiting-host' && hostId && searchParams.get('nickname')?.trim()) {
+      findAndWait();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, hostId]);
 
   // ── Chercher la salle active et s'abonner ────────────────────────────────
   const goToRoom = (roomCode: string) => {
