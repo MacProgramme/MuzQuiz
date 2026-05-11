@@ -9,7 +9,6 @@ import { useRealtime } from '@/hooks/useRealtime';
 import { BuzzerButton } from '@/components/BuzzerButton';
 import { QCMChoices } from '@/components/QCMChoices';
 import { Timer } from '@/components/Timer';
-import { Scoreboard } from '@/components/Scoreboard';
 import { SettingsModal } from '@/components/SettingsModal';
 import { InterLeaderboard } from '@/components/InterLeaderboard';
 import { PublicScreenView } from '@/components/PublicScreenView';
