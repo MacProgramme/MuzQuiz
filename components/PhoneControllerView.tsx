@@ -41,18 +41,19 @@ interface Props {
 }
 
 /* Bouton absent — réutilisé dans plusieurs vues */
-function AbsentButton({ onToggle }: { onToggle: () => void }) {
+function AbsentButton({ onToggle, isAbsent }: { onToggle: () => void; isAbsent: boolean }) {
   return (
     <button
       onClick={onToggle}
       className="px-4 py-2 rounded-xl font-bold text-xs transition-all hover:opacity-80"
       style={{
-        background: 'rgba(245,158,11,0.08)',
-        color: 'rgba(245,158,11,0.6)',
-        border: '1px solid rgba(245,158,11,0.2)',
+        background: isAbsent ? 'rgba(245,158,11,0.22)' : 'rgba(245,158,11,0.08)',
+        color: isAbsent ? '#F59E0B' : 'rgba(245,158,11,0.55)',
+        border: `1px solid ${isAbsent ? 'rgba(245,158,11,0.55)' : 'rgba(245,158,11,0.2)'}`,
+        boxShadow: isAbsent ? '0 0 10px rgba(245,158,11,0.2)' : 'none',
       }}
     >
-      💤 Je m'absente
+      {isAbsent ? '💤 Absent — Reprendre' : '💤 Je m\'absente'}
     </button>
   );
 }
@@ -213,7 +214,7 @@ export function PhoneControllerView({
           style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.3)' }}>
           #{myRank}
         </div>
-        <AbsentButton onToggle={toggleAbsent} />
+        <AbsentButton onToggle={toggleAbsent} isAbsent={myPlayer.is_absent ?? false} />
       </div>
     );
   }
@@ -362,7 +363,7 @@ export function PhoneControllerView({
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
         <div className="flex items-center justify-between w-full max-w-sm mb-10">
           <p className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>{myPlayer.nickname}</p>
-          <AbsentButton onToggle={toggleAbsent} />
+          <AbsentButton onToggle={toggleAbsent} isAbsent={myPlayer.is_absent ?? false} />
         </div>
         <button
           onClick={pressBuzzer}
@@ -454,7 +455,7 @@ export function PhoneControllerView({
           <p className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>{myPlayer.nickname}</p>
         </div>
         <div className="flex items-center gap-2">
-          <AbsentButton onToggle={toggleAbsent} />
+          <AbsentButton onToggle={toggleAbsent} isAbsent={myPlayer.is_absent ?? false} />
           <p className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
             Q{(room.current_question ?? 0) + 1}
           </p>

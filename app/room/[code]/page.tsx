@@ -284,10 +284,11 @@ export default function RoomPage() {
   useEffect(() => {
     if (!room || isBuzzMechanic(room.mode) || !myPlayer?.is_host || qcmRevealed) return;
     // En mode écran public, l'hôte ne joue pas — on l'exclut du décompte
-    // On exclut aussi les joueurs marqués absents
-    const activePlayers = (room.public_screen ? players.filter(p => !p.is_host) : players)
-      .filter(p => !p.is_absent);
-    if (activePlayers.length > 0 && qcmAnswers.length >= activePlayers.length) {
+    const allPlayers = room.public_screen ? players.filter(p => !p.is_host) : players;
+    // On exclut les joueurs marqués absents
+    const activePlayers = allPlayers.filter(p => !p.is_absent);
+    // Révéler si : tous les joueurs présents ont répondu, OU si tout le monde est absent
+    if (allPlayers.length > 0 && (activePlayers.length === 0 || qcmAnswers.length >= activePlayers.length)) {
       revealQCMAndNext();
     }
   }, [qcmAnswers, players, room, myPlayer, qcmRevealed]);
@@ -365,8 +366,11 @@ export default function RoomPage() {
 
   if (!room || !myPlayer) return null;
 
-  // Score toujours à jour (players est mis à jour via realtime, myPlayer ne l'est pas)
-  const liveMyPlayer = players.find(p => p.id === myPlayer.id) ?? myPlayer;
+  // Score toujours à jour via realtime (players), is_absent via myPlayer (mis à jour immédiatement)
+  const liveMyPlayer = {
+    ...(players.find(p => p.id === myPlayer.id) ?? myPlayer),
+    is_absent: myPlayer?.is_absent,
+  };
 
   const currentQForPublic = questions[room.current_question] ?? null;
   const correctPlayerIdsForPublic = qcmAnswers.filter(a => a.is_correct).map(a => a.player_id);
