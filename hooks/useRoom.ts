@@ -82,7 +82,7 @@ export function useRoom(code: string, nickname: string) {
   }, [room?.pack_id, room?.mode]);
 
   // Créer le canal broadcast dès qu'on a l'id de la salle
-  // Ce canal sert à envoyer/recevoir : révélation QCM + buzz (fallback fiable vs realtime DB)
+  // Ce canal sert à envoyer/recevoir : révélation QCM + buzz + absent (fallback fiable vs realtime DB)
   useEffect(() => {
     if (!room?.id) return;
     const ch = supabase
@@ -94,6 +94,14 @@ export function useRoom(code: string, nickname: string) {
       .on('broadcast', { event: 'buzz' }, ({ payload }) => {
         // Fallback broadcast : garantit la propagation du buzz même si realtime DB échoue
         if (payload?.buzz) setBuzz(payload.buzz);
+      })
+      .on('broadcast', { event: 'player_absent' }, ({ payload }) => {
+        // Mise à jour immédiate du statut absent — sans attendre le realtime DB
+        if (payload?.player_id) {
+          setPlayers(prev => prev.map(p =>
+            p.id === payload.player_id ? { ...p, is_absent: payload.is_absent } : p
+          ));
+        }
       });
     ch.subscribe();
     broadcastChannelRef.current = ch;
@@ -348,8 +356,16 @@ export function useRoom(code: string, nickname: string) {
   const toggleAbsent = useCallback(async () => {
     if (!myPlayer) return;
     const newAbsent = !myPlayer.is_absent;
-    await supabase.from('room_players').update({ is_absent: newAbsent }).eq('id', myPlayer.id);
+    // Mise à jour locale immédiate
     setMyPlayer(p => p ? { ...p, is_absent: newAbsent } : p);
+    // Broadcast immédiat à tous les clients (hôte inclus) — n'attend pas le realtime DB
+    broadcastChannelRef.current?.send({
+      type: 'broadcast',
+      event: 'player_absent',
+      payload: { player_id: myPlayer.id, is_absent: newAbsent },
+    });
+    // Persistance en DB (best-effort — nécessite la colonne is_absent dans room_players)
+    await supabase.from('room_players').update({ is_absent: newAbsent }).eq('id', myPlayer.id);
   }, [myPlayer]);
 
   const saveSettings = useCallback(async (settings: { timer_duration: number; sound_enabled: boolean }) => {

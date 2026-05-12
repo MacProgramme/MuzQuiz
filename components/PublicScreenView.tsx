@@ -464,37 +464,6 @@ export function PublicScreenView({
           })}
         </div>
 
-        {/* Moustaches — overlay fixé en bas, toujours visible quel que soit le layout */}
-        {qcmRevealed && (() => {
-          const correctIds = new Set(qcmAnswers.filter(a => a.is_correct).map(a => a.player_id));
-          const nonHostPlayers = players.filter(p => !p.is_host);
-          return (
-            <div style={{
-              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 15,
-              background: 'rgba(13,27,62,0.96)', backdropFilter: 'blur(10px)',
-              borderTop: '2px solid rgba(0,229,209,0.25)',
-              padding: '10px 32px 12px',
-              display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center',
-            }}>
-              {nonHostPlayers.map(p => {
-                const ok = correctIds.has(p.id);
-                return (
-                  <div key={p.id} style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
-                    padding: '6px 14px', borderRadius: '14px',
-                    background: ok ? 'rgba(0,229,209,0.12)' : 'rgba(255,255,255,0.04)',
-                    border: `2px solid ${ok ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                  }}>
-                    {ok ? <MustacheMedal rank={1} width={32} /> : <span style={{ fontSize: '1.3rem' }}>✗</span>}
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: ok ? '#00E5D1' : 'rgba(240,244,255,0.4)' }}>
-                      {p.nickname}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
       </div>
     );
   }
@@ -636,37 +605,6 @@ export function PublicScreenView({
           )}
         </div>
 
-        {/* Moustaches — overlay fixé en bas, toujours visible quel que soit le layout */}
-        {qcmRevealed && (() => {
-          const correctIds = new Set(qcmAnswers.filter(a => a.is_correct).map(a => a.player_id));
-          const nonHostPlayers = players.filter(p => !p.is_host);
-          return (
-            <div style={{
-              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 15,
-              background: 'rgba(13,27,62,0.96)', backdropFilter: 'blur(10px)',
-              borderTop: '2px solid rgba(0,229,209,0.25)',
-              padding: '10px 32px 12px',
-              display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center',
-            }}>
-              {nonHostPlayers.map(p => {
-                const ok = correctIds.has(p.id);
-                return (
-                  <div key={p.id} style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
-                    padding: '6px 14px', borderRadius: '14px',
-                    background: ok ? 'rgba(0,229,209,0.12)' : 'rgba(255,255,255,0.04)',
-                    border: `2px solid ${ok ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                  }}>
-                    {ok ? <MustacheMedal rank={1} width={32} /> : <span style={{ fontSize: '1.3rem' }}>✗</span>}
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: ok ? '#00E5D1' : 'rgba(240,244,255,0.4)' }}>
-                      {p.nickname}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
       </div>
     );
   }
