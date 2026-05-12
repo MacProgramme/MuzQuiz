@@ -204,15 +204,16 @@ export function PhoneControllerView({
   /* ---- CLASSEMENT INTER-QUESTION ---- */
   if (showLeaderboard) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8"
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 gap-0"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
         <p className="text-sm font-bold uppercase tracking-widest mb-3"
           style={{ color: 'rgba(240,244,255,0.4)' }}>Ton score</p>
         <div className="text-6xl font-black mb-3" style={{ color: '#F59E0B' }}>{myPlayer.score}</div>
-        <div className="text-2xl font-black px-5 py-2 rounded-full"
+        <div className="text-2xl font-black px-5 py-2 rounded-full mb-8"
           style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.3)' }}>
           #{myRank}
         </div>
+        <AbsentButton onToggle={toggleAbsent} />
       </div>
     );
   }
