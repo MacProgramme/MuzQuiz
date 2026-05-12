@@ -113,6 +113,7 @@ export interface Player {
   nickname: string;
   score: number;
   is_host: boolean;
+  is_absent?: boolean;
 }
 
 export interface Buzz {

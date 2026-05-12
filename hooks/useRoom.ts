@@ -345,6 +345,13 @@ export function useRoom(code: string, nickname: string) {
     await supabase.from('rooms').update({ status: 'finished', is_paused: false }).eq('id', room.id);
   }, [room, myPlayer]);
 
+  const toggleAbsent = useCallback(async () => {
+    if (!myPlayer) return;
+    const newAbsent = !myPlayer.is_absent;
+    await supabase.from('room_players').update({ is_absent: newAbsent }).eq('id', myPlayer.id);
+    setMyPlayer(p => p ? { ...p, is_absent: newAbsent } : p);
+  }, [myPlayer]);
+
   const saveSettings = useCallback(async (settings: { timer_duration: number; sound_enabled: boolean }) => {
     if (!room || !myPlayer?.is_host) return;
     await supabase.from('rooms').update(settings).eq('id', room.id);
@@ -363,6 +370,7 @@ export function useRoom(code: string, nickname: string) {
     submitQCMAnswer, revealQCMAndNext,
     startGame, saveSettings,
     pauseGame, resumeGame, endGame,
+    toggleAbsent,
     setRoom, setPlayers,
   };
 }

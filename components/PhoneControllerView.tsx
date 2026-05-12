@@ -37,6 +37,24 @@ interface Props {
   pressBuzzer: () => void;
   submitQCMAnswer: (index: number) => void;
   questionStartedAt?: number;
+  toggleAbsent: () => void;
+}
+
+/* Bouton absent — réutilisé dans plusieurs vues */
+function AbsentButton({ onToggle }: { onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className="px-4 py-2 rounded-xl font-bold text-xs transition-all hover:opacity-80"
+      style={{
+        background: 'rgba(245,158,11,0.08)',
+        color: 'rgba(245,158,11,0.6)',
+        border: '1px solid rgba(245,158,11,0.2)',
+      }}
+    >
+      💤 Je m'absente
+    </button>
+  );
 }
 
 // Preview animé du score potentiel en temps réel
@@ -128,7 +146,7 @@ export function RemainingTimer({ questionStartedAt, timerDuration, isPaused = fa
 
 export function PhoneControllerView({
   room, myPlayer, players, buzz, qcmAnswers, qcmRevealed, showLeaderboard,
-  currentQuestion, pressBuzzer, submitQCMAnswer, questionStartedAt,
+  currentQuestion, pressBuzzer, submitQCMAnswer, questionStartedAt, toggleAbsent,
 }: Props) {
   const myAnswer = qcmAnswers.find(a => a.player_id === myPlayer.id);
   const myRank = [...players].sort((a, b) => b.score - a.score)
@@ -195,6 +213,32 @@ export function PhoneControllerView({
           style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.3)' }}>
           #{myRank}
         </div>
+      </div>
+    );
+  }
+
+  /* ---- MODE ABSENT ---- */
+  if (myPlayer.is_absent) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 gap-6 muz-fade-in"
+        style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
+        <span style={{ fontSize: '4rem' }}>💤</span>
+        <h1 className="text-2xl font-black text-center" style={{ color: '#F0F4FF' }}>
+          Mode absent
+        </h1>
+        <p className="text-sm text-center" style={{ color: 'rgba(240,244,255,0.45)', lineHeight: 1.6 }}>
+          La partie continue sans toi.<br />Tes coéquipiers jouent — reviens quand tu veux !
+        </p>
+        <div className="px-4 py-2 rounded-full text-sm font-bold"
+          style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.25)' }}>
+          {myPlayer.nickname}
+        </div>
+        <button
+          onClick={toggleAbsent}
+          className="muz-btn-pink px-8 py-4 rounded-2xl font-black text-lg mt-2"
+        >
+          Je reviens ! →
+        </button>
       </div>
     );
   }
@@ -317,6 +361,7 @@ export function PhoneControllerView({
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
         <div className="flex items-center justify-between w-full max-w-sm mb-10">
           <p className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>{myPlayer.nickname}</p>
+          <AbsentButton onToggle={toggleAbsent} />
         </div>
         <button
           onClick={pressBuzzer}
@@ -407,9 +452,12 @@ export function PhoneControllerView({
         <div>
           <p className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>{myPlayer.nickname}</p>
         </div>
-        <p className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
-          Q{(room.current_question ?? 0) + 1}
-        </p>
+        <div className="flex items-center gap-2">
+          <AbsentButton onToggle={toggleAbsent} />
+          <p className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
+            Q{(room.current_question ?? 0) + 1}
+          </p>
+        </div>
       </div>
 
       <p className="text-center font-bold mb-5" style={{ color: 'rgba(240,244,255,0.5)' }}>

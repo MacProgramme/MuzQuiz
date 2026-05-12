@@ -464,17 +464,6 @@ export function PublicScreenView({
           })}
         </div>
 
-        {/* Bouton révéler (hôte) */}
-        {myPlayer.is_host && !qcmRevealed && (
-          <div className="px-8 pb-6">
-            <button onClick={revealQCMAndNext}
-              className="muz-btn-pink w-full rounded-2xl font-black"
-              style={{ padding: '1.25rem', fontSize: '1.3rem' }}>
-              Révéler les réponses →
-            </button>
-          </div>
-        )}
-
         {/* Moustaches — overlay fixé en bas, toujours visible quel que soit le layout */}
         {qcmRevealed && (() => {
           const correctIds = new Set(qcmAnswers.filter(a => a.is_correct).map(a => a.player_id));

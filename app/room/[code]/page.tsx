@@ -161,6 +161,7 @@ export default function RoomPage() {
     pressBuzzer, submitQCMAnswer, revealQCMAndNext,
     startGame, saveSettings,
     pauseGame, resumeGame, endGame,
+    toggleAbsent,
     setRoom, setPlayers,
   } = useRoom(code, nickname);
 
@@ -279,11 +280,13 @@ export default function RoomPage() {
     return () => clearTimeout(t);
   }, [qcmRevealed]);
 
-  // Auto-révéler QCM quand tous les joueurs ont répondu
+  // Auto-révéler QCM quand tous les joueurs présents ont répondu
   useEffect(() => {
     if (!room || isBuzzMechanic(room.mode) || !myPlayer?.is_host || qcmRevealed) return;
     // En mode écran public, l'hôte ne joue pas — on l'exclut du décompte
-    const activePlayers = room.public_screen ? players.filter(p => !p.is_host) : players;
+    // On exclut aussi les joueurs marqués absents
+    const activePlayers = (room.public_screen ? players.filter(p => !p.is_host) : players)
+      .filter(p => !p.is_absent);
     if (activePlayers.length > 0 && qcmAnswers.length >= activePlayers.length) {
       revealQCMAndNext();
     }
@@ -409,6 +412,7 @@ export default function RoomPage() {
           pressBuzzer={pressBuzzer}
           submitQCMAnswer={submitQCMAnswer}
           questionStartedAt={questionStartedAt}
+          toggleAbsent={toggleAbsent}
         />
       );
     }
@@ -931,12 +935,6 @@ export default function RoomPage() {
               onChoose={submitQCMAnswer}
               revealed={qcmRevealed}
             />
-
-            {myPlayer.is_host && !qcmRevealed && answeredCount > 0 && (
-              <button onClick={revealQCMAndNext} className="muz-btn-cyan px-6 py-3 rounded-xl font-black text-sm mt-2">
-                Révéler la réponse →
-              </button>
-            )}
 
             {qcmRevealed && (
               <RevealCountdown players={players} correctPlayerIds={correctPlayerIds} pointsEarned={earnedThisRound} />

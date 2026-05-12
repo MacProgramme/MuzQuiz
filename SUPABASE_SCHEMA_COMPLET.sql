@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS room_players (
   nickname  TEXT        NOT NULL,
   score     INT         DEFAULT 0,
   is_host   BOOLEAN     DEFAULT false,
+  is_absent BOOLEAN     DEFAULT false,
   joined_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -102,6 +103,9 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ai_uses_month TEXT NOT NULL DEFAUL
 -- Code d'invitation permanent (unique par utilisateur)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS invite_code TEXT UNIQUE;
 CREATE UNIQUE INDEX IF NOT EXISTS profiles_invite_code_idx ON profiles(invite_code);
+
+-- Statut absent pour les joueurs (se mettre en pause pendant une partie)
+ALTER TABLE room_players ADD COLUMN IF NOT EXISTS is_absent BOOLEAN DEFAULT false;
 
 
 -- ================================================================
