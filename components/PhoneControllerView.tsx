@@ -221,15 +221,20 @@ export function PhoneControllerView({
 
   /* ---- MODE ABSENT ---- */
   if (myPlayer.is_absent) {
+    // Détecte si le joueur vient juste de rejoindre (0 question jouée = jamais répondu)
+    const justJoined = qcmAnswers.filter(a => a.player_id === myPlayer.id).length === 0
+      && !buzz;
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8 gap-6 muz-fade-in"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-        <span style={{ fontSize: '4rem' }}>💤</span>
+        <span style={{ fontSize: '4rem' }}>{justJoined ? '👋' : '💤'}</span>
         <h1 className="text-2xl font-black text-center" style={{ color: '#F0F4FF' }}>
-          Mode absent
+          {justJoined ? 'Partie en cours !' : 'Mode absent'}
         </h1>
         <p className="text-sm text-center" style={{ color: 'rgba(240,244,255,0.45)', lineHeight: 1.6 }}>
-          La partie continue sans toi.<br />Tes coéquipiers jouent — reviens quand tu veux !
+          {justJoined
+            ? 'Une question est peut-être en cours.\nAppuie pour rejoindre à la prochaine !'
+            : 'La partie continue sans toi.\nTes coéquipiers jouent — reviens quand tu veux !'}
         </p>
         <div className="px-4 py-2 rounded-full text-sm font-bold"
           style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.25)' }}>
@@ -239,7 +244,7 @@ export function PhoneControllerView({
           onClick={toggleAbsent}
           className="muz-btn-pink px-8 py-4 rounded-2xl font-black text-lg mt-2"
         >
-          Je reviens ! →
+          {justJoined ? 'Je suis prêt ! →' : 'Je reviens ! →'}
         </button>
       </div>
     );

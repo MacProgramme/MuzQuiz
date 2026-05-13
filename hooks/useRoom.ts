@@ -21,8 +21,11 @@ export function useRoom(code: string, nickname: string) {
 
   // Ref pour accéder aux questions custom sans stale closure dans les callbacks
   const customQuestionsRef = useRef<(BuzzQuestion | QCMQuestion)[]>([]);
-  // Garder la ref synchronisée avec le state
+  // Ref pour accéder aux réponses QCM sans stale closure dans revealQCMAndNext
+  const qcmAnswersRef = useRef<QCMAnswer[]>([]);
+  // Garder les refs synchronisées avec les states
   useEffect(() => { customQuestionsRef.current = customQuestions; }, [customQuestions]);
+  useEffect(() => { qcmAnswersRef.current = qcmAnswers; }, [qcmAnswers]);
 
   // Canal broadcast pour envoyer la révélation à tous
   const broadcastChannelRef = useRef<any>(null);
@@ -161,9 +164,12 @@ export function useRoom(code: string, nickname: string) {
         return;
       }
 
+      // Si la partie est déjà en cours, marquer le joueur absent dès l'insertion
+      // → le jeu ne l'attend pas pour la question en cours, il devra appuyer sur "Je reviens !"
+      const joinedMidGame = roomData.status === 'playing';
       const { data: playerData } = await supabase
         .from('room_players')
-        .insert({ room_id: roomData.id, user_id: userId, nickname, is_host: false })
+        .insert({ room_id: roomData.id, user_id: userId, nickname, is_host: false, is_absent: joinedMidGame })
         .select('*')
         .single();
       if (playerData) setMyPlayer(playerData);
@@ -281,8 +287,11 @@ export function useRoom(code: string, nickname: string) {
     // Révéler localement
     setQcmRevealed(true);
 
-    // Calculer les points UNE SEULE FOIS maintenant (avant toute MAJ DB)
-    const correctAnswers = qcmAnswers.filter(a => a.is_correct);
+    // Utiliser la REF pour qcmAnswers — évite le stale closure sur les questions avancées
+    // (le useCallback recrée la fonction seulement quand room/myPlayer changent,
+    //  mais qcmAnswers peut avoir évolué entre deux recréations — la ref est toujours à jour)
+    const currentAnswers = qcmAnswersRef.current;
+    const correctAnswers = currentAnswers.filter(a => a.is_correct);
     const totalMs = room.timer_duration * 1000;
     const earned: Record<string, number> = {};
     for (const ans of correctAnswers) {
@@ -317,7 +326,7 @@ export function useRoom(code: string, nickname: string) {
       setQcmAnswers([]);
       isRevealingRef.current = false;
     }, 10000);
-  }, [room, myPlayer, qcmAnswers]);
+  }, [room, myPlayer]); // qcmAnswers retiré des deps — on passe par qcmAnswersRef
 
   const nextQuestion = async (currentRoom: Room) => {
     // Utiliser la ref pour éviter les stale closures (customQuestions peut changer après la création du callback)
