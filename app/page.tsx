@@ -16,7 +16,7 @@ export default function Home() {
   const [tab, setTab] = useState<'create' | 'join'>('create');
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState('');
-  const [mode, setMode] = useState<GameMode>('buzz');
+  const [mode, setMode] = useState<GameMode>('quiz');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -400,12 +400,19 @@ export default function Home() {
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(240,244,255,0.4)' }}>
                 Mode de jeu
               </p>
+              {/* ================================================================
+                  MODES ACTIFS — Quiz et Blind Test uniquement
+                  Pour réactiver le Buzz, décommenter le bloc BUZZ MODE ci-dessous
+                  et remettre buzz_quiz / buzz_blind_test dans le tableau des modes
+                  ================================================================ */}
               <div className="grid grid-cols-2 gap-2">
                 {([
-                  { value: 'quiz'            as GameMode, label: 'Quiz',            sub: '4 choix simultané',  color: '#8B5CF6', mechanic: 'QCM',  minTier: 'decouverte' },
-                  { value: 'blind_test'      as GameMode, label: 'Blind Test',       sub: 'Musique, 4 choix',   color: '#00E5D1', mechanic: 'QCM',  minTier: 'pro' },
-                  { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',        sub: 'Buzz puis répondre', color: '#FF00AA', mechanic: 'BUZZ', minTier: 'decouverte' },
-                  { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test',  sub: 'Musique + buzz',     color: '#F59E0B', mechanic: 'BUZZ', minTier: 'pro' },
+                  { value: 'quiz'       as GameMode, label: 'Quiz',       sub: '4 choix simultané', color: '#8B5CF6', mechanic: 'QCM', minTier: 'decouverte' },
+                  { value: 'blind_test' as GameMode, label: 'Blind Test', sub: 'Musique, 4 choix',  color: '#00E5D1', mechanic: 'QCM', minTier: 'pro'        },
+                  // ── BUZZ MODE DÉSACTIVÉ ── décommenter pour réactiver ──────────────
+                  // { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',       sub: 'Buzz puis répondre', color: '#FF00AA', mechanic: 'BUZZ', minTier: 'decouverte' },
+                  // { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test', sub: 'Musique + buzz',     color: '#F59E0B', mechanic: 'BUZZ', minTier: 'pro'        },
+                  // ────────────────────────────────────────────────────────────────────
                 ] as const).map(m => {
                   const tierOrder: SubscriptionTier[] = ['decouverte', 'essentiel', 'pro', 'expert'];
                   const locked = isLoggedIn && tierOrder.indexOf(userTier) < tierOrder.indexOf(m.minTier as SubscriptionTier);
