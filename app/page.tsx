@@ -178,7 +178,13 @@ export default function Home() {
 
       // Seulement si pas du tout connecté (pas de session du tout)
       if (!userId) {
-        const { data } = await supabase.auth.signInAnonymously();
+        const { data, error: anonErr } = await supabase.auth.signInAnonymously();
+        if (anonErr) {
+          console.error('[createRoom] signInAnonymously error:', anonErr);
+          setErr(`Connexion anonyme impossible : ${anonErr.message}`);
+          setLoading(false);
+          return;
+        }
         userId = data.user?.id;
       }
       if (!userId) { setErr("Erreur d'authentification. Recharge la page."); setLoading(false); return; }
