@@ -31,6 +31,9 @@ export default function Home() {
   // Salle active (hôte revenant du menu principal après un replay)
   const [activeWaitingRoom, setActiveWaitingRoom] = useState<{ id: string; code: string; mode: GameMode; inviteCode: string | null } | null>(null);
 
+  // Partie en cours dont ce joueur (non-hôte) fait encore partie
+  const [activePlayerGame, setActivePlayerGame] = useState<{ playerId: string; roomCode: string; nickname: string } | null>(null);
+
   // Classement journalier (mini — top 3 sur la home)
   type MiniEntry = { user_id: string; nickname: string; avatar_color: string; score: number; rank: number };
   const [miniLeaderboard, setMiniLeaderboard] = useState<MiniEntry[]>([]);
@@ -46,6 +49,30 @@ export default function Home() {
       window.history.replaceState({}, '', '/');
     }
   }, []);
+
+  // Vérifie si le joueur (non-hôte) a une partie en cours — marche pour comptes et anonymes
+  const checkActiveGame = async (uid: string) => {
+    const { data: playerRows } = await supabase
+      .from('room_players')
+      .select('id, room_id, nickname')
+      .eq('user_id', uid)
+      .eq('is_host', false);
+    if (!playerRows || playerRows.length === 0) return;
+
+    const roomIds = playerRows.map((p: any) => p.room_id);
+    const { data: playingRooms } = await supabase
+      .from('rooms')
+      .select('id, code, status')
+      .in('id', roomIds)
+      .eq('status', 'playing');
+    if (!playingRooms || playingRooms.length === 0) return;
+
+    const room = playingRooms[0] as any;
+    const player = playerRows.find((p: any) => p.room_id === room.id);
+    if (player) {
+      setActivePlayerGame({ playerId: player.id, roomCode: room.code, nickname: player.nickname });
+    }
+  };
 
   useEffect(() => {
     const loadProfile = async (uid: string) => {
@@ -100,11 +127,17 @@ export default function Home() {
 
       if (loggedIn && user) {
         loadProfile(user.id);
+        checkActiveGame(user.id);
+      } else if (user?.is_anonymous && user.id) {
+        // Joueur anonyme : vérifier quand même s'il a une partie en cours
+        checkActiveGame(user.id);
+        setProfileLoading(false);
       } else {
         setNickname('');
         setUserTier('decouverte');
         setUserId(null);
         setAvatarColor('#8B5CF6');
+        setActivePlayerGame(null);
         setProfileLoading(false);
       }
     });
@@ -222,6 +255,42 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col"
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
+
+      {/* Modal : partie en cours détectée — rejoindre ou quitter */}
+      {activePlayerGame && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          style={{ background: 'rgba(13,27,62,0.92)', backdropFilter: 'blur(8px)' }}>
+          <div className="w-full max-w-sm rounded-3xl p-8 flex flex-col items-center gap-5 muz-pop"
+            style={{ background: 'rgba(17,34,71,0.98)', border: '2px solid rgba(255,0,170,0.35)', boxShadow: '0 0 60px rgba(255,0,170,0.15)' }}>
+            <MuzquizLogo width={56} showText={false} />
+            <div className="text-center">
+              <h2 className="text-xl font-black mb-2" style={{ color: '#F0F4FF' }}>
+                Partie en cours !
+              </h2>
+              <p className="text-sm" style={{ color: 'rgba(240,244,255,0.5)', lineHeight: 1.6 }}>
+                Tu es encore dans une partie active.<br />
+                Que veux-tu faire ?
+              </p>
+            </div>
+            <div className="w-full flex flex-col gap-3">
+              <button
+                onClick={() => router.push(`/room/${activePlayerGame.roomCode}?nickname=${encodeURIComponent(activePlayerGame.nickname)}`)}
+                className="muz-btn-pink w-full py-4 rounded-2xl font-black text-base">
+                Rejoindre ma partie →
+              </button>
+              <button
+                onClick={async () => {
+                  await supabase.from('room_players').delete().eq('id', activePlayerGame.playerId);
+                  setActivePlayerGame(null);
+                }}
+                className="w-full py-3 rounded-2xl font-bold text-sm transition-all hover:opacity-80"
+                style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(240,244,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                Quitter définitivement
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scanner QR modal */}
       {showScanner && (
