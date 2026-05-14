@@ -78,31 +78,6 @@ function RevealCountdown({ players, correctPlayerIds, pointsEarned = {} }: {
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-lg">
-      {/* Scores animés */}
-      <div className="flex flex-wrap justify-center gap-3">
-        {players.map(p => {
-          const correct = correctPlayerIds.includes(p.id);
-          const pts = pointsEarned[p.id];
-          return (
-            <div key={p.id} className="relative flex flex-col items-center px-3 py-2 rounded-xl"
-              style={{
-                background: correct ? 'rgba(0,229,209,0.15)' : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${correct ? 'rgba(0,229,209,0.4)' : 'rgba(255,255,255,0.08)'}`,
-              }}>
-              <span className="text-xs font-bold" style={{ color: correct ? '#00E5D1' : 'rgba(240,244,255,0.4)' }}>
-                {p.nickname}
-              </span>
-              {correct && pts !== undefined && (
-                <span className="muz-score-float absolute -top-4 font-black text-sm"
-                  style={{ color: '#00E5D1', textShadow: '0 0 10px rgba(0,229,209,0.8)' }}>
-                  +{pts}
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
       {/* Cercle countdown */}
       <div className="flex flex-col items-center gap-1">
         <svg width="72" height="72" viewBox="0 0 64 64">

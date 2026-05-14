@@ -342,13 +342,14 @@ export default function Home() {
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.35)' }}>
               Quiz du Jour
             </p>
-            <span className="text-xs font-black px-2 py-0.5 rounded-full ml-auto"
+            <span className="flex items-center gap-1 text-xs font-black px-2 py-0.5 rounded-full ml-auto"
               style={{
-                background: userTier === 'expert' ? 'rgba(245,158,11,0.15)' : userTier === 'pro' ? 'rgba(139,92,246,0.15)' : 'rgba(0,229,209,0.15)',
-                color: userTier === 'expert' ? '#F59E0B' : userTier === 'pro' ? '#8B5CF6' : '#00E5D1',
-                border: `1px solid ${userTier === 'expert' ? 'rgba(245,158,11,0.3)' : userTier === 'pro' ? 'rgba(139,92,246,0.3)' : 'rgba(0,229,209,0.3)'}`,
+                background: userTier === 'expert' ? 'rgba(255,0,170,0.15)' : userTier === 'pro' ? 'rgba(139,92,246,0.15)' : 'rgba(0,229,209,0.15)',
+                color: userTier === 'expert' ? '#FF00AA' : userTier === 'pro' ? '#8B5CF6' : '#00E5D1',
+                border: `1px solid ${userTier === 'expert' ? 'rgba(255,0,170,0.3)' : userTier === 'pro' ? 'rgba(139,92,246,0.3)' : 'rgba(0,229,209,0.3)'}`,
               }}>
-              {userTier === 'expert' ? '⭐ Expert' : userTier === 'pro' ? '🚀 Pro' : '✨ Essentiel'}
+              <MuzquizLogo width={14} showText={false} color={userTier === 'expert' ? '#FF00AA' : userTier === 'pro' ? '#8B5CF6' : '#00E5D1'} />
+              {userTier === 'expert' ? 'Expert' : userTier === 'pro' ? 'Pro' : 'Essentiel'}
             </span>
           </div>
           <DailyQuiz userId={userId} nickname={nickname} avatarColor={avatarColor} />

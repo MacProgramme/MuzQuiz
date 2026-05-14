@@ -127,7 +127,7 @@ const TIER_INFO: Record<SubscriptionTier, { label: string; color: string; bg: st
   decouverte: { label: 'Moustachu Découverte', color: 'rgba(240,244,255,0.5)', bg: 'rgba(255,255,255,0.06)',  price: '0€',     perks: ['Accès aux questions MUZQUIZ', 'Parties illimitées', 'Jusqu\'à 10 joueurs', 'Quiz QCM & Buzz Quiz'] },
   essentiel:  { label: 'Moustachu Essentiel',  color: '#00E5D1',               bg: 'rgba(0,229,209,0.1)',      price: '9,99€',  perks: ['Tout le Découverte', 'Jusqu\'à 20 joueurs', 'Questions image', 'Import Excel', 'IA : 10 quiz/mois'] },
   pro:        { label: 'Moustachu Pro',        color: '#8B5CF6',               bg: 'rgba(139,92,246,0.12)',    price: '19,99€', perks: ['Tout l\'Essentiel', 'Jusqu\'à 100 joueurs', 'Blind Test Audio', 'IA : 40 quiz/mois'] },
-  expert:     { label: 'Moustachu Expert',     color: '#F59E0B',               bg: 'rgba(245,158,11,0.1)',     price: '29,99€', perks: ['Tout le Pro', 'Jusqu\'à 250 joueurs', 'Tous les modes', 'IA : 80 quiz/mois'] },
+  expert:     { label: 'Moustachu Expert',     color: '#FF00AA',               bg: 'rgba(255,0,170,0.1)',      price: '29,99€', perks: ['Tout le Pro', 'Jusqu\'à 250 joueurs', 'Tous les modes', 'IA : 80 quiz/mois'] },
 };
 
 const AVATAR_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981'];
