@@ -82,9 +82,9 @@ const PLANS = [
     name: 'Moustachu Expert',
     price: '29,99€',
     period: 'par mois',
-    accent: '#F59E0B',
-    accentLight: 'rgba(245,158,11,0.08)',
-    accentBorder: 'rgba(245,158,11,0.35)',
+    accent: '#FF00AA',
+    accentLight: 'rgba(255,0,170,0.08)',
+    accentBorder: 'rgba(255,0,170,0.35)',
     badge: 'All-inclusive',
     features: [
       { text: 'Tous les modes de jeu', ok: true },
@@ -147,9 +147,6 @@ export default function PricingPage() {
 
             {/* Plan info */}
             <div className="text-center mb-6">
-              <div className="flex justify-center mb-3">
-                <MuzquizLogo width={44} showText={false} color={plan.accent} />
-              </div>
               <h2 className="text-base font-black mb-2 leading-tight" style={{ color: plan.accent }}>
                 {plan.name}
               </h2>
@@ -184,7 +181,7 @@ export default function PricingPage() {
                   : plan.ctaStyle === 'cyan'
                   ? { background: '#00E5D1', color: '#0D1B3E' }
                   : plan.ctaStyle === 'gold'
-                  ? { background: '#F59E0B', color: '#0D1B3E' }
+                  ? { background: '#FF00AA', color: 'white' }
                   : { background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#8B5CF6' }
               }>
               {plan.cta}

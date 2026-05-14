@@ -106,6 +106,43 @@ function BigTimer({ duration, running, onExpire }: { duration: number; running: 
   );
 }
 
+/* ---- Déroulant joueurs (écran public salle d'attente) ---- */
+function PlayerDropdown({ players }: { players: { id: string; nickname: string }[] }) {
+  const [open, setOpen] = useState(false);
+  if (players.length === 0) {
+    return <p className="mb-10" style={{ color: 'rgba(240,244,255,0.3)' }}>En attente de joueurs…</p>;
+  }
+  return (
+    <div className="mb-10 w-full max-w-md px-4">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-5 py-3 rounded-2xl transition-all"
+        style={{ background: 'rgba(0,229,209,0.07)', border: '1.5px solid rgba(0,229,209,0.25)', cursor: 'pointer' }}>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full" style={{ background: '#00E5D1', boxShadow: '0 0 6px #00E5D1' }} />
+          <span className="font-black text-base" style={{ color: '#00E5D1' }}>
+            {players.length} joueur{players.length > 1 ? 's' : ''} connecté{players.length > 1 ? 's' : ''}
+          </span>
+        </div>
+        <span className="text-sm transition-transform"
+          style={{ color: 'rgba(0,229,209,0.6)', display: 'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+          ▼
+        </span>
+      </button>
+      {open && (
+        <div className="flex flex-wrap gap-2 mt-3 px-1 justify-center">
+          {players.map(p => (
+            <div key={p.id} className="px-4 py-1.5 rounded-xl font-bold text-sm"
+              style={{ background: 'rgba(255,255,255,0.06)', color: '#F0F4FF', border: '1px solid rgba(255,255,255,0.1)' }}>
+              {p.nickname}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function PublicScreenView({
   room, players, myPlayer, currentQuestion, buzz, qcmAnswers, qcmRevealed,
   showLeaderboard, timerKey, totalQuestions, hostPacks, selectPack,
@@ -163,17 +200,8 @@ export function PublicScreenView({
           </div>
         </div>
 
-        {/* Liste des joueurs (hôte exclu — il n'est pas un joueur) */}
-        <div className="flex flex-wrap gap-3 justify-center max-w-3xl mb-10 px-8">
-          {players.filter(p => !p.is_host).length === 0 ? (
-            <p style={{ color: 'rgba(240,244,255,0.3)' }}>En attente de joueurs…</p>
-          ) : players.filter(p => !p.is_host).map(p => (
-            <div key={p.id} className="px-5 py-2 rounded-xl font-bold text-lg"
-              style={{ background: 'rgba(255,255,255,0.07)', color: '#F0F4FF', border: '1px solid rgba(255,255,255,0.1)' }}>
-              {p.nickname}
-            </div>
-          ))}
-        </div>
+        {/* Liste des joueurs — déroulant */}
+        <PlayerDropdown players={players.filter(p => !p.is_host)} />
 
         {/* Sélecteur de pack (hôte uniquement) — même dropdown que le mode normal */}
         {myPlayer.is_host && hostPacks.length > 0 && (
