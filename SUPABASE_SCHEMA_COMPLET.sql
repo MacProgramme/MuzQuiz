@@ -99,6 +99,8 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- Ajout des colonnes IA sur les profils existants (idempotent)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ai_uses_count INT  NOT NULL DEFAULT 0;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ai_uses_month TEXT NOT NULL DEFAULT '';
+-- Date d'expiration de l'abonnement (pour les cartes cadeaux)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ;
 
 -- Code d'invitation permanent (unique par utilisateur)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS invite_code TEXT UNIQUE;
@@ -586,14 +588,33 @@ WHERE id IN (
 
 -- Table des codes promo
 CREATE TABLE IF NOT EXISTS promo_codes (
-  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
-  code        TEXT        UNIQUE NOT NULL,
-  tier        TEXT        NOT NULL DEFAULT 'expert'
-                          CHECK (tier IN ('essentiel','pro','expert')),
-  expires_at  TIMESTAMPTZ NOT NULL,
-  is_active   BOOLEAN     NOT NULL DEFAULT true,
-  created_at  TIMESTAMPTZ DEFAULT NOW()
+  id               UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  code             TEXT        UNIQUE NOT NULL,
+  -- type : 'gift' = carte cadeau (X jours d'un tier), 'discount' = réduction %
+  type             TEXT        NOT NULL DEFAULT 'gift'
+                               CHECK (type IN ('gift', 'discount')),
+  -- Pour les cartes cadeaux
+  tier             TEXT        CHECK (tier IN ('essentiel','pro','expert')),
+  gift_days        INT,
+  -- Pour les codes de réduction
+  discount_percent INT         CHECK (discount_percent BETWEEN 1 AND 100),
+  -- Limites d'utilisation
+  max_uses         INT,        -- NULL = illimité
+  uses_count       INT         NOT NULL DEFAULT 0,
+  -- Expiration et état
+  expires_at       TIMESTAMPTZ,
+  is_active        BOOLEAN     NOT NULL DEFAULT true,
+  created_at       TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migrations si la table existait déjà
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'gift';
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS gift_days INT;
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS discount_percent INT;
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS max_uses INT;
+ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS uses_count INT NOT NULL DEFAULT 0;
+ALTER TABLE promo_codes ALTER COLUMN tier DROP NOT NULL;
+ALTER TABLE promo_codes ALTER COLUMN expires_at DROP NOT NULL;
 
 -- Table des utilisations (une ligne par joueur par code)
 CREATE TABLE IF NOT EXISTS promo_code_uses (
