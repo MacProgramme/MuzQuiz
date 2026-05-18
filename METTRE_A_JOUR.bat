@@ -31,7 +31,7 @@ git commit -m "update: deploiement %DATESTR% %TIMESTR%"
 
 echo.
 echo [3/3] Push vers GitHub...
-git push
+git push --set-upstream origin dev
 
 echo.
 echo ========================================
