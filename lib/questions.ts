@@ -68,3 +68,177 @@ export function getQuestionsForMode(mode: GameMode): (QCMQuestion | BuzzQuestion
 }
 
 export const FREE_QUESTION_LIMIT = 999;
+
+// ─── PACKS BUILTIN ──────────────────────────────────────────────────────────
+
+export interface BuiltinPack {
+  id: string;
+  name: string;
+  /** 'blind_test' = mode blind test QCM, 'quiz' = mode QCM classique */
+  mode: 'blind_test' | 'quiz';
+  emoji: string;
+  questions: (QCMQuestion | BuzzQuestion)[];
+}
+
+// ── Blind Test — Années 80 ───────────────────────────────────────────────────
+const BT_ANNEES80: QCMQuestion[] = [
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Duran Duran", "a-ha", "Depeche Mode", "New Order"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=djV11Xbc914", audio_start_time: 14 },
+  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Kim Wilde", "Cyndi Lauper", "Pat Benatar", "Bonnie Tyler"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=PIb6AZdTr-A", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Spandau Ballet", "Wham!", "Pet Shop Boys", "Frankie Goes to Hollywood"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=pIIpUBJ9mAY", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Depeche Mode", "The Human League", "Yazoo", "Soft Cell"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=uPudE8nDog0", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["The Eagles", "Fleetwood Mac", "Toto", "Journey"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=FTQbiNvZqaY", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Madonna", "Tina Turner", "Whitney Houston", "Janet Jackson"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=79fzeNUqMbk", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["ABC", "Culture Club", "Thompson Twins", "Simple Minds"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=JmcA9LIIXWw", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Sting", "Peter Gabriel", "Phil Collins", "Bryan Adams"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=OMOGaugKpzs", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Dire Straits", "Journey", "Foreigner", "REO Speedwagon"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=1k8craCGpgs", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Bauhaus", "The Cure", "Joy Division", "Spandau Ballet"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=DsHcFVkHXqU", audio_start_time: 0 },
+];
+
+// ── Blind Test — Pop Internationale ─────────────────────────────────────────
+const BT_POP_INTERNATIONAL: QCMQuestion[] = [
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Drake", "The Weeknd", "Post Malone", "Bruno Mars"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=4NRXx6U8ABQ", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Shawn Mendes", "Harry Styles", "Ed Sheeran", "Justin Bieber"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Beyoncé", "Rihanna", "Adele", "Amy Winehouse"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=rYEDA3JcQqw", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui interprète ce morceau ?", choices: ["Bruno Mars seul", "Mark Ronson ft. Bruno Mars", "Pharrell Williams", "Justin Timberlake"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=OPf0YbXqDm0", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Ne-Yo", "Pharrell Williams", "Robin Thicke", "John Legend"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=ZbZSe6N_BXs", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Katy Perry", "Ariana Grande", "Taylor Swift", "Selena Gomez"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=nfWlot6h_JM", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Halsey", "Dua Lipa", "Olivia Rodrigo", "Billie Eilish"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=DyDfgMOUjCI", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui interprète ce morceau ?", choices: ["J Balvin", "Bad Bunny", "Luis Fonsi ft. Daddy Yankee", "Maluma"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=kTJczUoc26U", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Adele", "Sam Smith", "Hozier", "James Bay"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=pB-5XG-DbAA", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["P!nk", "Adele", "Florence + The Machine", "Lana Del Rey"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=hLQl3WQQoQ0", audio_start_time: 0 },
+];
+
+// ── Blind Test — Rock Français ───────────────────────────────────────────────
+const BT_ROCK_FRANCAIS: QCMQuestion[] = [
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Téléphone", "Indochine", "Trust", "Niagara"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=w9XMD5LQsGw", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Indochine", "Téléphone", "Les Satellites", "Starshooter"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=cTrAA6jCLkM", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Mano Negra", "Noir Désir", "Les Thugs", "Bérurier Noir"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=9mdBBBNfGPM", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["Téléphone", "Bijou", "Trust", "Little Bob Story"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=a_mLBNpERDc", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Les Wampas", "Tryo", "Zebda", "Les Ogres de Barback"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=CXvdEF3MHHU", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Mano Negra", "La Ruda Salska", "Les Wampas", "Burning Heads"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=8Ri4MxWrmyY", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Louise Attaque", "Dionysos", "Deportivo", "Têtes Raides"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=KvI_56jBVXo", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["Noir Désir", "Tryo", "Superbus", "Les Rita Mitsouko"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=Lbzz6JRFQVY", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Rita Mitsouko", "Zazie", "Elli Medeiros", "Taxi Girl"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=JmSIHSYKFoA", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Saez", "Tryo", "Zebda", "Louise Attaque"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=2Ck1K1u4aPc", audio_start_time: 0 },
+];
+
+// ── Blind Test — Rap 2000 ────────────────────────────────────────────────────
+const BT_RAP2000: QCMQuestion[] = [
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Booba", "Sinik", "Rohff", "Diam's"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=ZmSiJTRrBVY", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Eminem", "50 Cent", "Jay-Z", "Kanye West"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=5qm8PH4xAss", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Pharrell Williams", "Nelly", "Usher", "Chingy"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=E2qs-oIRxwQ", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui interprète ce morceau ?", choices: ["Eminem", "Ja Rule", "DMX", "Ludacris"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=YVkUvmDQ3HY", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel artiste chante cette chanson ?", choices: ["Jay-Z", "Kanye West", "Common", "Mos Def"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=Co0tTeuUVhU", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Nelly ft. Kelly Rowland", "Ja Rule ft. Ashanti", "Jay-Z ft. Beyoncé", "Usher ft. Alicia Keys"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=CKZvWhCqx1s", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["T.I.", "Ludacris", "Lil Wayne", "Young Jeezy"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=7i7iHkSQwMw", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["The Roots", "Black Star", "The Black Eyed Peas", "OutKast"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=WpYeekQkAdc", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["T-Pain", "Akon", "Sean Kingston", "Chris Brown"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=l0A4Xo2-KHw", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel artiste interprète ce titre ?", choices: ["50 Cent", "The Game", "G-Unit", "Dr. Dre"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=eRxB4PC1M44", audio_start_time: 0 },
+];
+
+// ── Blind Test — Disney ──────────────────────────────────────────────────────
+const BT_DISNEY: QCMQuestion[] = [
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Pocahontas", "La Petite Sirène", "Aladdin", "La Belle et la Bête"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=GC_mV1IpjWA", audio_start_time: 0 },
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Le Livre de la Jungle", "Le Roi Lion", "Tarzan", "Bambi"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=GiIHMtwTFUM", audio_start_time: 0 },
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Frozen 2", "La Reine des Neiges", "Brave", "Raiponce"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=L0MK7qz13bU", audio_start_time: 0 },
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["La Belle et la Bête", "Cendrillon", "Blanche-Neige", "La Petite Sirène"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=7bCsHPEO0Xk", audio_start_time: 0 },
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Hercule", "Mulan", "Aladdin", "Pocahontas"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=MQQZN7e7LH8", audio_start_time: 0 },
+  { type: 'qcm', q: "De quel film Pixar vient cette chanson ?", choices: ["A Bug's Life", "Monsters Inc.", "Toy Story", "Finding Nemo"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=g6b-pWFtSGo", audio_start_time: 0 },
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Moana / Vaiana", "Raya", "Encanto", "Wish"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=cPAbx5kgCJo", audio_start_time: 0 },
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Mulan", "Pocahontas", "Atlantide", "Hercule"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=p6sONt_HvCo", audio_start_time: 0 },
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Pinocchio", "Fantasia", "Dumbo", "Blanche-Neige"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=J2-kYFU0A1A", audio_start_time: 0 },
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Lilo & Stitch", "Encanto", "Coco", "Soul"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=LopWnTQFSGI", audio_start_time: 0 },
+];
+
+// ── Quiz — Années 80 ─────────────────────────────────────────────────────────
+const QUIZ_ANNEES80: QCMQuestion[] = [
+  { type: 'qcm', q: "Quel film de 1985 met en scène un voyage dans le temps dans une DeLorean ?", choices: ["Ghostbusters", "E.T.", "Retour vers le futur", "Indiana Jones"], correct: 2 },
+  { type: 'qcm', q: "Quel groupe a sorti l'album 'Thriller' en 1982 ?", choices: ["Prince", "Michael Jackson", "David Bowie", "George Michael"], correct: 1 },
+  { type: 'qcm', q: "En quelle année les Jeux Olympiques de Los Angeles ont-ils eu lieu ?", choices: ["1980", "1982", "1984", "1986"], correct: 2 },
+  { type: 'qcm', q: "Quel jeu vidéo Atari représentait une grenouille traversant la route ?", choices: ["Pac-Man", "Space Invaders", "Frogger", "Donkey Kong"], correct: 2 },
+  { type: 'qcm', q: "Quel film d'animation Disney est sorti en 1989 ?", choices: ["Le Roi Lion", "La Belle au bois dormant", "La Petite Sirène", "Aladdin"], correct: 2 },
+  { type: 'qcm', q: "Quel personnage portait un blouson rouge dans 'Thriller' ?", choices: ["Prince", "Michael Jackson", "David Bowie", "Freddie Mercury"], correct: 1 },
+  { type: 'qcm', q: "Quel mur est tombé en novembre 1989 ?", choices: ["Mur de Chine", "Mur de Berlin", "Mur de Jéricho", "Mur de Hadrien"], correct: 1 },
+  { type: 'qcm', q: "Quel est le prénom du héros de la série 'Magnum' ?", choices: ["Rick", "Thomas", "Jack", "Mike"], correct: 1 },
+  { type: 'qcm', q: "Quel groupe de rock chantait 'We Will Rock You' ?", choices: ["AC/DC", "Led Zeppelin", "Queen", "The Rolling Stones"], correct: 2 },
+  { type: 'qcm', q: "Dans quel pays se déroule la série 'Miami Vice' ?", choices: ["Floride, États-Unis", "Californie, États-Unis", "Texas, États-Unis", "New York, États-Unis"], correct: 0 },
+];
+
+// ── Quiz — Pop Internationale ────────────────────────────────────────────────
+const QUIZ_POP_INTERNATIONAL: QCMQuestion[] = [
+  { type: 'qcm', q: "Combien d'albums studio Adele a-t-elle sortis ?", choices: ["3", "4", "5", "6"], correct: 1 },
+  { type: 'qcm', q: "Quel artiste détient le record du titre le plus streamé sur Spotify ?", choices: ["Ed Sheeran", "Drake", "The Weeknd", "Bad Bunny"], correct: 3 },
+  { type: 'qcm', q: "Quel pays représente BTS ?", choices: ["Japon", "Chine", "Corée du Sud", "Thaïlande"], correct: 2 },
+  { type: 'qcm', q: "Quel est le vrai nom de Lady Gaga ?", choices: ["Stefanie Germanotta", "Stefani Joanne Angelina Germanotta", "Alicia Moore", "Alecia Beth Moore"], correct: 1 },
+  { type: 'qcm', q: "En quelle année Taylor Swift a-t-elle sorti son premier album ?", choices: ["2004", "2006", "2008", "2010"], correct: 1 },
+  { type: 'qcm', q: "Quel groupe a popularisé le K-Pop à l'international ?", choices: ["EXO", "BTS", "BLACKPINK", "TWICE"], correct: 1 },
+  { type: 'qcm', q: "Qui a chanté 'Bohemian Rhapsody' ?", choices: ["Elton John", "Queen", "David Bowie", "The Beatles"], correct: 1 },
+  { type: 'qcm', q: "De quel pays vient Shakira ?", choices: ["Mexique", "Argentine", "Colombie", "Venezuela"], correct: 2 },
+  { type: 'qcm', q: "Quel artiste a sorti l'album 'Purple Rain' en 1984 ?", choices: ["Michael Jackson", "Prince", "Stevie Wonder", "James Brown"], correct: 1 },
+  { type: 'qcm', q: "Quel est le prénom de la chanteuse Beyoncé ?", choices: ["Beyoncé Giselle", "Beyoncé Solange", "Beyoncé Michelle", "Beyoncé Renée"], correct: 0 },
+];
+
+// ── Quiz — Rock Français ─────────────────────────────────────────────────────
+const QUIZ_ROCK_FRANCAIS: QCMQuestion[] = [
+  { type: 'qcm', q: "Quel groupe a sorti 'L'aventurier' en 1982 ?", choices: ["Téléphone", "Indochine", "Trust", "Niagara"], correct: 1 },
+  { type: 'qcm', q: "De quelle ville est originaire le groupe Téléphone ?", choices: ["Lyon", "Marseille", "Paris", "Bordeaux"], correct: 2 },
+  { type: 'qcm', q: "Quel groupe français a chanté 'Antisocial' en 1980 ?", choices: ["Téléphone", "Indochine", "Trust", "Bijou"], correct: 2 },
+  { type: 'qcm', q: "Quel chanteur de Noir Désir est décédé en 2011 ?", choices: ["Serge Teyssot-Gay", "Bertrand Cantat", "Denis Barthe", "Frédéric Vidalenc"], correct: 1 },
+  { type: 'qcm', q: "Quel groupe a sorti l'album ' 3' en 1998 ?", choices: ["Noir Désir", "Tryo", "Indochine", "Louise Attaque"], correct: 2 },
+  { type: 'qcm', q: "Zebda est un groupe originaire de quelle ville ?", choices: ["Paris", "Marseille", "Lyon", "Toulouse"], correct: 3 },
+  { type: 'qcm', q: "Quel groupe a sorti 'Tomber la chemise' ?", choices: ["Tryo", "Zebda", "Les Wampas", "Matmatah"], correct: 1 },
+  { type: 'qcm', q: "Combien de membres compte le groupe Téléphone à son apogée ?", choices: ["3", "4", "5", "6"], correct: 1 },
+  { type: 'qcm', q: "Quel est le vrai prénom du chanteur d'Indochine ?", choices: ["Nicolas", "Stéphane", "François", "Jean"], correct: 0 },
+  { type: 'qcm', q: "Quel album de Noir Désir contient 'Le vent nous portera' ?", choices: ["666.667 Club", "Du ciment sous les plaines", "Des visages des figures", "Tostaky"], correct: 2 },
+];
+
+// ── Quiz — Rap 2000 ──────────────────────────────────────────────────────────
+const QUIZ_RAP2000: QCMQuestion[] = [
+  { type: 'qcm', q: "Quel rappeur français a sorti l'album 'Nero Nemesis' en 2015 ?", choices: ["Rohff", "Booba", "Kaaris", "La Fouine"], correct: 1 },
+  { type: 'qcm', q: "Quel est le vrai nom d'Eminem ?", choices: ["Marshall Bruce Mathers III", "Curtis James Jackson III", "Dwayne Michael Carter Jr", "Calvin Cordozar Broadus Jr"], correct: 0 },
+  { type: 'qcm', q: "Quel rappeur a sorti 'Get Rich or Die Tryin'' en 2003 ?", choices: ["Jay-Z", "Nas", "50 Cent", "DMX"], correct: 2 },
+  { type: 'qcm', q: "Quel groupe rap américain réunissait Dr. Dre et Ice Cube ?", choices: ["Wu-Tang Clan", "N.W.A", "Public Enemy", "A Tribe Called Quest"], correct: 1 },
+  { type: 'qcm', q: "Quel album de Kanye West est sorti en 2004 ?", choices: ["My Beautiful Dark Twisted Fantasy", "The College Dropout", "Graduation", "Late Registration"], correct: 1 },
+  { type: 'qcm', q: "Quel rappeur français est connu sous le nom de 'Rohff' ?", choices: ["Housni Mkouboi", "Cyril Kamar", "Omar Sy", "Abdoulaye Diallo"], correct: 0 },
+  { type: 'qcm', q: "Quel est le label fondé par Jay-Z en 1995 ?", choices: ["Cash Money", "Roc-A-Fella Records", "Def Jam", "Bad Boy Records"], correct: 1 },
+  { type: 'qcm', q: "Quel rappeur a popularisé le terme 'bling-bling' ?", choices: ["Puff Daddy", "Lil Wayne", "B.G.", "Master P"], correct: 2 },
+  { type: 'qcm', q: "Diam's est originaire de quel pays ?", choices: ["France", "Chypre", "Belgique", "Maroc"], correct: 1 },
+  { type: 'qcm', q: "Quel rappeur américain est surnommé 'Slim Shady' ?", choices: ["Jay-Z", "Kanye West", "Eminem", "Nas"], correct: 2 },
+];
+
+// ── Quiz — Disney ────────────────────────────────────────────────────────────
+const QUIZ_DISNEY: QCMQuestion[] = [
+  { type: 'qcm', q: "Quel est le premier long-métrage d'animation de Disney (1937) ?", choices: ["Pinocchio", "Fantasia", "Blanche-Neige et les Sept Nains", "Dumbo"], correct: 2 },
+  { type: 'qcm', q: "Comment s'appelle le poisson-clown dans 'Le Monde de Nemo' ?", choices: ["Nemo", "Marlin", "Dory", "Gill"], correct: 0 },
+  { type: 'qcm', q: "Quel personnage dit 'Hakuna Matata' dans 'Le Roi Lion' ?", choices: ["Simba", "Mufasa", "Timon et Pumbaa", "Rafiki"], correct: 2 },
+  { type: 'qcm', q: "Dans quel film Disney la chanson 'Let It Go' est-elle chantée ?", choices: ["Brave", "La Reine des Neiges", "Raiponce", "Moana"], correct: 1 },
+  { type: 'qcm', q: "Quel est le vrai nom de la Petite Sirène ?", choices: ["Ariel", "Arial", "Arielle", "Arièle"], correct: 0 },
+  { type: 'qcm', q: "Combien de nains y a-t-il dans 'Blanche-Neige' ?", choices: ["5", "6", "7", "8"], correct: 2 },
+  { type: 'qcm', q: "Quel film Pixar met en scène une voiture de course nommée Flash McQueen ?", choices: ["Cars", "Turbo", "Racing Story", "Speed Racer"], correct: 0 },
+  { type: 'qcm', q: "De quel pays s'inspire le film 'Mulan' ?", choices: ["Japon", "Corée", "Chine", "Viêt Nam"], correct: 2 },
+  { type: 'qcm', q: "Comment s'appelle la fée dans 'Peter Pan' ?", choices: ["Pervenche", "Clochette", "Elsa", "Fée Bleue"], correct: 1 },
+  { type: 'qcm', q: "Quel animal est Simba dans 'Le Roi Lion' ?", choices: ["Tigre", "Léopard", "Lion", "Guépard"], correct: 2 },
+];
+
+// ── Catalogue complet des packs builtin ─────────────────────────────────────
+export const BUILTIN_PACKS: BuiltinPack[] = [
+  { id: 'builtin:bt_annees80',        name: 'Blind Test — Années 80',        mode: 'blind_test', emoji: '🕹️', questions: BT_ANNEES80 },
+  { id: 'builtin:bt_pop',             name: 'Blind Test — Pop Internationale', mode: 'blind_test', emoji: '🌍', questions: BT_POP_INTERNATIONAL },
+  { id: 'builtin:bt_rock_fr',         name: 'Blind Test — Rock Français',    mode: 'blind_test', emoji: '🎸', questions: BT_ROCK_FRANCAIS },
+  { id: 'builtin:bt_rap2000',         name: 'Blind Test — Rap 2000',         mode: 'blind_test', emoji: '🎤', questions: BT_RAP2000 },
+  { id: 'builtin:bt_disney',          name: 'Blind Test — Disney',           mode: 'blind_test', emoji: '✨', questions: BT_DISNEY },
+  { id: 'builtin:quiz_annees80',      name: 'Quiz — Années 80',              mode: 'quiz',       emoji: '📼', questions: QUIZ_ANNEES80 },
+  { id: 'builtin:quiz_pop',           name: 'Quiz — Pop Internationale',     mode: 'quiz',       emoji: '🎶', questions: QUIZ_POP_INTERNATIONAL },
+  { id: 'builtin:quiz_rock_fr',       name: 'Quiz — Rock Français',          mode: 'quiz',       emoji: '🤘', questions: QUIZ_ROCK_FRANCAIS },
+  { id: 'builtin:quiz_rap2000',       name: 'Quiz — Rap 2000',               mode: 'quiz',       emoji: '🔊', questions: QUIZ_RAP2000 },
+  { id: 'builtin:quiz_disney',        name: 'Quiz — Disney',                 mode: 'quiz',       emoji: '🏰', questions: QUIZ_DISNEY },
+];
+
+export function isBuiltinPack(packId: string | null | undefined): boolean {
+  return !!packId && packId.startsWith('builtin:');
+}
+
+export function getBuiltinPackQuestions(packId: string): (QCMQuestion | BuzzQuestion)[] {
+  const pack = BUILTIN_PACKS.find(p => p.id === packId);
+  return pack?.questions ?? [];
+}

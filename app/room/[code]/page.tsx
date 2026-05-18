@@ -13,7 +13,7 @@ import { SettingsModal } from '@/components/SettingsModal';
 import { InterLeaderboard } from '@/components/InterLeaderboard';
 import { PublicScreenView } from '@/components/PublicScreenView';
 import { PhoneControllerView, ScorePreview, RemainingTimer } from '@/components/PhoneControllerView';
-import { FREE_QUESTION_LIMIT, getQuestionsForMode } from '@/lib/questions';
+import { FREE_QUESTION_LIMIT, getQuestionsForMode, BUILTIN_PACKS, isBuiltinPack } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player, GameMode, isBuzzMechanic, isBlindTestMode } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
@@ -556,7 +556,9 @@ export default function RoomPage() {
                   <span className="flex-1 text-sm font-bold truncate"
                     style={{ color: room.pack_id ? '#FF00AA' : '#8B5CF6' }}>
                     {room.pack_id
-                      ? (hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné')
+                      ? (isBuiltinPack(room.pack_id)
+                          ? (BUILTIN_PACKS.find(p => p.id === room.pack_id)?.emoji + ' ' + BUILTIN_PACKS.find(p => p.id === room.pack_id)?.name ?? 'Pack MUZQUIZ')
+                          : (hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné'))
                       : 'Questions MUZQUIZ (défaut)'}
                   </span>
                   <span style={{ color: 'rgba(240,244,255,0.4)', fontSize: '0.9rem' }}>
@@ -592,6 +594,40 @@ export default function RoomPage() {
                         </span>
                         {!room.pack_id && <span className="ml-auto text-xs font-black" style={{ color: '#8B5CF6' }}>✓</span>}
                       </button>
+                      {/* Séparateur packs MUZQUIZ */}
+                      <div className="px-3 py-1.5 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                        <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(0,229,209,0.5)' }}>Packs MUZQUIZ</span>
+                      </div>
+                      {BUILTIN_PACKS
+                        .filter(p => {
+                          const roomIsBlind = isBlindTestMode(room.mode as any);
+                          return roomIsBlind ? p.mode === 'blind_test' : p.mode === 'quiz';
+                        })
+                        .map(pack => (
+                          <button key={pack.id}
+                            onClick={() => { selectPack(pack.id, pack.mode === 'blind_test' ? 'blind_test_qcm' : 'qcm'); setPackDropdownOpen(false); }}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
+                            <span className="text-base flex-shrink-0">{pack.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#00E5D1' : '#F0F4FF' }}>
+                                {pack.name}
+                              </p>
+                              <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                                {pack.questions.length}q · Muzquiz
+                              </p>
+                            </div>
+                            {room.pack_id === pack.id && <span className="text-xs font-black flex-shrink-0" style={{ color: '#00E5D1' }}>✓</span>}
+                          </button>
+                        ))}
+                      {/* Séparateur packs perso */}
+                      {hostPacks.filter(p => {
+                        const roomIsBlind = isBlindTestMode(room.mode as any);
+                        return roomIsBlind === isBlindTestMode(p.mode as any);
+                      }).length > 0 && (
+                        <div className="px-3 py-1.5 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                          <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.5)' }}>Mes packs</span>
+                        </div>
+                      )}
                       {/* Packs filtrés — uniquement ceux compatibles avec le mode de la salle */}
                       {hostPacks
                         .filter(p => {

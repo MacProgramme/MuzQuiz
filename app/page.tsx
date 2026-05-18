@@ -356,8 +356,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Mini classement journalier — visible par tous */}
-      {miniLeaderboard.length > 0 && (
+      {/* Mini classement journalier — visible uniquement si connecté */}
+      {isLoggedIn && miniLeaderboard.length > 0 && (
         <div className="w-full max-w-md mb-6">
           <div className="flex items-center gap-2 mb-3">
             <MuzquizLogo width={20} showText={false} color="rgba(240,244,255,0.35)" />
