@@ -250,8 +250,17 @@ export function useRoom(code: string, nickname: string) {
   }, [room, buzz, myPlayer]);
 
   // === QCM MODE ===
+  // Ref pour éviter le double-insert pendant que l'INSERT est en vol (bug : realtime
+  // renvoie l'event INSERT AU client qui a inséré, donc l'état est mis à jour UNE FOIS
+  // via onQCMAnswer, puis UNE DEUXIÈME fois quand l'INSERT retourne → doublon → auto-reveal prématuré)
+  const isSubmittingRef = useRef(false);
+
   const submitQCMAnswer = useCallback(async (answerIndex: number) => {
-    if (!room || !myPlayer || qcmAnswers.some(a => a.player_id === myPlayer.id)) return;
+    if (!room || !myPlayer) return;
+    // Bloquer si déjà en cours d'envoi (evite double-tap pendant l'INSERT async)
+    if (isSubmittingRef.current) return;
+    // Bloquer si déjà répondu (vérifie aussi via ref pour éviter stale closure)
+    if (qcmAnswers.some(a => a.player_id === myPlayer.id)) return;
     // Bloquer les réponses pendant la pause
     if (room.is_paused) return;
     // En mode buzz, seul le joueur buzzé peut répondre
@@ -263,6 +272,7 @@ export function useRoom(code: string, nickname: string) {
     const currentQ = questions[room.current_question];
     if (!currentQ) return;
 
+    isSubmittingRef.current = true;
     const isCorrect = answerIndex === currentQ.correct;
     const { data } = await supabase
       .from('qcm_answers')
@@ -276,8 +286,13 @@ export function useRoom(code: string, nickname: string) {
       })
       .select('*')
       .single();
+    isSubmittingRef.current = false;
 
-    if (data) setQcmAnswers(prev => [...prev, data]);
+    // Ajout avec dédup par ID — évite le doublon si l'event realtime est arrivé avant la réponse INSERT
+    if (data) setQcmAnswers(prev => {
+      if (prev.some(x => x.id === data.id)) return prev;
+      return [...prev, data];
+    });
   }, [room, myPlayer, qcmAnswers, buzz]);
 
   const revealQCMAndNext = useCallback(async () => {
@@ -288,9 +303,10 @@ export function useRoom(code: string, nickname: string) {
     setQcmRevealed(true);
 
     // Utiliser la REF pour qcmAnswers — évite le stale closure sur les questions avancées
-    // (le useCallback recrée la fonction seulement quand room/myPlayer changent,
-    //  mais qcmAnswers peut avoir évolué entre deux recréations — la ref est toujours à jour)
-    const currentAnswers = qcmAnswersRef.current;
+    // Filtre par question_index pour ne jamais scorer des réponses d'une question précédente
+    const currentAnswers = qcmAnswersRef.current.filter(
+      a => a.question_index === room.current_question
+    );
     const correctAnswers = currentAnswers.filter(a => a.is_correct);
     const totalMs = room.timer_duration * 1000;
     const earned: Record<string, number> = {};
