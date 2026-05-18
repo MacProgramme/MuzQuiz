@@ -114,6 +114,7 @@ export default function RoomPage() {
   const [hostPacks, setHostPacks] = useState<{ id: string; name: string; mode: string; question_count: number }[]>([]);
   const [packDropdownOpen, setPackDropdownOpen] = useState(false);
   const [packSearch, setPackSearch] = useState('');
+  const [playersOpen, setPlayersOpen] = useState(false);
   // Code d'invitation permanent de l'hôte
   const [hostInviteCode, setHostInviteCode] = useState<string | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
@@ -495,13 +496,38 @@ export default function RoomPage() {
           </div>
         </div>
 
-        {/* Compteur joueurs — sans liste de noms */}
-        <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div className="w-2 h-2 rounded-full" style={{ background: '#00E5D1', boxShadow: '0 0 6px #00E5D1' }} />
-          <p className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
-            {players.length} joueur{players.length > 1 ? 's' : ''} connecté{players.length > 1 ? 's' : ''}
-          </p>
+        {/* Dropdown joueurs — collapsible */}
+        <div className="w-full max-w-md">
+          <button
+            onClick={() => setPlayersOpen(o => !o)}
+            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full" style={{ background: '#00E5D1', boxShadow: '0 0 6px #00E5D1' }} />
+              <span className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                {players.filter(p => !p.is_host).length} joueur{players.filter(p => !p.is_host).length > 1 ? 's' : ''} connecté{players.filter(p => !p.is_host).length > 1 ? 's' : ''}
+              </span>
+            </div>
+            <span style={{ color: 'rgba(240,244,255,0.25)', fontSize: '0.75rem' }}>
+              {playersOpen ? '▲' : '▼'}
+            </span>
+          </button>
+          {playersOpen && players.filter(p => !p.is_host).length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2 px-1 justify-center">
+              {players.filter(p => !p.is_host).map(p => (
+                <div key={p.id}
+                  className="px-3 py-1.5 rounded-xl font-bold text-sm"
+                  style={{ background: 'rgba(0,229,209,0.08)', border: '1px solid rgba(0,229,209,0.2)', color: '#00E5D1' }}>
+                  {p.nickname}
+                </div>
+              ))}
+            </div>
+          )}
+          {playersOpen && players.filter(p => !p.is_host).length === 0 && (
+            <p className="text-center text-xs mt-2" style={{ color: 'rgba(240,244,255,0.25)' }}>
+              En attente de joueurs…
+            </p>
+          )}
         </div>
 
         {myPlayer.is_host ? (
