@@ -557,7 +557,7 @@ export default function RoomPage() {
                     style={{ color: room.pack_id ? '#FF00AA' : '#8B5CF6' }}>
                     {room.pack_id
                       ? (isBuiltinPack(room.pack_id)
-                          ? (BUILTIN_PACKS.find(p => p.id === room.pack_id)?.emoji + ' ' + BUILTIN_PACKS.find(p => p.id === room.pack_id)?.name ?? 'Pack MUZQUIZ')
+                          ? (() => { const bp = BUILTIN_PACKS.find(p => p.id === room.pack_id); return bp ? `${bp.emoji} ${bp.name}` : 'Pack MUZQUIZ'; })()
                           : (hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné'))
                       : 'Questions MUZQUIZ (défaut)'}
                   </span>
