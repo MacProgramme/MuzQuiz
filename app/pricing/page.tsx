@@ -1,7 +1,7 @@
 // app/pricing/page.tsx
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
@@ -121,6 +121,34 @@ export default function PricingPage() {
   // ── CGU ──────────────────────────────────────────────────────────────────
   const [acceptedCGU, setAcceptedCGU] = useState(false);
 
+  // ── Newsletter ───────────────────────────────────────────────────────────
+  const [newsletter, setNewsletter] = useState(true); // activé par défaut
+  const [newsletterSaving, setNewsletterSaving] = useState(false);
+
+  // Charger la préférence newsletter depuis le profil au chargement
+  useEffect(() => {
+    const loadNewsletter = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user || session.user.is_anonymous) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('newsletter_subscribed')
+        .eq('id', session.user.id)
+        .single();
+      if (data) setNewsletter(data.newsletter_subscribed ?? false);
+    };
+    loadNewsletter();
+  }, []);
+
+  const toggleNewsletter = async (val: boolean) => {
+    setNewsletter(val);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user || session.user.is_anonymous) return; // pas connecté, on garde juste l'état local
+    setNewsletterSaving(true);
+    await supabase.from('profiles').update({ newsletter_subscribed: val }).eq('id', session.user.id);
+    setNewsletterSaving(false);
+  };
+
   const handleCheckout = async (tier: string) => {
     setCheckoutError(null);
     setCheckoutLoading(tier);
@@ -206,15 +234,15 @@ export default function PricingPage() {
         </p>
       </div>
 
-      {/* CGU */}
+      {/* CGU + Newsletter */}
       <div className="max-w-md mx-auto mb-6 flex flex-col gap-3 px-2">
-        <label className="flex items-start gap-3 cursor-pointer group">
+        <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={acceptedCGU}
             onChange={e => { setAcceptedCGU(e.target.checked); setCheckoutError(null); }}
-            className="mt-0.5 flex-shrink-0 accent-pink-500"
-            style={{ width: 18, height: 18, cursor: 'pointer' }}
+            className="mt-0.5 flex-shrink-0"
+            style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#FF00AA' }}
           />
           <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.6)' }}>
             J&apos;accepte les{' '}
@@ -227,6 +255,26 @@ export default function PricingPage() {
               style={{ color: '#FF00AA' }}>
               politique de confidentialité
             </a>
+          </span>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={newsletter}
+            onChange={e => toggleNewsletter(e.target.checked)}
+            disabled={newsletterSaving}
+            className="mt-0.5 flex-shrink-0"
+            style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#8B5CF6' }}
+          />
+          <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.55)' }}>
+            M&apos;abonner à la newsletter Muzquiz
+            {newsletterSaving && (
+              <span className="ml-2 text-xs" style={{ color: 'rgba(240,244,255,0.3)' }}>…</span>
+            )}
+            {!newsletterSaving && newsletter && (
+              <span className="ml-2 text-xs font-black" style={{ color: '#8B5CF6' }}>✓ Enregistré</span>
+            )}
           </span>
         </label>
       </div>
