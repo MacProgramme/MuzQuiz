@@ -111,6 +111,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
+  const [tierFilter, setTierFilter] = useState<SubscriptionTier | null>(null);
 
   // ── Quiz du Jour
   const [quizzes, setQuizzes] = useState<DailyQuizEntry[]>([]);
@@ -241,12 +242,20 @@ export default function AdminPage() {
     setSaving(null);
   };
 
-  const filtered = users.filter(u => u.nickname.toLowerCase().includes(search.toLowerCase()));
+  // Exclure les joueurs anonymes (nickname null, vide, ou "Joueur" par défaut)
+  const realUsers = users.filter(u => u.nickname && u.nickname !== 'Joueur' && u.nickname.trim() !== '');
+
+  const filtered = realUsers.filter(u => {
+    const matchSearch = u.nickname.toLowerCase().includes(search.toLowerCase());
+    const matchTier = tierFilter === null || u.subscription_tier === tierFilter;
+    return matchSearch && matchTier;
+  });
+
   const counts = {
-    decouverte: users.filter(u => u.subscription_tier === 'decouverte').length,
-    essentiel:  users.filter(u => u.subscription_tier === 'essentiel').length,
-    pro:        users.filter(u => u.subscription_tier === 'pro').length,
-    expert:     users.filter(u => u.subscription_tier === 'expert').length,
+    decouverte: realUsers.filter(u => u.subscription_tier === 'decouverte').length,
+    essentiel:  realUsers.filter(u => u.subscription_tier === 'essentiel').length,
+    pro:        realUsers.filter(u => u.subscription_tier === 'pro').length,
+    expert:     realUsers.filter(u => u.subscription_tier === 'expert').length,
   };
 
   // ─── Quiz — suppression ───────────────────────────────────────────────────
@@ -434,22 +443,45 @@ export default function AdminPage() {
           <>
             <h1 className="text-2xl font-black mb-2" style={{ color: '#F0F4FF' }}>Gestion des utilisateurs</h1>
             <p className="text-sm mb-6" style={{ color: 'rgba(240,244,255,0.4)' }}>
-              {users.length} compte{users.length > 1 ? 's' : ''} enregistré{users.length > 1 ? 's' : ''}
+              {realUsers.length} compte{realUsers.length > 1 ? 's' : ''} enregistré{realUsers.length > 1 ? 's' : ''}
             </p>
 
             <div className="grid grid-cols-4 gap-3 mb-6">
-              {[
-                { label: 'Découverte', value: counts.decouverte, color: 'rgba(240,244,255,0.5)' },
-                { label: 'Essentiel',  value: counts.essentiel,  color: '#00E5D1'               },
-                { label: 'Pro',        value: counts.pro,        color: '#8B5CF6'               },
-                { label: 'Expert',     value: counts.expert,     color: '#F59E0B'               },
-              ].map(s => (
-                <div key={s.label} className="muz-card p-4 text-center">
-                  <div className="text-2xl font-black" style={{ color: s.color }}>{s.value}</div>
-                  <div className="text-xs font-bold mt-1" style={{ color: 'rgba(240,244,255,0.4)' }}>{s.label}</div>
-                </div>
-              ))}
+              {([
+                { label: 'Découverte', tier: 'decouverte' as SubscriptionTier, value: counts.decouverte, color: 'rgba(240,244,255,0.5)' },
+                { label: 'Essentiel',  tier: 'essentiel'  as SubscriptionTier, value: counts.essentiel,  color: '#00E5D1'               },
+                { label: 'Pro',        tier: 'pro'        as SubscriptionTier, value: counts.pro,        color: '#8B5CF6'               },
+                { label: 'Expert',     tier: 'expert'     as SubscriptionTier, value: counts.expert,     color: '#F59E0B'               },
+              ]).map(s => {
+                const isActive = tierFilter === s.tier;
+                return (
+                  <button key={s.label}
+                    onClick={() => setTierFilter(isActive ? null : s.tier)}
+                    className="muz-card p-4 text-center transition-all hover:scale-[1.03]"
+                    style={{
+                      outline: isActive ? `2px solid ${s.color}` : 'none',
+                      outlineOffset: '2px',
+                      cursor: 'pointer',
+                    }}>
+                    <div className="text-2xl font-black" style={{ color: s.color }}>{s.value}</div>
+                    <div className="text-xs font-bold mt-1" style={{ color: isActive ? s.color : 'rgba(240,244,255,0.4)' }}>{s.label}</div>
+                  </button>
+                );
+              })}
             </div>
+
+            {tierFilter && (
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
+                  Filtre actif : <span style={{ color: '#FF00AA' }}>{tierFilter}</span>
+                </span>
+                <button onClick={() => setTierFilter(null)}
+                  className="text-xs font-bold px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
+                  ✕ Effacer
+                </button>
+              </div>
+            )}
 
             <input
               value={search} onChange={e => setSearch(e.target.value)}
