@@ -165,7 +165,7 @@ export default function ProfilePage() {
           router.push('/login');
           return;
         }
-        const ADMIN_EMAILS = ['antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr'];
+        const ADMIN_EMAILS = ['antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr', 'lacaravanegame@gmail.com'];
         if (ADMIN_EMAILS.includes(user.email ?? '')) setIsAdmin(true);
 
         // Charger le profil
