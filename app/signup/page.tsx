@@ -17,6 +17,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
   const [avatarColor, setAvatarColor] = useState(AVATAR_COLORS[2]);
+  const [newsletter, setNewsletter] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
 
@@ -59,6 +60,7 @@ export default function SignupPage() {
       id: userId,
       nickname: nickname.trim(),
       avatar_color: avatarColor,
+      newsletter_subscribed: newsletter,
     });
 
     // Si l'insertion a réussi (session active), on va directement au profil
@@ -169,6 +171,24 @@ export default function SignupPage() {
             onFocus={e => e.target.style.borderColor = '#FF00AA'}
             onBlur={e => e.target.style.borderColor = 'rgba(139,92,246,0.3)'}
           />
+
+          {/* Newsletter */}
+          <label className="flex items-start gap-3 cursor-pointer px-1">
+            <input
+              type="checkbox"
+              checked={newsletter}
+              onChange={e => setNewsletter(e.target.checked)}
+              className="mt-0.5 flex-shrink-0"
+              style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#FF00AA' }}
+            />
+            <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.45)' }}>
+              M&apos;abonner à la newsletter Muzquiz
+              <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full font-black"
+                style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.2)' }}>
+                À venir
+              </span>
+            </span>
+          </label>
 
           {err && <p className="text-sm font-bold text-center" style={{ color: '#FF00AA' }}>{err}</p>}
 

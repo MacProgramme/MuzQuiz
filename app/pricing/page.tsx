@@ -118,9 +118,8 @@ export default function PricingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null); // tier en cours
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-  // ── CGU + Newsletter ─────────────────────────────────────────────────────
+  // ── CGU ──────────────────────────────────────────────────────────────────
   const [acceptedCGU, setAcceptedCGU] = useState(false);
-  const [newsletter, setNewsletter] = useState(false);
 
   const handleCheckout = async (tier: string) => {
     setCheckoutError(null);
@@ -207,7 +206,7 @@ export default function PricingPage() {
         </p>
       </div>
 
-      {/* CGU + Newsletter */}
+      {/* CGU */}
       <div className="max-w-md mx-auto mb-6 flex flex-col gap-3 px-2">
         <label className="flex items-start gap-3 cursor-pointer group">
           <input
@@ -228,23 +227,6 @@ export default function PricingPage() {
               style={{ color: '#FF00AA' }}>
               politique de confidentialité
             </a>
-          </span>
-        </label>
-
-        <label className="flex items-start gap-3 cursor-pointer group">
-          <input
-            type="checkbox"
-            checked={newsletter}
-            onChange={e => setNewsletter(e.target.checked)}
-            className="mt-0.5 flex-shrink-0 accent-pink-500"
-            style={{ width: 18, height: 18, cursor: 'pointer' }}
-          />
-          <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.45)' }}>
-            M&apos;abonner à la newsletter Muzquiz
-            <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full font-black"
-              style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.2)' }}>
-              À venir
-            </span>
           </span>
         </label>
       </div>
