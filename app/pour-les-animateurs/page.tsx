@@ -158,4 +158,10 @@ export default function PourLesAnimateursPage() {
           <Link href="/pour-les-bars" style={{ color: 'rgba(240,244,255,0.3)' }}>Bars & Restaurants</Link>
           <Link href="/pour-les-evenements" style={{ color: 'rgba(240,244,255,0.3)' }}>Événements</Link>
           <Link href="/pour-les-streamers" style={{ color: 'rgba(240,244,255,0.3)' }}>Streamers</Link>
-          <Link href="/pricing" style={{
+          <Link href="/pricing" style={{ color: 'rgba(240,244,255,0.3)' }}>Tarifs</Link>
+        </div>
+        MUZQUIZ © 2025 — Quiz & Blind Test en temps réel
+      </footer>
+    </main>
+  );
+}

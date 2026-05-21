@@ -19,4 +19,6 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: 'https://www.muzquiz.fr/sitemap.xml',
-    host: 'https://www
+    host: 'https://www.muzquiz.fr',
+  };
+}

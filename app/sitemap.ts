@@ -73,4 +73,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/confidentialite`,
-      lastModified
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.2,
+    },
+  ];
+}

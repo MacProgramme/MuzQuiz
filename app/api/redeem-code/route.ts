@@ -147,4 +147,12 @@ export async function POST(req: NextRequest) {
 
   await adminClient
     .from('promo_codes')
-    .update({ uses_count: (promoCode.
+    .update({ uses_count: (promoCode.uses_count ?? 0) + 1 })
+    .eq('id', promoCode.id);
+
+  return NextResponse.json({
+    success: true,
+    type: promoCode.type,
+    message,
+  });
+}

@@ -286,4 +286,16 @@ export default function PricingPage() {
           ].map((item, i) => (
             <div key={i} className="muz-card muz-card-lift p-4">
               <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>{item.q}</p>
-              <p className="text-sm" style={{ color: 'rgba(240,244,255
+              <p className="text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>{item.a}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <p className="text-center text-xs mt-12" style={{ color: 'rgba(240,244,255,0.2)' }}>
+        MUZQUIZ © 2025 — Quiz & Blind Test en temps réel
+      </p>
+    </main>
+  );
+}
