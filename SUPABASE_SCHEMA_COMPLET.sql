@@ -160,6 +160,10 @@ ALTER TABLE question_packs
 ALTER TABLE question_packs
   ADD COLUMN IF NOT EXISTS shared_description TEXT NOT NULL DEFAULT '';
 
+-- Newsletter
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS newsletter_subscribed BOOLEAN NOT NULL DEFAULT false;
+
 
 -- ================================================================
 -- 4. TABLES QUIZ DU JOUR

@@ -40,38 +40,61 @@ interface Props {
 export function QCMChoices({
   choices, selectedIndex, correctIndex, onChoose, revealed, disabledForNonBuzzer = false,
 }: Props) {
-  // Quand révélé : on affiche uniquement la bonne réponse en pleine largeur
-  // → plus de place pour le texte + la moustache sur mobile
+  // Quand révélé : afficher la bonne réponse + la mauvaise choisie (si différente)
   if (revealed && correctIndex !== null) {
-    const choice = choices[correctIndex];
-    const color = CHOICE_COLORS[correctIndex];
+    const hasWrongSelection = selectedIndex !== null && selectedIndex !== correctIndex;
     return (
-      <div className="w-full max-w-lg">
+      <div className="w-full max-w-lg flex flex-col gap-3">
+
+        {/* Mauvaise réponse choisie — affichée en premier si applicable */}
+        {hasWrongSelection && (
+          <div
+            className="flex items-center gap-4 p-4 rounded-2xl"
+            style={{
+              background: 'rgba(255,0,170,0.08)',
+              border: '2px solid rgba(255,0,170,0.35)',
+            }}
+          >
+            <span
+              className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
+              style={{ background: 'rgba(255,0,170,0.2)', color: '#FF00AA' }}
+            >
+              {LABELS[selectedIndex!]}
+            </span>
+            <span
+              className="font-bold text-sm leading-snug flex-1"
+              style={{ color: 'rgba(240,244,255,0.5)', wordBreak: 'break-word', overflowWrap: 'break-word', minWidth: 0 }}
+            >
+              {choices[selectedIndex!]}
+            </span>
+            <span className="text-xl flex-shrink-0" style={{ color: '#FF00AA' }}>✗</span>
+          </div>
+        )}
+
+        {/* Bonne réponse — toujours affichée en pleine largeur */}
         <div
-          className="relative flex items-center gap-4 p-5 rounded-2xl"
+          className="flex items-center gap-4 p-5 rounded-2xl"
           style={{
             background: 'rgba(0,229,209,0.15)',
             border: '2px solid #00E5D1',
             boxShadow: '0 0 28px rgba(0,229,209,0.4)',
           }}
         >
-          {/* Label lettre */}
           <span
             className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
             style={{ background: '#00E5D1', color: '#0D1B3E' }}
           >
             {LABELS[correctIndex]}
           </span>
-          {/* Texte bonne réponse */}
           <span
             className="font-bold text-base leading-snug flex-1"
             style={{ color: '#F0F4FF', wordBreak: 'break-word', overflowWrap: 'break-word', minWidth: 0 }}
           >
-            {choice}
+            {choices[correctIndex]}
           </span>
-          {/* Moustache à droite */}
           <MustacheIcon color="#00E5D1" size={52} />
         </div>
+
       </div>
     );
   }

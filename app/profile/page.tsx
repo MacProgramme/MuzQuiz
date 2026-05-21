@@ -17,6 +17,7 @@ interface Profile {
   avatar_color: string;
   avatar_url: string | null;
   subscription_tier: SubscriptionTier;
+  newsletter_subscribed: boolean;
   created_at: string;
 }
 
@@ -583,6 +584,33 @@ function ProfilePageInner() {
                   </div>
                   <span style={{ color: 'rgba(0,229,209,0.5)' }}>›</span>
                 </Link>
+
+                {/* Newsletter toggle */}
+                <label className="flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer"
+                  style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.18)' }}>
+                  <div>
+                    <p className="font-bold text-sm" style={{ color: 'rgba(240,244,255,0.7)' }}>
+                      Newsletter Muzquiz
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                      {profile.newsletter_subscribed ? 'Abonné(e) ✓' : 'Non abonné(e)'}
+                      <span className="ml-2 px-1.5 py-0.5 rounded-full font-black text-xs"
+                        style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.2)' }}>
+                        À venir
+                      </span>
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={profile.newsletter_subscribed}
+                    onChange={async e => {
+                      const val = e.target.checked;
+                      await supabase.from('profiles').update({ newsletter_subscribed: val }).eq('id', profile.id);
+                      setProfile(p => p ? { ...p, newsletter_subscribed: val } : p);
+                    }}
+                    style={{ width: 20, height: 20, accentColor: '#8B5CF6', cursor: 'pointer' }}
+                  />
+                </label>
 
                 <button
                   onClick={() => { setEditing(true); setEditNickname(profile.nickname); setEditColor(profile.avatar_color); setEditAvatarUrl(profile.avatar_url ?? null); }}
