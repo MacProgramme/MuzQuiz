@@ -34,6 +34,4 @@ echo.
 echo ========================================
 echo   DONE ! www.muzquiz.fr sera mis a jour
 echo   dans 1-2 minutes sur Vercel.
-echo ========================================
-echo.
-pause
+echo ================================

@@ -37,6 +37,4 @@ echo.
 echo ========================================
 echo   DONE ! Vercel va se mettre a jour
 echo   automatiquement dans 1-2 minutes.
-echo ========================================
-echo.
-pause
+echo ==============================
