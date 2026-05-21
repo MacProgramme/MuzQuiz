@@ -1,8 +1,8 @@
 // app/profile/page.tsx
 "use client";
 
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useRef, useCallback, useMemo, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { SubscriptionTier, TIER_LIMITS, normalizeTier } from '@/types';
 import Link from 'next/link';
@@ -132,10 +132,18 @@ const TIER_INFO: Record<SubscriptionTier, { label: string; color: string; bg: st
 
 const AVATAR_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981'];
 
-export default function ProfilePage() {
+function ProfilePageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Succès abonnement Stripe
+  const subscriptionSuccess = searchParams.get('subscription') === 'success';
+  const [showSuccessBanner, setShowSuccessBanner] = useState(subscriptionSuccess);
+
+  // Portail Stripe
+  const [portalLoading, setPortalLoading] = useState(false);
 
   // Code promo
   const [promoCode, setPromoCode] = useState('');
@@ -281,6 +289,29 @@ export default function ProfilePage() {
     }
   };
 
+  // Portail Stripe — gérer / annuler l'abonnement
+  const openCustomerPortal = async () => {
+    setPortalLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    try {
+      const res = await fetch('/api/customer-portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error ?? 'Impossible d\'accéder au portail Stripe.');
+      }
+    } catch {
+      alert('Erreur réseau.');
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
   const formatDate = (str: string) => {
     const d = new Date(str);
     return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -307,6 +338,15 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen muz-fade-in" style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
+
+      {/* Bannière succès abonnement */}
+      {showSuccessBanner && (
+        <div className="flex items-center justify-between px-5 py-3 text-sm font-bold"
+          style={{ background: 'rgba(0,229,209,0.12)', borderBottom: '1px solid rgba(0,229,209,0.3)', color: '#00E5D1' }}>
+          <span>🎉 Abonnement activé ! Bienvenue dans la famille Muzquiz.</span>
+          <button onClick={() => setShowSuccessBanner(false)} style={{ opacity: 0.6, fontSize: '18px' }}>×</button>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4"
@@ -535,6 +575,17 @@ export default function ProfilePage() {
                       ⬆ Passer Pro ou Premium →
                     </Link>
                   )}
+
+                  {/* Gérer abonnement Stripe pour les abonnés payants */}
+                  {!isAdmin && profile.subscription_tier !== 'decouverte' && (
+                    <button
+                      onClick={openCustomerPortal}
+                      disabled={portalLoading}
+                      className="flex items-center justify-center gap-2 mt-3 py-2.5 rounded-xl font-black text-sm transition-all hover:opacity-90 disabled:opacity-50 w-full"
+                      style={{ background: 'rgba(0,229,209,0.08)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.25)' }}>
+                      {portalLoading ? '…' : '⚙ Gérer mon abonnement →'}
+                    </button>
+                  )}
                 </div>
 
                 {/* Lien vers les packs */}
@@ -657,5 +708,19 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center"
+        style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
+        <div className="w-8 h-8 rounded-full border-4 border-t-transparent animate-spin"
+          style={{ borderColor: '#FF00AA', borderTopColor: 'transparent' }} />
+      </div>
+    }>
+      <ProfilePageInner />
+    </Suspense>
   );
 }

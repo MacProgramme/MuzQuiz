@@ -102,6 +102,11 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ai_uses_month TEXT NOT NULL DEFAUL
 -- Date d'expiration de l'abonnement (pour les cartes cadeaux)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ;
 
+-- Colonnes Stripe (abonnements)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_customer_id     TEXT UNIQUE;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_price_id        TEXT;
+
 -- Code d'invitation permanent (unique par utilisateur)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS invite_code TEXT UNIQUE;
 CREATE UNIQUE INDEX IF NOT EXISTS profiles_invite_code_idx ON profiles(invite_code);
