@@ -1,5 +1,4 @@
 // app/api/redeem-code/route.ts
-// POST → valide et active un code promo pour l'utilisateur connecté
 export const dynamic = 'force-dynamic';
 
 import { createClient } from '@supabase/supabase-js';
@@ -13,7 +12,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
   }
 
-  // Client authentifié avec le JWT du joueur
   const authClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -25,6 +23,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Session invalide' }, { status: 401 });
   }
 
+  // Refuser les comptes anonymes
+  if (user.is_anonymous) {
+    return NextResponse.json({ error: 'Connecte-toi avec un vrai compte pour activer un code' }, { status: 403 });
+  }
+
   const body = await req.json();
   const code: string = (body.code ?? '').trim().toUpperCase();
 
@@ -32,7 +35,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Code manquant' }, { status: 400 });
   }
 
-  // Client service role pour lire + modifier les codes et profils
   const adminClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -53,11 +55,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Ce code a été désactivé' }, { status: 410 });
   }
 
-  if (new Date(promoCode.expires_at) < new Date()) {
+  if (promoCode.expires_at && new Date(promoCode.expires_at) < new Date()) {
     return NextResponse.json({ error: 'Ce code a expiré' }, { status: 410 });
   }
 
-  // 2. Vérifier que l'utilisateur ne l'a pas déjà utilisé
+  // 2. Vérifier la limite d'utilisations
+  if (promoCode.max_uses !== null && promoCode.uses_count >= promoCode.max_uses) {
+    return NextResponse.json({ error: 'Ce code a atteint sa limite d\'utilisations' }, { status: 410 });
+  }
+
+  // 3. Vérifier que l'utilisateur ne l'a pas déjà utilisé
   const { data: alreadyUsed } = await adminClient
     .from('promo_code_uses')
     .select('id')
@@ -69,24 +76,83 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Tu as déjà utilisé ce code' }, { status: 409 });
   }
 
-  // 3. Appliquer le tier au profil de l'utilisateur
-  const { error: updateErr } = await adminClient
-    .from('profiles')
-    .update({ subscription_tier: promoCode.tier })
-    .eq('id', user.id);
+  // 4. Appliquer selon le type
+  // Fallback : si la colonne type n'existe pas encore (migration non jouée),
+  // on déduit le type selon la présence de tier ou discount_percent
+  const codeType: string =
+    promoCode.type ??
+    (promoCode.discount_percent ? 'discount' : 'gift');
 
-  if (updateErr) {
-    return NextResponse.json({ error: 'Erreur lors de l\'activation' }, { status: 500 });
+  let message = '';
+
+  if (codeType === 'gift') {
+    // Carte cadeau : activer X jours du tier
+    const days = promoCode.gift_days ?? 30;
+    const tier = promoCode.tier ?? 'essentiel';
+
+    // Calculer la nouvelle date d'expiration
+    // Si le joueur a déjà un abonnement actif non expiré, on cumule les jours
+    const { data: profile } = await adminClient
+      .from('profiles')
+      .select('subscription_tier, subscription_expires_at')
+      .eq('id', user.id)
+      .single();
+
+    let baseDate = new Date();
+    if (profile?.subscription_expires_at && new Date(profile.subscription_expires_at) > new Date()) {
+      baseDate = new Date(profile.subscription_expires_at);
+    }
+    const newExpiry = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000);
+
+    const { error: updateErr } = await adminClient
+      .from('profiles')
+      .update({
+        subscription_tier: tier,
+        subscription_expires_at: newExpiry.toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (updateErr) {
+      return NextResponse.json({ error: 'Erreur lors de l\'activation' }, { status: 500 });
+    }
+
+    const tierLabel = tier === 'expert' ? 'Expert' : tier === 'pro' ? 'Pro' : 'Essentiel';
+    message = `🎁 Carte cadeau activée ! Tu bénéficies de ${days} jours ${tierLabel} jusqu'au ${newExpiry.toLocaleDateString('fr-FR')}.`;
+
+  } else if (codeType === 'discount') {
+    // Code de réduction : stocker la réduction en attente sur le profil
+    const pct = promoCode.discount_percent ?? 10;
+
+    const { error: updateErr } = await adminClient
+      .from('profiles')
+      .update({ pending_discount_percent: pct, pending_discount_code_id: promoCode.id })
+      .eq('id', user.id);
+
+    if (updateErr) {
+      // Si les colonnes n'existent pas encore, on ignore l'erreur et on informe quand même
+      console.warn('pending_discount columns may not exist yet:', updateErr.message);
+    }
+
+    message = `🎉 Code de réduction activé ! Tu bénéficies de ${pct}% de réduction sur ton prochain abonnement.`;
+
+  } else {
+    // Type inconnu — on ne touche rien
+    return NextResponse.json({ error: 'Type de code invalide' }, { status: 400 });
   }
 
-  // 4. Enregistrer l'utilisation du code
+  // 5. Enregistrer l'utilisation + incrémenter le compteur
   await adminClient
     .from('promo_code_uses')
     .insert({ code_id: promoCode.id, user_id: user.id });
 
+  await adminClient
+    .from('promo_codes')
+    .update({ uses_count: (promoCode.uses_count ?? 0) + 1 })
+    .eq('id', promoCode.id);
+
   return NextResponse.json({
     success: true,
-    tier: promoCode.tier,
-    message: `Félicitations ! Ton compte est maintenant ${promoCode.tier === 'expert' ? 'Expert' : promoCode.tier === 'pro' ? 'Pro' : 'Essentiel'}.`,
+    type: promoCode.type,
+    message,
   });
 }

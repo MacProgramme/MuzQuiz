@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Room, Player, Buzz, QCMAnswer, GameMode, BuzzQuestion, QCMQuestion, isBuzzMechanic } from '@/types';
-import { BUZZ_QUESTIONS, QCM_QUESTIONS, getQuestionsForMode } from '@/lib/questions';
+import { BUZZ_QUESTIONS, QCM_QUESTIONS, getQuestionsForMode, isBuiltinPack, getBuiltinPackQuestions } from '@/lib/questions';
 
 export function useRoom(code: string, nickname: string) {
   const [room, setRoom] = useState<Room | null>(null);
@@ -52,6 +52,17 @@ export function useRoom(code: string, nickname: string) {
     if (!room?.pack_id) {
       setCustomQuestions([]);
       customQuestionsRef.current = [];
+      return;
+    }
+    // Packs builtin — chargement depuis lib/questions.ts (pas de requête Supabase)
+    if (isBuiltinPack(room.pack_id)) {
+      const qs = getBuiltinPackQuestions(room.pack_id).map(q => ({
+        ...q,
+        type: isBuzzMechanic(room.mode as GameMode) ? 'buzz' : 'qcm',
+        a: (q as any).a ?? q.choices[q.correct] ?? '',
+      }));
+      setCustomQuestions(qs as any);
+      customQuestionsRef.current = qs as any;
       return;
     }
     const loadCustom = async () => {
@@ -183,6 +194,16 @@ export function useRoom(code: string, nickname: string) {
 
     // Charger les questions custom si un pack est sélectionné
     if (roomData.pack_id) {
+      // Packs builtin — chargement direct depuis lib/questions.ts
+      if (isBuiltinPack(roomData.pack_id)) {
+        const qs = getBuiltinPackQuestions(roomData.pack_id).map(q => ({
+          ...q,
+          type: isBuzzMechanic(roomData.mode as GameMode) ? 'buzz' : 'qcm',
+          a: (q as any).a ?? q.choices[q.correct] ?? '',
+        }));
+        setCustomQuestions(qs as any);
+        customQuestionsRef.current = qs as any;
+      } else {
       const { data: cqs } = await supabase
         .from('custom_questions')
         .select('*')
@@ -203,6 +224,7 @@ export function useRoom(code: string, nickname: string) {
         setCustomQuestions(formatted as any);
         customQuestionsRef.current = formatted as any;
       }
+      } // fin else builtin
     }
 
     setLoading(false);

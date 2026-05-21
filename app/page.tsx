@@ -356,8 +356,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Mini classement journalier — visible par tous */}
-      {miniLeaderboard.length > 0 && (
+      {/* Mini classement journalier — visible uniquement si connecté */}
+      {isLoggedIn && miniLeaderboard.length > 0 && (
         <div className="w-full max-w-md mb-6">
           <div className="flex items-center gap-2 mb-3">
             <MuzquizLogo width={20} showText={false} color="rgba(240,244,255,0.35)" />
@@ -628,9 +628,31 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Section Pour qui — maillage interne + SEO */}
+      <div className="w-full max-w-md mt-8 mb-2">
+        <p className="text-xs font-black uppercase tracking-widest text-center mb-3" style={{ color: 'rgba(240,244,255,0.2)' }}>
+          MUZQUIZ est fait pour
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { href: '/pour-les-bars',        emoji: '🍺', label: 'Bars & Restaurants' },
+            { href: '/pour-les-animateurs',  emoji: '🎤', label: 'Animateurs'          },
+            { href: '/pour-les-evenements',  emoji: '🎉', label: 'Événements'          },
+            { href: '/pour-les-streamers',   emoji: '🎮', label: 'Streamers'           },
+          ].map(item => (
+            <Link key={item.href} href={item.href}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl font-bold text-xs transition-all hover:opacity-80"
+              style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(240,244,255,0.45)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <span>{item.emoji}</span>
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Footer */}
       <Link href="/pricing"
-        className="mt-7 text-xs font-bold tracking-wide uppercase transition-all hover:opacity-100"
+        className="mt-5 text-xs font-bold tracking-wide uppercase transition-all hover:opacity-100"
         style={{ color: 'rgba(139,92,246,0.55)', letterSpacing: '0.08em' }}>
         Formules & abonnements →
       </Link>

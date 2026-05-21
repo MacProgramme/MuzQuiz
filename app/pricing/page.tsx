@@ -1,8 +1,10 @@
 // app/pricing/page.tsx
 "use client";
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
+import { supabase } from '@/lib/supabase';
 
 const PLANS = [
   {
@@ -15,7 +17,7 @@ const PLANS = [
     accentBorder: 'rgba(139,92,246,0.25)',
     badge: null,
     features: [
-      { text: 'Modes Quiz & Buzz Quiz', ok: true },
+      { text: 'Modes Quiz & Blind Test', ok: true },
       { text: 'Questions Muzquiz prédéfinies', ok: true },
       { text: 'Parties illimitées', ok: true },
       { text: 'Packs de questions personnalisés', ok: true },
@@ -23,7 +25,7 @@ const PLANS = [
       { text: 'Jusqu\'à 10 joueurs par salle', ok: true },
       { text: 'Import CSV / Excel', ok: false },
       { text: 'Génération IA de questions', ok: false },
-      { text: 'Blind Test & Buzz Blind Test', ok: false },
+      { text: 'Blind Test', ok: false },
     ],
     cta: 'Commencer gratuitement',
     href: '/',
@@ -47,7 +49,7 @@ const PLANS = [
       { text: 'Jusqu\'à 20 joueurs par salle', ok: true },
       { text: 'Import CSV / Excel', ok: true },
       { text: 'IA : 10 questions × 10 fois/mois', ok: true },
-      { text: 'Blind Test & Buzz Blind Test', ok: true },
+      { text: 'Blind Test', ok: true },
     ],
     cta: 'Passer Essentiel →',
     href: '#',
@@ -71,7 +73,7 @@ const PLANS = [
       { text: 'Jusqu\'à 100 joueurs par salle', ok: true },
       { text: 'Import CSV / Excel', ok: true },
       { text: 'IA : 20 questions × 40 fois/mois', ok: true },
-      { text: 'Blind Test & Buzz Blind Test', ok: true },
+      { text: 'Blind Test', ok: true },
     ],
     cta: 'Passer Pro →',
     href: '#',
@@ -104,6 +106,31 @@ const PLANS = [
 ];
 
 export default function PricingPage() {
+  const [promoCode, setPromoCode] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoResult, setPromoResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handlePromo = async () => {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoResult(null);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token || session.user?.is_anonymous) {
+      setPromoResult({ success: false, message: 'Tu dois être connecté avec un vrai compte pour activer un code.' });
+      setPromoLoading(false);
+      return;
+    }
+    const res = await fetch('/api/redeem-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ code: promoCode.trim().toUpperCase() }),
+    });
+    const data = await res.json();
+    setPromoResult({ success: res.ok && data.success, message: data.message ?? data.error ?? 'Erreur inconnue' });
+    if (res.ok && data.success) setPromoCode('');
+    setPromoLoading(false);
+  };
+
   return (
     <main className="min-h-screen p-6 py-12"
       style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 60%, #0D1B3E 100%)' }}>
@@ -194,6 +221,43 @@ export default function PricingPage() {
             )}
           </div>
         ))}
+      </div>
+
+      {/* Code promo */}
+      <div className="max-w-md mx-auto mt-14 mb-4">
+        <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,0,170,0.18)' }}>
+          <p className="text-xs font-black uppercase tracking-widest text-center mb-4" style={{ color: 'rgba(240,244,255,0.35)' }}>
+            🎟 Tu as un code promo ?
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={promoCode}
+              onChange={e => setPromoCode(e.target.value.toUpperCase())}
+              onKeyDown={e => e.key === 'Enter' && handlePromo()}
+              placeholder="ex: MUZQUIZ2025"
+              className="flex-1 px-4 py-3 rounded-xl font-mono font-black text-sm text-center tracking-widest outline-none"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)', color: '#F0F4FF' }}
+            />
+            <button
+              onClick={handlePromo}
+              disabled={promoLoading || !promoCode.trim()}
+              className="px-5 py-3 rounded-xl font-black text-sm transition-all hover:scale-[1.03] disabled:opacity-40"
+              style={{ background: '#FF00AA', color: 'white' }}>
+              {promoLoading ? '…' : 'Activer'}
+            </button>
+          </div>
+          {promoResult && (
+            <div className="mt-3 px-4 py-3 rounded-xl text-sm font-bold text-center"
+              style={{
+                background: promoResult.success ? 'rgba(0,229,209,0.08)' : 'rgba(255,80,80,0.08)',
+                border: `1px solid ${promoResult.success ? 'rgba(0,229,209,0.3)' : 'rgba(255,80,80,0.3)'}`,
+                color: promoResult.success ? '#00E5D1' : '#FF6060',
+              }}>
+              {promoResult.message}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* FAQ */}

@@ -111,6 +111,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
+  const [tierFilter, setTierFilter] = useState<SubscriptionTier | null>(null);
 
   // ── Quiz du Jour
   const [quizzes, setQuizzes] = useState<DailyQuizEntry[]>([]);
@@ -140,11 +141,16 @@ export default function AdminPage() {
   // ── Codes promo
   const [promoCodes, setPromoCodes] = useState<any[]>([]);
   const [promoLoading, setPromoLoading] = useState(false);
-  const [newPromoCode, setNewPromoCode] = useState('');
-  const [newPromoTier, setNewPromoTier] = useState<'essentiel' | 'pro' | 'expert'>('expert');
-  const [newPromoExpiry, setNewPromoExpiry] = useState('');
   const [promoSaving, setPromoSaving] = useState(false);
   const [promoMsg, setPromoMsg] = useState('');
+  // Formulaire nouveau code
+  const [newCode, setNewCode] = useState('');
+  const [newType, setNewType] = useState<'gift' | 'discount'>('gift');
+  const [newTier, setNewTier] = useState<'essentiel' | 'pro' | 'expert'>('essentiel');
+  const [newGiftDays, setNewGiftDays] = useState('30');
+  const [newDiscountPct, setNewDiscountPct] = useState('20');
+  const [newMaxUses, setNewMaxUses] = useState('');
+  const [newExpiry, setNewExpiry] = useState('');
 
   // ─── Chargement initial ───────────────────────────────────────────────────
 
@@ -188,21 +194,30 @@ export default function AdminPage() {
   };
 
   const createPromoCode = async () => {
-    if (!newPromoCode.trim() || !newPromoExpiry) return;
+    if (!newCode.trim()) return;
     setPromoSaving(true);
     setPromoMsg('');
-    const { error } = await supabase.from('promo_codes').insert({
-      code: newPromoCode.trim().toUpperCase(),
-      tier: newPromoTier,
-      expires_at: new Date(newPromoExpiry + 'T23:59:59').toISOString(),
+    const payload: any = {
+      code: newCode.trim().toUpperCase(),
+      type: newType,
       is_active: true,
-    });
+      max_uses: newMaxUses ? parseInt(newMaxUses) : null,
+      expires_at: newExpiry ? new Date(newExpiry + 'T23:59:59').toISOString() : null,
+    };
+    if (newType === 'gift') {
+      payload.tier = newTier;
+      payload.gift_days = parseInt(newGiftDays) || 30;
+    } else {
+      payload.discount_percent = parseInt(newDiscountPct) || 20;
+    }
+    const { error } = await supabase.from('promo_codes').insert(payload);
     if (error) {
       setPromoMsg(error.code === '23505' ? '⚠ Ce code existe déjà.' : `Erreur : ${error.message}`);
     } else {
       setPromoMsg('✓ Code créé !');
-      setNewPromoCode('');
-      setNewPromoExpiry('');
+      setNewCode('');
+      setNewExpiry('');
+      setNewMaxUses('');
       await loadPromoCodes();
     }
     setPromoSaving(false);
@@ -227,12 +242,20 @@ export default function AdminPage() {
     setSaving(null);
   };
 
-  const filtered = users.filter(u => u.nickname.toLowerCase().includes(search.toLowerCase()));
+  // Exclure les joueurs anonymes (nickname null, vide, ou "Joueur" par défaut)
+  const realUsers = users.filter(u => u.nickname && u.nickname !== 'Joueur' && u.nickname.trim() !== '');
+
+  const filtered = realUsers.filter(u => {
+    const matchSearch = u.nickname.toLowerCase().includes(search.toLowerCase());
+    const matchTier = tierFilter === null || u.subscription_tier === tierFilter;
+    return matchSearch && matchTier;
+  });
+
   const counts = {
-    decouverte: users.filter(u => u.subscription_tier === 'decouverte').length,
-    essentiel:  users.filter(u => u.subscription_tier === 'essentiel').length,
-    pro:        users.filter(u => u.subscription_tier === 'pro').length,
-    expert:     users.filter(u => u.subscription_tier === 'expert').length,
+    decouverte: realUsers.filter(u => u.subscription_tier === 'decouverte').length,
+    essentiel:  realUsers.filter(u => u.subscription_tier === 'essentiel').length,
+    pro:        realUsers.filter(u => u.subscription_tier === 'pro').length,
+    expert:     realUsers.filter(u => u.subscription_tier === 'expert').length,
   };
 
   // ─── Quiz — suppression ───────────────────────────────────────────────────
@@ -420,22 +443,45 @@ export default function AdminPage() {
           <>
             <h1 className="text-2xl font-black mb-2" style={{ color: '#F0F4FF' }}>Gestion des utilisateurs</h1>
             <p className="text-sm mb-6" style={{ color: 'rgba(240,244,255,0.4)' }}>
-              {users.length} compte{users.length > 1 ? 's' : ''} enregistré{users.length > 1 ? 's' : ''}
+              {realUsers.length} compte{realUsers.length > 1 ? 's' : ''} enregistré{realUsers.length > 1 ? 's' : ''}
             </p>
 
             <div className="grid grid-cols-4 gap-3 mb-6">
-              {[
-                { label: 'Découverte', value: counts.decouverte, color: 'rgba(240,244,255,0.5)' },
-                { label: 'Essentiel',  value: counts.essentiel,  color: '#00E5D1'               },
-                { label: 'Pro',        value: counts.pro,        color: '#8B5CF6'               },
-                { label: 'Expert',     value: counts.expert,     color: '#F59E0B'               },
-              ].map(s => (
-                <div key={s.label} className="muz-card p-4 text-center">
-                  <div className="text-2xl font-black" style={{ color: s.color }}>{s.value}</div>
-                  <div className="text-xs font-bold mt-1" style={{ color: 'rgba(240,244,255,0.4)' }}>{s.label}</div>
-                </div>
-              ))}
+              {([
+                { label: 'Découverte', tier: 'decouverte' as SubscriptionTier, value: counts.decouverte, color: 'rgba(240,244,255,0.5)' },
+                { label: 'Essentiel',  tier: 'essentiel'  as SubscriptionTier, value: counts.essentiel,  color: '#00E5D1'               },
+                { label: 'Pro',        tier: 'pro'        as SubscriptionTier, value: counts.pro,        color: '#8B5CF6'               },
+                { label: 'Expert',     tier: 'expert'     as SubscriptionTier, value: counts.expert,     color: '#F59E0B'               },
+              ]).map(s => {
+                const isActive = tierFilter === s.tier;
+                return (
+                  <button key={s.label}
+                    onClick={() => setTierFilter(isActive ? null : s.tier)}
+                    className="muz-card p-4 text-center transition-all hover:scale-[1.03]"
+                    style={{
+                      outline: isActive ? `2px solid ${s.color}` : 'none',
+                      outlineOffset: '2px',
+                      cursor: 'pointer',
+                    }}>
+                    <div className="text-2xl font-black" style={{ color: s.color }}>{s.value}</div>
+                    <div className="text-xs font-bold mt-1" style={{ color: isActive ? s.color : 'rgba(240,244,255,0.4)' }}>{s.label}</div>
+                  </button>
+                );
+              })}
             </div>
+
+            {tierFilter && (
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
+                  Filtre actif : <span style={{ color: '#FF00AA' }}>{tierFilter}</span>
+                </span>
+                <button onClick={() => setTierFilter(null)}
+                  className="text-xs font-bold px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
+                  ✕ Effacer
+                </button>
+              </div>
+            )}
 
             <input
               value={search} onChange={e => setSearch(e.target.value)}
@@ -767,58 +813,102 @@ export default function AdminPage() {
             {/* Formulaire de création */}
             <div className="muz-card p-5" style={{ background: 'rgba(139,92,246,0.08)', border: '1.5px solid rgba(139,92,246,0.2)' }}>
               <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'rgba(139,92,246,0.7)' }}>
-                Créer un code promo
+                Créer un code
               </p>
               <div className="flex flex-col gap-3">
+
                 {/* Code */}
                 <div>
                   <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Code (majuscules)</p>
-                  <input
-                    type="text"
-                    placeholder="EX : PROMO2026"
-                    value={newPromoCode}
-                    onChange={e => setNewPromoCode(e.target.value.toUpperCase())}
+                  <input type="text" placeholder="EX : MUZQUIZ2026"
+                    value={newCode} onChange={e => setNewCode(e.target.value.toUpperCase())}
                     className="w-full px-4 py-2.5 rounded-xl font-mono font-bold text-sm"
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.3)', color: '#F0F4FF', outline: 'none' }}
                   />
                 </div>
-                {/* Tier */}
+
+                {/* Type */}
                 <div>
-                  <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Tier accordé</p>
+                  <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Type de code</p>
                   <div className="flex gap-2">
-                    {([
-                      { value: 'essentiel', label: '✨ Essentiel', color: '#00E5D1' },
-                      { value: 'pro',       label: '🚀 Pro',       color: '#8B5CF6' },
-                      { value: 'expert',    label: '⭐ Expert',    color: '#F59E0B' },
-                    ] as { value: 'essentiel' | 'pro' | 'expert'; label: string; color: string }[]).map(t => (
-                      <button key={t.value} onClick={() => setNewPromoTier(t.value)}
-                        className="flex-1 py-2 rounded-xl font-black text-xs transition-all"
-                        style={{
-                          background: newPromoTier === t.value ? t.color : 'rgba(255,255,255,0.05)',
-                          color: newPromoTier === t.value ? '#0D1B3E' : 'rgba(240,244,255,0.5)',
-                          border: `1px solid ${newPromoTier === t.value ? 'transparent' : 'rgba(255,255,255,0.1)'}`,
-                        }}>
-                        {t.label}
-                      </button>
-                    ))}
+                    <button onClick={() => setNewType('gift')}
+                      className="flex-1 py-2 rounded-xl font-black text-xs transition-all"
+                      style={{ background: newType === 'gift' ? '#FF00AA' : 'rgba(255,255,255,0.05)', color: newType === 'gift' ? 'white' : 'rgba(240,244,255,0.5)', border: '1px solid transparent' }}>
+                      🎁 Carte cadeau
+                    </button>
+                    <button onClick={() => setNewType('discount')}
+                      className="flex-1 py-2 rounded-xl font-black text-xs transition-all"
+                      style={{ background: newType === 'discount' ? '#8B5CF6' : 'rgba(255,255,255,0.05)', color: newType === 'discount' ? 'white' : 'rgba(240,244,255,0.5)', border: '1px solid transparent' }}>
+                      🏷️ Réduction %
+                    </button>
                   </div>
                 </div>
-                {/* Date d'expiration */}
+
+                {/* Options carte cadeau */}
+                {newType === 'gift' && (
+                  <>
+                    <div>
+                      <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Abonnement offert</p>
+                      <div className="flex gap-2">
+                        {([
+                          { value: 'essentiel', label: 'Essentiel', color: '#00E5D1' },
+                          { value: 'pro',       label: 'Pro',       color: '#8B5CF6' },
+                          { value: 'expert',    label: 'Expert',    color: '#FF00AA' },
+                        ] as { value: 'essentiel' | 'pro' | 'expert'; label: string; color: string }[]).map(t => (
+                          <button key={t.value} onClick={() => setNewTier(t.value)}
+                            className="flex-1 py-2 rounded-xl font-black text-xs transition-all"
+                            style={{ background: newTier === t.value ? t.color : 'rgba(255,255,255,0.05)', color: newTier === t.value ? '#0D1B3E' : 'rgba(240,244,255,0.5)', border: '1px solid transparent' }}>
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Durée (jours)</p>
+                      <input type="number" min="1" placeholder="30"
+                        value={newGiftDays} onChange={e => setNewGiftDays(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl text-sm"
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,0,170,0.3)', color: '#F0F4FF', outline: 'none' }}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Options réduction */}
+                {newType === 'discount' && (
+                  <div>
+                    <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Réduction (%)</p>
+                    <input type="number" min="1" max="100" placeholder="20"
+                      value={newDiscountPct} onChange={e => setNewDiscountPct(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl text-sm"
+                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.3)', color: '#F0F4FF', outline: 'none' }}
+                    />
+                  </div>
+                )}
+
+                {/* Limite d'utilisations */}
                 <div>
-                  <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Expiration du code</p>
-                  <input
-                    type="date"
-                    value={newPromoExpiry}
-                    onChange={e => setNewPromoExpiry(e.target.value)}
+                  <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Limite d'utilisations <span style={{ color: 'rgba(240,244,255,0.25)' }}>(vide = illimité)</span></p>
+                  <input type="number" min="1" placeholder="ex: 100"
+                    value={newMaxUses} onChange={e => setNewMaxUses(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl text-sm"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.3)', color: '#F0F4FF', outline: 'none', colorScheme: 'dark' }}
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#F0F4FF', outline: 'none' }}
                   />
                 </div>
-                <button
-                  onClick={createPromoCode}
-                  disabled={promoSaving || !newPromoCode.trim() || !newPromoExpiry}
+
+                {/* Date d'expiration */}
+                <div>
+                  <p className="text-xs font-bold mb-1" style={{ color: 'rgba(240,244,255,0.4)' }}>Date d'expiration du code <span style={{ color: 'rgba(240,244,255,0.25)' }}>(optionnel)</span></p>
+                  <input type="date"
+                    value={newExpiry} onChange={e => setNewExpiry(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#F0F4FF', outline: 'none', colorScheme: 'dark' }}
+                  />
+                </div>
+
+                <button onClick={createPromoCode} disabled={promoSaving || !newCode.trim()}
                   className="w-full py-3 rounded-xl font-black text-sm transition-all disabled:opacity-40"
-                  style={{ background: '#8B5CF6', color: 'white' }}>
+                  style={{ background: newType === 'gift' ? '#FF00AA' : '#8B5CF6', color: 'white' }}>
                   {promoSaving ? 'Création…' : '+ Créer le code'}
                 </button>
                 {promoMsg && (
@@ -843,46 +933,47 @@ export default function AdminPage() {
               ) : (
                 <div className="flex flex-col gap-3">
                   {promoCodes.map(p => {
-                    const expired = new Date(p.expires_at) < new Date();
-                    const tierColor = p.tier === 'expert' ? '#F59E0B' : p.tier === 'pro' ? '#8B5CF6' : '#00E5D1';
+                    const expired = p.expires_at && new Date(p.expires_at) < new Date();
+                    const isGift = p.type === 'gift' || !p.type;
+                    const accentColor = isGift ? '#FF00AA' : '#8B5CF6';
+                    const tierColor = p.tier === 'expert' ? '#FF00AA' : p.tier === 'pro' ? '#8B5CF6' : '#00E5D1';
                     return (
                       <div key={p.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl"
                         style={{
-                          background: (!p.is_active || expired) ? 'rgba(255,255,255,0.03)' : 'rgba(139,92,246,0.08)',
-                          border: `1.5px solid ${(!p.is_active || expired) ? 'rgba(255,255,255,0.07)' : 'rgba(139,92,246,0.25)'}`,
+                          background: (!p.is_active || expired) ? 'rgba(255,255,255,0.03)' : `${accentColor}12`,
+                          border: `1.5px solid ${(!p.is_active || expired) ? 'rgba(255,255,255,0.07)' : `${accentColor}30`}`,
                           opacity: (!p.is_active || expired) ? 0.6 : 1,
                         }}>
-                        {/* Code */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="font-mono font-black text-base" style={{ color: p.is_active && !expired ? '#F0F4FF' : 'rgba(240,244,255,0.4)' }}>
-                              {p.code}
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                            <span className="font-mono font-black text-sm" style={{ color: '#F0F4FF' }}>{p.code}</span>
+                            {/* Badge type */}
+                            <span className="text-xs font-black px-2 py-0.5 rounded-full" style={{ background: `${accentColor}20`, color: accentColor }}>
+                              {isGift ? `🎁 ${p.gift_days ?? 30}j ${p.tier ?? ''}` : `🏷️ -${p.discount_percent ?? '?'}%`}
                             </span>
-                            <span className="text-xs font-black px-2 py-0.5 rounded-full" style={{ background: `${tierColor}20`, color: tierColor }}>
-                              {p.tier}
+                            {/* Utilisations */}
+                            <span className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                              {p.uses_count ?? 0}{p.max_uses ? `/${p.max_uses}` : ''} utilisation{(p.uses_count ?? 0) !== 1 ? 's' : ''}
                             </span>
                             {expired && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,0,0,0.1)', color: '#FF6B6B' }}>Expiré</span>}
                             {!p.is_active && !expired && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(240,244,255,0.4)' }}>Désactivé</span>}
                           </div>
-                          <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                            Expire le {new Date(p.expires_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </p>
+                          {p.expires_at && (
+                            <p className="text-xs" style={{ color: 'rgba(240,244,255,0.3)' }}>
+                              Expire le {new Date(p.expires_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </p>
+                          )}
                         </div>
-                        {/* Actions */}
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {!expired && (
                             <button onClick={() => togglePromoCode(p.id, p.is_active)}
                               className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
-                              style={{
-                                background: p.is_active ? 'rgba(0,229,209,0.1)' : 'rgba(255,0,170,0.1)',
-                                color: p.is_active ? '#00E5D1' : '#FF00AA',
-                                border: `1px solid ${p.is_active ? 'rgba(0,229,209,0.25)' : 'rgba(255,0,170,0.25)'}`,
-                              }}>
+                              style={{ background: p.is_active ? 'rgba(0,229,209,0.1)' : 'rgba(255,0,170,0.1)', color: p.is_active ? '#00E5D1' : '#FF00AA', border: `1px solid ${p.is_active ? 'rgba(0,229,209,0.25)' : 'rgba(255,0,170,0.25)'}` }}>
                               {p.is_active ? 'Désactiver' : 'Activer'}
                             </button>
                           )}
                           <button onClick={() => deletePromoCode(p.id)}
-                            className="text-xs font-bold px-2 py-1.5 rounded-lg transition-all"
+                            className="text-xs font-bold px-2 py-1.5 rounded-lg"
                             style={{ background: 'rgba(255,0,0,0.08)', color: '#FF6B6B', border: '1px solid rgba(255,0,0,0.15)' }}>
                             ✕
                           </button>
