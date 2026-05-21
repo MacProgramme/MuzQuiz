@@ -153,12 +153,4 @@ export default function RedeemPage() {
             <div>
               <p className="text-xs font-black" style={{ color: '#F0F4FF' }}>Code de réduction</p>
               <p className="text-xs" style={{ color: 'rgba(240,244,255,0.4)' }}>
-                Applique une réduction en % sur ton prochain abonnement.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  );
-}
+                Appli

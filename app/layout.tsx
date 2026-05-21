@@ -125,12 +125,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <linearGradient id="muz-logo-grad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#FF00AA" />
               <stop offset="50%" stopColor="#8B5CF6" />
-              <stop offset="100%" stopColor="#00E5D1" />
-            </linearGradient>
-          </defs>
-        </svg>
-        {children}
-      </body>
-    </html>
-  );
-}
+              <stop offset="100%" stopColor="

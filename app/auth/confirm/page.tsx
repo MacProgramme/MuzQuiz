@@ -144,13 +144,4 @@ export default function ConfirmPage() {
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
             style={{ borderColor: '#FF00AA', borderTopColor: 'transparent' }} />
-          <p className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
-            Chargement…
-          </p>
-        </div>
-      }>
-        <ConfirmInner />
-      </Suspense>
-    </main>
-  );
-}
+          <p className="text-sm font-bold" style={{ color: 'rgba(240
