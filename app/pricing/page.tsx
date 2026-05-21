@@ -118,9 +118,20 @@ export default function PricingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null); // tier en cours
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
+  // ── CGU + Newsletter ─────────────────────────────────────────────────────
+  const [acceptedCGU, setAcceptedCGU] = useState(false);
+  const [newsletter, setNewsletter] = useState(false);
+
   const handleCheckout = async (tier: string) => {
     setCheckoutError(null);
     setCheckoutLoading(tier);
+
+    // Vérifier l'acceptation des CGU
+    if (!acceptedCGU) {
+      setCheckoutError('Tu dois accepter les conditions générales d\'utilisation pour continuer.');
+      setCheckoutLoading(null);
+      return;
+    }
 
     const { data: { session } } = await supabase.auth.getSession();
 
@@ -194,6 +205,48 @@ export default function PricingPage() {
         <p style={{ color: 'rgba(240,244,255,0.4)', letterSpacing: '0.02em' }}>
           Gratuit pour toujours. Plus de joueurs et d'IA quand tu veux aller plus loin.
         </p>
+      </div>
+
+      {/* CGU + Newsletter */}
+      <div className="max-w-md mx-auto mb-6 flex flex-col gap-3 px-2">
+        <label className="flex items-start gap-3 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={acceptedCGU}
+            onChange={e => { setAcceptedCGU(e.target.checked); setCheckoutError(null); }}
+            className="mt-0.5 flex-shrink-0 accent-pink-500"
+            style={{ width: 18, height: 18, cursor: 'pointer' }}
+          />
+          <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.6)' }}>
+            J&apos;accepte les{' '}
+            <a href="/cgu" target="_blank" className="underline transition-opacity hover:opacity-80"
+              style={{ color: '#FF00AA' }}>
+              conditions générales d&apos;utilisation
+            </a>
+            {' '}et la{' '}
+            <a href="/mentions-legales" target="_blank" className="underline transition-opacity hover:opacity-80"
+              style={{ color: '#FF00AA' }}>
+              politique de confidentialité
+            </a>
+          </span>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={newsletter}
+            onChange={e => setNewsletter(e.target.checked)}
+            className="mt-0.5 flex-shrink-0 accent-pink-500"
+            style={{ width: 18, height: 18, cursor: 'pointer' }}
+          />
+          <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.45)' }}>
+            M&apos;abonner à la newsletter Muzquiz
+            <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full font-black"
+              style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.2)' }}>
+              À venir
+            </span>
+          </span>
+        </label>
       </div>
 
       {/* Erreur checkout globale */}
@@ -298,20 +351,20 @@ export default function PricingPage() {
           <p className="text-xs font-black uppercase tracking-widest text-center mb-4" style={{ color: 'rgba(240,244,255,0.35)' }}>
             🎟 Tu as un code promo ?
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={promoCode}
               onChange={e => setPromoCode(e.target.value.toUpperCase())}
               onKeyDown={e => e.key === 'Enter' && handlePromo()}
               placeholder="ex: MUZQUIZ2025"
-              className="flex-1 px-4 py-3 rounded-xl font-mono font-black text-sm text-center tracking-widest outline-none"
+              className="min-w-0 flex-1 px-4 py-3 rounded-xl font-mono font-black text-sm text-center tracking-widest outline-none"
               style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)', color: '#F0F4FF' }}
             />
             <button
               onClick={handlePromo}
               disabled={promoLoading || !promoCode.trim()}
-              className="px-5 py-3 rounded-xl font-black text-sm transition-all hover:scale-[1.03] disabled:opacity-40"
+              className="w-full sm:w-auto shrink-0 px-5 py-3 rounded-xl font-black text-sm transition-all hover:scale-[1.03] disabled:opacity-40 whitespace-nowrap"
               style={{ background: '#FF00AA', color: 'white' }}>
               {promoLoading ? '…' : 'Activer'}
             </button>
@@ -355,16 +408,4 @@ export default function PricingPage() {
             {
               q: "Est-ce que je reçois une facture après chaque paiement ?",
               a: "Oui ! Stripe envoie automatiquement une facture PDF par email après chaque prélèvement mensuel.",
-            },
-          ].map((item, i) => (
-            <div key={i} className="muz-card muz-card-lift p-4">
-              <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>{item.q}</p>
-              <p className="text-sm" style={{ color: 'rgba(240,244,255,0.45)' }}>{item.a}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-    </main>
-  );
-}
+            },
