@@ -8,7 +8,7 @@ import { SubscriptionTier, normalizeTier } from '@/types';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
-const ADMIN_EMAILS = ['antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr'];
+const ADMIN_EMAILS = ['antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr', 'lacaravanegame@gmail.com'];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -967,26 +967,4 @@ export default function AdminPage() {
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {!expired && (
                             <button onClick={() => togglePromoCode(p.id, p.is_active)}
-                              className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
-                              style={{ background: p.is_active ? 'rgba(0,229,209,0.1)' : 'rgba(255,0,170,0.1)', color: p.is_active ? '#00E5D1' : '#FF00AA', border: `1px solid ${p.is_active ? 'rgba(0,229,209,0.25)' : 'rgba(255,0,170,0.25)'}` }}>
-                              {p.is_active ? 'Désactiver' : 'Activer'}
-                            </button>
-                          )}
-                          <button onClick={() => deletePromoCode(p.id)}
-                            className="text-xs font-bold px-2 py-1.5 rounded-lg"
-                            style={{ background: 'rgba(255,0,0,0.08)', color: '#FF6B6B', border: '1px solid rgba(255,0,0,0.15)' }}>
-                            ✕
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+                              className="text-xs font-bold px-3 py-1.5 rounded-lg transit
