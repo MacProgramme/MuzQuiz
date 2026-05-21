@@ -154,6 +154,12 @@ CREATE TABLE IF NOT EXISTS custom_questions (
 ALTER TABLE rooms
   ADD COLUMN IF NOT EXISTS pack_id UUID REFERENCES question_packs(id) ON DELETE SET NULL;
 
+-- Colonne partage communauté
+ALTER TABLE question_packs
+  ADD COLUMN IF NOT EXISTS is_shared BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE question_packs
+  ADD COLUMN IF NOT EXISTS shared_description TEXT NOT NULL DEFAULT '';
+
 
 -- ================================================================
 -- 4. TABLES QUIZ DU JOUR

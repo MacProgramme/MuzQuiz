@@ -652,9 +652,15 @@ export default function Home() {
 
       {/* Footer */}
       <Link href="/pricing"
-        className="mt-5 text-xs font-bold tracking-wide uppercase transition-all hover:opacity-100"
-        style={{ color: 'rgba(139,92,246,0.55)', letterSpacing: '0.08em' }}>
-        Formules & abonnements →
+        className="mt-6 px-8 py-4 rounded-2xl font-black text-base transition-all hover:scale-[1.04] hover:opacity-100 flex items-center gap-2"
+        style={{
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(255,0,170,0.14) 100%)',
+          border: '2px solid rgba(139,92,246,0.45)',
+          color: '#C4B5FD',
+          boxShadow: '0 0 24px rgba(139,92,246,0.2)',
+          letterSpacing: '0.02em',
+        }}>
+        ⭐ Formules &amp; abonnements →
       </Link>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-bold"
         style={{ color: 'rgba(240,244,255,0.2)' }}>
