@@ -160,9 +160,11 @@ ALTER TABLE question_packs
 ALTER TABLE question_packs
   ADD COLUMN IF NOT EXISTS shared_description TEXT NOT NULL DEFAULT '';
 
--- Newsletter
+-- Newsletter (activée par défaut pour tous les utilisateurs)
 ALTER TABLE profiles
-  ADD COLUMN IF NOT EXISTS newsletter_subscribed BOOLEAN NOT NULL DEFAULT false;
+  ADD COLUMN IF NOT EXISTS newsletter_subscribed BOOLEAN NOT NULL DEFAULT true;
+-- Activer pour les profils existants
+UPDATE profiles SET newsletter_subscribed = true WHERE newsletter_subscribed = false;
 
 
 -- ================================================================
