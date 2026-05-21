@@ -77,9 +77,15 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Appliquer selon le type
+  // Fallback : si la colonne type n'existe pas encore (migration non jouée),
+  // on déduit le type selon la présence de tier ou discount_percent
+  const codeType: string =
+    promoCode.type ??
+    (promoCode.discount_percent ? 'discount' : 'gift');
+
   let message = '';
 
-  if (promoCode.type === 'gift') {
+  if (codeType === 'gift') {
     // Carte cadeau : activer X jours du tier
     const days = promoCode.gift_days ?? 30;
     const tier = promoCode.tier ?? 'essentiel';
@@ -113,7 +119,7 @@ export async function POST(req: NextRequest) {
     const tierLabel = tier === 'expert' ? 'Expert' : tier === 'pro' ? 'Pro' : 'Essentiel';
     message = `🎁 Carte cadeau activée ! Tu bénéficies de ${days} jours ${tierLabel} jusqu'au ${newExpiry.toLocaleDateString('fr-FR')}.`;
 
-  } else if (promoCode.type === 'discount') {
+  } else if (codeType === 'discount') {
     // Code de réduction : stocker la réduction en attente sur le profil
     const pct = promoCode.discount_percent ?? 10;
 
@@ -130,18 +136,8 @@ export async function POST(req: NextRequest) {
     message = `🎉 Code de réduction activé ! Tu bénéficies de ${pct}% de réduction sur ton prochain abonnement.`;
 
   } else {
-    // Fallback : ancienne logique tier direct
-    const { error: updateErr } = await adminClient
-      .from('profiles')
-      .update({ subscription_tier: promoCode.tier })
-      .eq('id', user.id);
-
-    if (updateErr) {
-      return NextResponse.json({ error: 'Erreur lors de l\'activation' }, { status: 500 });
-    }
-
-    const tierLabel = promoCode.tier === 'expert' ? 'Expert' : promoCode.tier === 'pro' ? 'Pro' : 'Essentiel';
-    message = `✓ Félicitations ! Ton compte est maintenant ${tierLabel}.`;
+    // Type inconnu — on ne touche rien
+    return NextResponse.json({ error: 'Type de code invalide' }, { status: 400 });
   }
 
   // 5. Enregistrer l'utilisation + incrémenter le compteur
