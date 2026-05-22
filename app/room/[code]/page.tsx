@@ -830,7 +830,7 @@ export default function RoomPage() {
       </div>
 
       {/* Zone de jeu */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
+      <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 gap-4 sm:gap-6">
 
         <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.6)' }}>
           {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
@@ -861,8 +861,8 @@ export default function RoomPage() {
         )}
 
         {/* Question */}
-        <div className="muz-card text-center px-6 py-5 w-full max-w-lg">
-          <h2 className="text-xl font-bold leading-snug" style={{ color: '#F0F4FF' }}>{currentQ.q}</h2>
+        <div className="muz-card text-center px-4 py-4 sm:px-6 sm:py-5 w-full max-w-lg">
+          <h2 className="text-base sm:text-xl font-bold leading-snug" style={{ color: '#F0F4FF' }}>{currentQ.q}</h2>
         </div>
 
         {/* ===== MODE BUZZ QUIZ ===== */}

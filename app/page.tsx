@@ -650,6 +650,28 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Liens communauté */}
+      <div className="w-full max-w-md mt-6 flex gap-3">
+        <Link href="/forum"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-3 rounded-2xl font-black text-xs sm:text-sm transition-all hover:scale-[1.03] hover:opacity-90"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,0,170,0.1) 0%, rgba(139,92,246,0.08) 100%)',
+            border: '1.5px solid rgba(255,0,170,0.25)',
+            color: '#FF00AA',
+          }}>
+          💬 Forum
+        </Link>
+        <Link href="/weekly-quiz"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-3 rounded-2xl font-black text-xs sm:text-sm transition-all hover:scale-[1.03] hover:opacity-90"
+          style={{
+            background: 'linear-gradient(135deg, rgba(0,229,209,0.1) 0%, rgba(139,92,246,0.08) 100%)',
+            border: '1.5px solid rgba(0,229,209,0.25)',
+            color: '#00E5D1',
+          }}>
+          📅 Quiz semaine
+        </Link>
+      </div>
+
       {/* Footer */}
       <Link href="/pricing"
         className="mt-6 px-8 py-4 rounded-2xl font-black text-base transition-all hover:scale-[1.04] hover:opacity-100 flex items-center gap-2"
