@@ -28,29 +28,29 @@ const PLANS = [
       { text: 'Génération IA de questions', ok: false },
       { text: 'Blind Test', ok: false },
     ],
-    cta: 'Commencer gratuitement',
-    ctaStyle: 'secondary',
+    cta: 'Commencer gratuitement →',
+    ctaStyle: 'violet',
     paid: false,
   },
   {
     tier: 'essentiel',
     name: 'Moustachu Essentiel',
-    price: '9,99€',
-    period: 'par mois',
+    price: '9€',
+    period: '/ mois',
     accent: '#00E5D1',
     accentLight: 'rgba(0,229,209,0.08)',
-    accentBorder: 'rgba(0,229,209,0.3)',
+    accentBorder: 'rgba(0,229,209,0.25)',
     badge: null,
     features: [
-      { text: 'Tous les modes de jeu', ok: true },
+      { text: 'Modes Quiz & Blind Test', ok: true },
       { text: 'Questions Muzquiz prédéfinies', ok: true },
       { text: 'Parties illimitées', ok: true },
-      { text: 'Packs de questions illimités', ok: true },
+      { text: 'Packs de questions personnalisés', ok: true },
       { text: 'Création manuelle de questions', ok: true },
-      { text: "Jusqu'à 20 joueurs par salle", ok: true },
+      { text: "Jusqu'à 30 joueurs par salle", ok: true },
       { text: 'Import CSV / Excel', ok: true },
-      { text: 'IA : 10 questions × 10 fois/mois', ok: true },
-      { text: 'Blind Test', ok: true },
+      { text: 'IA : 20 questions × 10 fois/mois', ok: true },
+      { text: 'Blind Test', ok: false },
     ],
     cta: 'Passer Essentiel →',
     ctaStyle: 'cyan',
@@ -59,22 +59,22 @@ const PLANS = [
   {
     tier: 'pro',
     name: 'Moustachu Pro',
-    price: '19,99€',
-    period: 'par mois',
+    price: '19€',
+    period: '/ mois',
     accent: '#FF00AA',
-    accentLight: 'rgba(255,0,170,0.10)',
-    accentBorder: 'rgba(255,0,170,0.35)',
+    accentLight: 'rgba(255,0,170,0.08)',
+    accentBorder: 'rgba(255,0,170,0.3)',
     badge: 'Populaire',
     features: [
-      { text: 'Tous les modes de jeu', ok: true },
+      { text: 'Modes Quiz & Blind Test', ok: true },
       { text: 'Questions Muzquiz prédéfinies', ok: true },
       { text: 'Parties illimitées', ok: true },
-      { text: 'Packs de questions illimités', ok: true },
+      { text: 'Packs de questions personnalisés', ok: true },
       { text: 'Création manuelle de questions', ok: true },
       { text: "Jusqu'à 100 joueurs par salle", ok: true },
       { text: 'Import CSV / Excel', ok: true },
       { text: 'IA : 20 questions × 40 fois/mois', ok: true },
-      { text: 'Blind Test', ok: true },
+      { text: 'Blind Test inclus', ok: true },
     ],
     cta: 'Passer Pro →',
     ctaStyle: 'pink',
@@ -83,17 +83,17 @@ const PLANS = [
   {
     tier: 'expert',
     name: 'Moustachu Expert',
-    price: '29,99€',
-    period: 'par mois',
-    accent: '#FF9900',
-    accentLight: 'rgba(255,153,0,0.08)',
-    accentBorder: 'rgba(255,153,0,0.35)',
-    badge: 'All-inclusive',
+    price: '39€',
+    period: '/ mois',
+    accent: '#F59E0B',
+    accentLight: 'rgba(245,158,11,0.08)',
+    accentBorder: 'rgba(245,158,11,0.3)',
+    badge: null,
     features: [
-      { text: 'Tous les modes de jeu', ok: true },
+      { text: 'Modes Quiz & Blind Test', ok: true },
       { text: 'Questions Muzquiz prédéfinies', ok: true },
       { text: 'Parties illimitées', ok: true },
-      { text: 'Packs de questions illimités', ok: true },
+      { text: 'Packs de questions personnalisés', ok: true },
       { text: 'Création manuelle de questions', ok: true },
       { text: "Jusqu'à 250 joueurs par salle", ok: true },
       { text: 'Import CSV / Excel', ok: true },
@@ -230,7 +230,7 @@ export default function PricingPage() {
           Choisissez votre formule
         </p>
         <p style={{ color: 'rgba(240,244,255,0.4)', letterSpacing: '0.02em' }}>
-          Gratuit pour toujours. Plus de joueurs et d'IA quand tu veux aller plus loin.
+          Gratuit pour toujours. Plus de joueurs et d&apos;IA quand tu veux aller plus loin.
         </p>
       </div>
 
@@ -394,7 +394,7 @@ export default function PricingPage() {
             <button
               onClick={handlePromo}
               disabled={promoLoading || !promoCode.trim()}
-              className="w-full sm:w-auto shrink-0 px-5 py-3 rounded-xl font-black text-sm transition-all hover:scale-[1.03] disabled:opacity-40 whitespace-nowrap"
+              className="px-5 py-3 rounded-xl font-black text-sm transition-all hover:scale-[1.03] disabled:opacity-40"
               style={{ background: '#FF00AA', color: 'white' }}>
               {promoLoading ? '…' : 'Activer'}
             </button>
@@ -438,4 +438,16 @@ export default function PricingPage() {
             {
               q: "Est-ce que je reçois une facture après chaque paiement ?",
               a: "Oui ! Stripe envoie automatiquement une facture PDF par email après chaque prélèvement mensuel.",
-            },
+            },
+          ].map((item, i) => (
+            <div key={i} className="muz-card muz-card-lift p-4">
+              <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>{item.q}</p>
+              <p className="text-sm" style={{ color: 'rgba(240,244,255,0.45)' }}>{item.a}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </main>
+  );
+}
