@@ -677,7 +677,7 @@ export default function QuestionsPage() {
 
             <div className="flex flex-col gap-3">
               {sortedPacks.map(pack => (
-                <div key={pack.id} className="muz-card muz-card-lift p-4 flex items-center gap-4 cursor-pointer" onClick={() => openPack(pack)}>
+                <div key={pack.id} className="muz-card muz-card-lift p-4 flex items-center gap-2 cursor-pointer" onClick={() => openPack(pack)}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-black text-base" style={{ color: '#F0F4FF' }}>{pack.name}</span>
