@@ -90,11 +90,16 @@ export default function WeeklyQuizPage() {
 
       const slots: Slot[] = Array.from({ length: 7 }, (_, i) => {
         const existing = slotsData?.find((s: any) => s.day_of_week === i);
+        const qp = existing?.question_packs;
+        const raw = Array.isArray(qp) ? qp[0] : qp;
+        const pack: Pack | undefined = raw
+          ? { id: raw.id, name: raw.name, mode: raw.mode, question_count: 0 }
+          : undefined;
         return {
           id: existing?.id ?? '',
           day_of_week: i,
           pack_id: existing?.pack_id ?? null,
-          pack: existing?.question_packs ?? undefined,
+          pack,
         };
       });
       setMyQuiz({ id: quizData.id, name: quizData.name, slots });
