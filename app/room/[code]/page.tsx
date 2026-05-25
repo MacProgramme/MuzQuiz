@@ -22,6 +22,11 @@ import { QuestionImage } from '@/components/QuestionImage';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 import Link from 'next/link';
 
+// Supprime les emoji en tête de chaîne (ex: "🌐 Culture Générale" → "Culture Générale")
+function stripLeadingEmoji(str: string): string {
+  return str.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}️\s]+/u, '').trim();
+}
+
 // --- Confettis lors de la révélation ---
 const CONFETTI_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#FF6B6B', '#4ECDC4', '#FFE66D'];
 const CONFETTI_PIECES = Array.from({ length: 70 }, (_, i) => ({
@@ -558,7 +563,7 @@ export default function RoomPage() {
                     {room.pack_id
                       ? (isBuiltinPack(room.pack_id)
                           ? (() => { const bp = BUILTIN_PACKS.find(p => p.id === room.pack_id); return bp ? bp.name : 'Pack MUZQUIZ'; })()
-                          : (hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné'))
+                          : stripLeadingEmoji(hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné'))
                       : 'Sélectionner un pack…'}
                   </span>
                   <span style={{ color: 'rgba(240,244,255,0.4)', fontSize: '0.9rem' }}>
@@ -633,7 +638,7 @@ export default function RoomPage() {
                             <MuzquizLogo width={16} showText={false} color={room.pack_id === pack.id ? '#FF00AA' : undefined} />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#FF00AA' : '#F0F4FF' }}>
-                                {pack.name}
+                                {stripLeadingEmoji(pack.name)}
                               </p>
                               <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
                                 {pack.question_count}q · {pack.mode}

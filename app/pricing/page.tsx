@@ -258,25 +258,6 @@ export default function PricingPage() {
           </span>
         </label>
 
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={newsletter}
-            onChange={e => toggleNewsletter(e.target.checked)}
-            disabled={newsletterSaving}
-            className="mt-0.5 flex-shrink-0"
-            style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#8B5CF6' }}
-          />
-          <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.55)' }}>
-            M&apos;abonner à la newsletter Muzquiz
-            {newsletterSaving && (
-              <span className="ml-2 text-xs" style={{ color: 'rgba(240,244,255,0.3)' }}>…</span>
-            )}
-            {!newsletterSaving && newsletter && (
-              <span className="ml-2 text-xs font-black" style={{ color: '#8B5CF6' }}>✓ Enregistré</span>
-            )}
-          </span>
-        </label>
       </div>
 
       {/* Erreur checkout globale */}
