@@ -681,7 +681,7 @@ export default function Home() {
           boxShadow: '0 0 24px rgba(139,92,246,0.2)',
           letterSpacing: '0.02em',
         }}>
-        ⭐ Formules &amp; abonnements →
+        Formules &amp; abonnements →
       </Link>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-bold"
         style={{ color: 'rgba(240,244,255,0.2)' }}>
