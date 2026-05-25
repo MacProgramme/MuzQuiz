@@ -24,7 +24,8 @@ import Link from 'next/link';
 
 // Supprime les emoji en tête de chaîne (ex: "🌐 Culture Générale" → "Culture Générale")
 function stripLeadingEmoji(str: string): string {
-  return str.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}️\s]+/u, '').trim();
+  // Retire les caractères non-ASCII (emoji, drapeaux…) et espaces en début de chaîne
+  return str.replace(/^[^\wÀ-ɏ\s]+\s*/g, '').trim();
 }
 
 // --- Confettis lors de la révélation ---
