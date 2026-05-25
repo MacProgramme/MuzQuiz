@@ -557,7 +557,7 @@ export default function RoomPage() {
                     style={{ color: room.pack_id ? '#FF00AA' : 'rgba(240,244,255,0.4)' }}>
                     {room.pack_id
                       ? (isBuiltinPack(room.pack_id)
-                          ? (() => { const bp = BUILTIN_PACKS.find(p => p.id === room.pack_id); return bp ? `${bp.emoji} ${bp.name}` : 'Pack MUZQUIZ'; })()
+                          ? (() => { const bp = BUILTIN_PACKS.find(p => p.id === room.pack_id); return bp ? bp.name : 'Pack MUZQUIZ'; })()
                           : (hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné'))
                       : 'Sélectionner un pack…'}
                   </span>
@@ -597,7 +597,7 @@ export default function RoomPage() {
                           <button key={pack.id}
                             onClick={() => { selectPack(pack.id, pack.mode === 'blind_test' ? 'blind_test_qcm' : 'qcm'); setPackDropdownOpen(false); }}
                             className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
-                            <span className="text-base flex-shrink-0">{pack.emoji}</span>
+                            <MuzquizLogo width={16} showText={false} color={room.pack_id === pack.id ? '#00E5D1' : 'rgba(0,229,209,0.6)'} />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#00E5D1' : '#F0F4FF' }}>
                                 {pack.name}
