@@ -74,16 +74,13 @@ export default function ForumPage() {
     setLoading(true);
     const { data } = await supabase
       .from('forum_posts')
-      .select(`id, title, content, created_at, replies_count, profiles(nickname, avatar_color)`)
+      .select(`id, title, content, created_at, replies_count, profiles!inner(nickname, avatar_color)`)
       .order('created_at', { ascending: false });
 
     if (data) {
       setPosts(data.map((p: any) => ({
         ...p,
-        author: {
-          nickname: p.profiles?.nickname ?? 'Anonyme',
-          avatar_color: p.profiles?.avatar_color ?? '#8B5CF6',
-        },
+        author: { nickname: p.profiles.nickname, avatar_color: p.profiles.avatar_color },
       })));
     }
     setLoading(false);
@@ -94,17 +91,14 @@ export default function ForumPage() {
     setRepliesLoading(true);
     const { data } = await supabase
       .from('forum_replies')
-      .select(`id, content, created_at, author_id, profiles(nickname, avatar_color)`)
+      .select(`id, content, created_at, author_id, profiles!inner(nickname, avatar_color)`)
       .eq('post_id', post.id)
       .order('created_at', { ascending: true });
 
     if (data) {
       setReplies(data.map((r: any) => ({
         ...r,
-        author: {
-          nickname: r.profiles?.nickname ?? 'Anonyme',
-          avatar_color: r.profiles?.avatar_color ?? '#8B5CF6',
-        },
+        author: { nickname: r.profiles.nickname, avatar_color: r.profiles.avatar_color },
       })));
     }
     setRepliesLoading(false);
@@ -113,11 +107,13 @@ export default function ForumPage() {
   const createPost = async () => {
     if (!newTitle.trim() || !newContent.trim() || !userId) return;
     setPostSaving(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('forum_posts')
-      .insert({ author_id: userId, title: newTitle.trim(), content: newContent.trim() });
+      .insert({ author_id: userId, title: newTitle.trim(), content: newContent.trim() })
+      .select(`id, title, content, created_at, replies_count, profiles!inner(nickname, avatar_color)`)
+      .single();
 
-    if (!error) {
+    if (!error && data) {
       setNewTitle(''); setNewContent('');
       setShowNewPost(false);
       await loadPosts();

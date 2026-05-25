@@ -126,34 +126,6 @@ export default function PricingPage() {
   // ── CGU ──────────────────────────────────────────────────────────────────
   const [acceptedCGU, setAcceptedCGU] = useState(false);
 
-  // ── Newsletter ───────────────────────────────────────────────────────────
-  const [newsletter, setNewsletter] = useState(true); // activé par défaut
-  const [newsletterSaving, setNewsletterSaving] = useState(false);
-
-  // Charger la préférence newsletter depuis le profil au chargement
-  useEffect(() => {
-    const loadNewsletter = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user || session.user.is_anonymous) return;
-      const { data } = await supabase
-        .from('profiles')
-        .select('newsletter_subscribed')
-        .eq('id', session.user.id)
-        .single();
-      if (data) setNewsletter(data.newsletter_subscribed ?? false);
-    };
-    loadNewsletter();
-  }, []);
-
-  const toggleNewsletter = async (val: boolean) => {
-    setNewsletter(val);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user || session.user.is_anonymous) return; // pas connecté, on garde juste l'état local
-    setNewsletterSaving(true);
-    await supabase.from('profiles').update({ newsletter_subscribed: val }).eq('id', session.user.id);
-    setNewsletterSaving(false);
-  };
-
   const handleCheckout = async (tier: string) => {
     setCheckoutError(null);
     setCheckoutLoading(tier);
@@ -445,4 +417,17 @@ export default function PricingPage() {
             },
             {
               q: "Est-ce que je reçois une facture après chaque paiement ?",
-              a: "Oui ! Stripe envoie automatiquement une facture PDF p
+              a: "Oui ! Stripe envoie automatiquement une facture PDF par email après chaque prélèvement mensuel.",
+            },
+          ].map((item, i) => (
+            <div key={i} className="muz-card muz-card-lift p-4">
+              <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>{item.q}</p>
+              <p className="text-sm" style={{ color: 'rgba(240,244,255,0.45)' }}>{item.a}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </main>
+  );
+}
