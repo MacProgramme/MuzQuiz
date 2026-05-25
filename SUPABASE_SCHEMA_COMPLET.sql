@@ -154,9 +154,79 @@ CREATE TABLE IF NOT EXISTS custom_questions (
 ALTER TABLE rooms
   ADD COLUMN IF NOT EXISTS pack_id UUID REFERENCES question_packs(id) ON DELETE SET NULL;
 
+-- Colonne partage communauté
+ALTER TABLE question_packs
+  ADD COLUMN IF NOT EXISTS is_shared BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE question_packs
+  ADD COLUMN IF NOT EXISTS shared_description TEXT NOT NULL DEFAULT '';
+
+-- Newsletter (activée par défaut pour tous les utilisateurs)
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS newsletter_subscribed BOOLEAN NOT NULL DEFAULT true;
+-- Activer pour les profils existants
+UPDATE profiles SET newsletter_subscribed = true WHERE newsletter_subscribed = false;
+
 
 -- ================================================================
--- 4. TABLES QUIZ DU JOUR
+-- 4. FORUM COMMUNAUTAIRE
+-- ================================================================
+
+CREATE TABLE IF NOT EXISTS forum_posts (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  author_id   UUID        REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  title       TEXT        NOT NULL,
+  content     TEXT        NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  replies_count INT       NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS forum_replies (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id     UUID        REFERENCES forum_posts(id) ON DELETE CASCADE NOT NULL,
+  author_id   UUID        REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  content     TEXT        NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Trigger pour mettre à jour replies_count automatiquement
+CREATE OR REPLACE FUNCTION update_forum_replies_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE forum_posts SET replies_count = replies_count + 1 WHERE id = NEW.post_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE forum_posts SET replies_count = GREATEST(replies_count - 1, 0) WHERE id = OLD.post_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_forum_replies_count ON forum_replies;
+CREATE TRIGGER trg_forum_replies_count
+  AFTER INSERT OR DELETE ON forum_replies
+  FOR EACH ROW EXECUTE FUNCTION update_forum_replies_count();
+
+-- ================================================================
+-- 5. QUIZ DE LA SEMAINE
+-- ================================================================
+
+CREATE TABLE IF NOT EXISTS weekly_quizzes (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  owner_id    UUID        REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name        TEXT        NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS weekly_quiz_slots (
+  id              UUID  DEFAULT gen_random_uuid() PRIMARY KEY,
+  weekly_quiz_id  UUID  REFERENCES weekly_quizzes(id) ON DELETE CASCADE NOT NULL,
+  day_of_week     INT   NOT NULL CHECK (day_of_week BETWEEN 0 AND 6), -- 0=Lundi, 6=Dimanche
+  pack_id         UUID  REFERENCES question_packs(id) ON DELETE SET NULL,
+  UNIQUE (weekly_quiz_id, day_of_week)
+);
+
+-- ================================================================
+-- 6. TABLES QUIZ DU JOUR
 -- ================================================================
 
 -- ── Quiz du jour (1 ligne par date) ───────────────────────────
@@ -249,8 +319,12 @@ ALTER TABLE profiles          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE question_packs    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE custom_questions  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE friendships       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE daily_quizzes     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE daily_quiz_scores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_quizzes       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_quiz_scores   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE forum_posts         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE forum_replies       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weekly_quizzes      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weekly_quiz_slots   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE monthly_winners   ENABLE ROW LEVEL SECURITY;
 
 -- ── rooms ──────────────────────────────────────────────────────
@@ -660,6 +734,33 @@ CREATE POLICY "promo_code_uses: lecture personnelle"
 -- L'insertion se fait via l'API route avec le service role
 -- donc pas de policy INSERT nécessaire côté client
 
+
+-- ── Forum ──────────────────────────────────────────────────────
+DROP POLICY IF EXISTS "forum_posts: lecture publique"   ON forum_posts;
+DROP POLICY IF EXISTS "forum_posts: creation connecte" ON forum_posts;
+DROP POLICY IF EXISTS "forum_posts: suppression auteur" ON forum_posts;
+CREATE POLICY "forum_posts: lecture publique"    ON forum_posts FOR SELECT USING (true);
+CREATE POLICY "forum_posts: creation connecte"  ON forum_posts FOR INSERT WITH CHECK (auth.uid() = author_id AND auth.jwt()->>'is_anonymous' IS DISTINCT FROM 'true');
+CREATE POLICY "forum_posts: suppression auteur" ON forum_posts FOR DELETE USING (auth.uid() = author_id);
+
+DROP POLICY IF EXISTS "forum_replies: lecture publique"    ON forum_replies;
+DROP POLICY IF EXISTS "forum_replies: creation connecte"  ON forum_replies;
+DROP POLICY IF EXISTS "forum_replies: suppression auteur" ON forum_replies;
+CREATE POLICY "forum_replies: lecture publique"    ON forum_replies FOR SELECT USING (true);
+CREATE POLICY "forum_replies: creation connecte"  ON forum_replies FOR INSERT WITH CHECK (auth.uid() = author_id AND auth.jwt()->>'is_anonymous' IS DISTINCT FROM 'true');
+CREATE POLICY "forum_replies: suppression auteur" ON forum_replies FOR DELETE USING (auth.uid() = author_id);
+
+-- ── Quiz de la semaine ─────────────────────────────────────────
+DROP POLICY IF EXISTS "weekly_quizzes: lecture publique"    ON weekly_quizzes;
+DROP POLICY IF EXISTS "weekly_quizzes: gestion proprietaire" ON weekly_quizzes;
+CREATE POLICY "weekly_quizzes: lecture publique"      ON weekly_quizzes FOR SELECT USING (true);
+CREATE POLICY "weekly_quizzes: gestion proprietaire"  ON weekly_quizzes FOR ALL  USING (auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS "weekly_quiz_slots: lecture publique"    ON weekly_quiz_slots;
+DROP POLICY IF EXISTS "weekly_quiz_slots: gestion proprietaire" ON weekly_quiz_slots;
+CREATE POLICY "weekly_quiz_slots: lecture publique" ON weekly_quiz_slots FOR SELECT USING (true);
+CREATE POLICY "weekly_quiz_slots: gestion proprietaire" ON weekly_quiz_slots FOR ALL
+  USING (EXISTS (SELECT 1 FROM weekly_quizzes w WHERE w.id = weekly_quiz_id AND w.owner_id = auth.uid()));
 
 -- ================================================================
 -- ✅ FIN DU SCHÉMA

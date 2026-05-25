@@ -1,7 +1,7 @@
 // app/pricing/page.tsx
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
@@ -28,29 +28,29 @@ const PLANS = [
       { text: 'Génération IA de questions', ok: false },
       { text: 'Blind Test', ok: false },
     ],
-    cta: 'Commencer gratuitement',
-    ctaStyle: 'secondary',
+    cta: 'Commencer gratuitement →',
+    ctaStyle: 'violet',
     paid: false,
   },
   {
     tier: 'essentiel',
     name: 'Moustachu Essentiel',
-    price: '9,99€',
-    period: 'par mois',
+    price: '9€',
+    period: '/ mois',
     accent: '#00E5D1',
     accentLight: 'rgba(0,229,209,0.08)',
-    accentBorder: 'rgba(0,229,209,0.3)',
+    accentBorder: 'rgba(0,229,209,0.25)',
     badge: null,
     features: [
-      { text: 'Tous les modes de jeu', ok: true },
+      { text: 'Modes Quiz & Blind Test', ok: true },
       { text: 'Questions Muzquiz prédéfinies', ok: true },
       { text: 'Parties illimitées', ok: true },
-      { text: 'Packs de questions illimités', ok: true },
+      { text: 'Packs de questions personnalisés', ok: true },
       { text: 'Création manuelle de questions', ok: true },
-      { text: "Jusqu'à 20 joueurs par salle", ok: true },
+      { text: "Jusqu'à 30 joueurs par salle", ok: true },
       { text: 'Import CSV / Excel', ok: true },
-      { text: 'IA : 10 questions × 10 fois/mois', ok: true },
-      { text: 'Blind Test', ok: true },
+      { text: 'IA : 20 questions × 10 fois/mois', ok: true },
+      { text: 'Blind Test', ok: false },
     ],
     cta: 'Passer Essentiel →',
     ctaStyle: 'cyan',
@@ -59,22 +59,22 @@ const PLANS = [
   {
     tier: 'pro',
     name: 'Moustachu Pro',
-    price: '19,99€',
-    period: 'par mois',
+    price: '19€',
+    period: '/ mois',
     accent: '#FF00AA',
-    accentLight: 'rgba(255,0,170,0.10)',
-    accentBorder: 'rgba(255,0,170,0.35)',
+    accentLight: 'rgba(255,0,170,0.08)',
+    accentBorder: 'rgba(255,0,170,0.3)',
     badge: 'Populaire',
     features: [
-      { text: 'Tous les modes de jeu', ok: true },
+      { text: 'Modes Quiz & Blind Test', ok: true },
       { text: 'Questions Muzquiz prédéfinies', ok: true },
       { text: 'Parties illimitées', ok: true },
-      { text: 'Packs de questions illimités', ok: true },
+      { text: 'Packs de questions personnalisés', ok: true },
       { text: 'Création manuelle de questions', ok: true },
       { text: "Jusqu'à 100 joueurs par salle", ok: true },
       { text: 'Import CSV / Excel', ok: true },
       { text: 'IA : 20 questions × 40 fois/mois', ok: true },
-      { text: 'Blind Test', ok: true },
+      { text: 'Blind Test inclus', ok: true },
     ],
     cta: 'Passer Pro →',
     ctaStyle: 'pink',
@@ -83,17 +83,17 @@ const PLANS = [
   {
     tier: 'expert',
     name: 'Moustachu Expert',
-    price: '29,99€',
-    period: 'par mois',
-    accent: '#FF9900',
-    accentLight: 'rgba(255,153,0,0.08)',
-    accentBorder: 'rgba(255,153,0,0.35)',
-    badge: 'All-inclusive',
+    price: '39€',
+    period: '/ mois',
+    accent: '#F59E0B',
+    accentLight: 'rgba(245,158,11,0.08)',
+    accentBorder: 'rgba(245,158,11,0.3)',
+    badge: null,
     features: [
-      { text: 'Tous les modes de jeu', ok: true },
+      { text: 'Modes Quiz & Blind Test', ok: true },
       { text: 'Questions Muzquiz prédéfinies', ok: true },
       { text: 'Parties illimitées', ok: true },
-      { text: 'Packs de questions illimités', ok: true },
+      { text: 'Packs de questions personnalisés', ok: true },
       { text: 'Création manuelle de questions', ok: true },
       { text: "Jusqu'à 250 joueurs par salle", ok: true },
       { text: 'Import CSV / Excel', ok: true },
@@ -118,9 +118,47 @@ export default function PricingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null); // tier en cours
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
+  // ── CGU ──────────────────────────────────────────────────────────────────
+  const [acceptedCGU, setAcceptedCGU] = useState(false);
+
+  // ── Newsletter ───────────────────────────────────────────────────────────
+  const [newsletter, setNewsletter] = useState(true); // activé par défaut
+  const [newsletterSaving, setNewsletterSaving] = useState(false);
+
+  // Charger la préférence newsletter depuis le profil au chargement
+  useEffect(() => {
+    const loadNewsletter = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user || session.user.is_anonymous) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('newsletter_subscribed')
+        .eq('id', session.user.id)
+        .single();
+      if (data) setNewsletter(data.newsletter_subscribed ?? false);
+    };
+    loadNewsletter();
+  }, []);
+
+  const toggleNewsletter = async (val: boolean) => {
+    setNewsletter(val);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user || session.user.is_anonymous) return; // pas connecté, on garde juste l'état local
+    setNewsletterSaving(true);
+    await supabase.from('profiles').update({ newsletter_subscribed: val }).eq('id', session.user.id);
+    setNewsletterSaving(false);
+  };
+
   const handleCheckout = async (tier: string) => {
     setCheckoutError(null);
     setCheckoutLoading(tier);
+
+    // Vérifier l'acceptation des CGU
+    if (!acceptedCGU) {
+      setCheckoutError('Tu dois accepter les conditions générales d\'utilisation pour continuer.');
+      setCheckoutLoading(null);
+      return;
+    }
 
     const { data: { session } } = await supabase.auth.getSession();
 
@@ -192,8 +230,34 @@ export default function PricingPage() {
           Choisissez votre formule
         </p>
         <p style={{ color: 'rgba(240,244,255,0.4)', letterSpacing: '0.02em' }}>
-          Gratuit pour toujours. Plus de joueurs et d'IA quand tu veux aller plus loin.
+          Gratuit pour toujours. Plus de joueurs et d&apos;IA quand tu veux aller plus loin.
         </p>
+      </div>
+
+      {/* CGU + Newsletter */}
+      <div className="max-w-md mx-auto mb-6 flex flex-col gap-3 px-2">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={acceptedCGU}
+            onChange={e => { setAcceptedCGU(e.target.checked); setCheckoutError(null); }}
+            className="mt-0.5 flex-shrink-0"
+            style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#FF00AA' }}
+          />
+          <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.6)' }}>
+            J&apos;accepte les{' '}
+            <a href="/cgu" target="_blank" className="underline transition-opacity hover:opacity-80"
+              style={{ color: '#FF00AA' }}>
+              conditions générales d&apos;utilisation
+            </a>
+            {' '}et la{' '}
+            <a href="/mentions-legales" target="_blank" className="underline transition-opacity hover:opacity-80"
+              style={{ color: '#FF00AA' }}>
+              politique de confidentialité
+            </a>
+          </span>
+        </label>
+
       </div>
 
       {/* Erreur checkout globale */}
@@ -298,14 +362,14 @@ export default function PricingPage() {
           <p className="text-xs font-black uppercase tracking-widest text-center mb-4" style={{ color: 'rgba(240,244,255,0.35)' }}>
             🎟 Tu as un code promo ?
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={promoCode}
               onChange={e => setPromoCode(e.target.value.toUpperCase())}
               onKeyDown={e => e.key === 'Enter' && handlePromo()}
               placeholder="ex: MUZQUIZ2025"
-              className="flex-1 px-4 py-3 rounded-xl font-mono font-black text-sm text-center tracking-widest outline-none"
+              className="min-w-0 flex-1 px-4 py-3 rounded-xl font-mono font-black text-sm text-center tracking-widest outline-none"
               style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)', color: '#F0F4FF' }}
             />
             <button

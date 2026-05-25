@@ -22,6 +22,12 @@ import { QuestionImage } from '@/components/QuestionImage';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 import Link from 'next/link';
 
+// Supprime les emoji en tête de chaîne (ex: "🌐 Culture Générale" → "Culture Générale")
+function stripLeadingEmoji(str: string): string {
+  // Retire les caractères non-ASCII (emoji, drapeaux…) et espaces en début de chaîne
+  return str.replace(/^[^\wÀ-ɏ\s]+\s*/g, '').trim();
+}
+
 // --- Confettis lors de la révélation ---
 const CONFETTI_COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B', '#FF6B6B', '#4ECDC4', '#FFE66D'];
 const CONFETTI_PIECES = Array.from({ length: 70 }, (_, i) => ({
@@ -552,14 +558,14 @@ export default function RoomPage() {
                     background: room.pack_id ? 'rgba(255,0,170,0.08)' : 'rgba(139,92,246,0.08)',
                     border: `1.5px solid ${room.pack_id ? 'rgba(255,0,170,0.35)' : 'rgba(139,92,246,0.3)'}`,
                   }}>
-                  <MuzquizLogo width={18} showText={false} color={room.pack_id ? '#FF00AA' : '#8B5CF6'} />
+                  <MuzquizLogo width={18} showText={false} color={room.pack_id ? '#FF00AA' : 'rgba(240,244,255,0.3)'} />
                   <span className="flex-1 text-sm font-bold truncate"
-                    style={{ color: room.pack_id ? '#FF00AA' : '#8B5CF6' }}>
+                    style={{ color: room.pack_id ? '#FF00AA' : 'rgba(240,244,255,0.4)' }}>
                     {room.pack_id
                       ? (isBuiltinPack(room.pack_id)
-                          ? (() => { const bp = BUILTIN_PACKS.find(p => p.id === room.pack_id); return bp ? `${bp.emoji} ${bp.name}` : 'Pack MUZQUIZ'; })()
-                          : (hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné'))
-                      : 'Questions MUZQUIZ (défaut)'}
+                          ? (() => { const bp = BUILTIN_PACKS.find(p => p.id === room.pack_id); return bp ? bp.name : 'Pack MUZQUIZ'; })()
+                          : stripLeadingEmoji(hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné'))
+                      : 'Sélectionner un pack…'}
                   </span>
                   <span style={{ color: 'rgba(240,244,255,0.4)', fontSize: '0.9rem' }}>
                     {packDropdownOpen ? '▲' : '▼'}
@@ -584,50 +590,6 @@ export default function RoomPage() {
                     )}
                     {/* Options */}
                     <div className="max-h-52 overflow-y-auto">
-                      {/* Option défaut */}
-                      <button
-                        onClick={() => { selectPack(null); setPackDropdownOpen(false); }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
-                        <MuzquizLogo width={16} showText={false} />
-                        <span className="text-sm font-bold" style={{ color: !room.pack_id ? '#8B5CF6' : '#F0F4FF' }}>
-                          Questions MUZQUIZ (défaut)
-                        </span>
-                        {!room.pack_id && <span className="ml-auto text-xs font-black" style={{ color: '#8B5CF6' }}>✓</span>}
-                      </button>
-                      {/* Séparateur packs MUZQUIZ */}
-                      <div className="px-3 py-1.5 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                        <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(0,229,209,0.5)' }}>Packs MUZQUIZ</span>
-                      </div>
-                      {BUILTIN_PACKS
-                        .filter(p => {
-                          const roomIsBlind = isBlindTestMode(room.mode as any);
-                          return roomIsBlind ? p.mode === 'blind_test' : p.mode === 'quiz';
-                        })
-                        .map(pack => (
-                          <button key={pack.id}
-                            onClick={() => { selectPack(pack.id, pack.mode === 'blind_test' ? 'blind_test_qcm' : 'qcm'); setPackDropdownOpen(false); }}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
-                            <span className="text-base flex-shrink-0">{pack.emoji}</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#00E5D1' : '#F0F4FF' }}>
-                                {pack.name}
-                              </p>
-                              <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                                {pack.questions.length}q · Muzquiz
-                              </p>
-                            </div>
-                            {room.pack_id === pack.id && <span className="text-xs font-black flex-shrink-0" style={{ color: '#00E5D1' }}>✓</span>}
-                          </button>
-                        ))}
-                      {/* Séparateur packs perso */}
-                      {hostPacks.filter(p => {
-                        const roomIsBlind = isBlindTestMode(room.mode as any);
-                        return roomIsBlind === isBlindTestMode(p.mode as any);
-                      }).length > 0 && (
-                        <div className="px-3 py-1.5 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                          <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.5)' }}>Mes packs</span>
-                        </div>
-                      )}
                       {/* Packs filtrés — uniquement ceux compatibles avec le mode de la salle */}
                       {hostPacks
                         .filter(p => {
@@ -643,7 +605,7 @@ export default function RoomPage() {
                             <MuzquizLogo width={16} showText={false} color={room.pack_id === pack.id ? '#FF00AA' : undefined} />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#FF00AA' : '#F0F4FF' }}>
-                                {pack.name}
+                                {stripLeadingEmoji(pack.name)}
                               </p>
                               <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
                                 {pack.question_count}q · {pack.mode}
@@ -830,7 +792,7 @@ export default function RoomPage() {
       </div>
 
       {/* Zone de jeu */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
+      <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 gap-4 sm:gap-6">
 
         <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.6)' }}>
           {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
@@ -861,8 +823,8 @@ export default function RoomPage() {
         )}
 
         {/* Question */}
-        <div className="muz-card text-center px-6 py-5 w-full max-w-lg">
-          <h2 className="text-xl font-bold leading-snug" style={{ color: '#F0F4FF' }}>{currentQ.q}</h2>
+        <div className="muz-card text-center px-4 py-4 sm:px-6 sm:py-5 w-full max-w-lg">
+          <h2 className="text-base sm:text-xl font-bold leading-snug" style={{ color: '#F0F4FF' }}>{currentQ.q}</h2>
         </div>
 
         {/* ===== MODE BUZZ QUIZ ===== */}

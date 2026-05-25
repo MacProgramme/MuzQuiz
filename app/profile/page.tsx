@@ -17,6 +17,7 @@ interface Profile {
   avatar_color: string;
   avatar_url: string | null;
   subscription_tier: SubscriptionTier;
+  newsletter_subscribed: boolean;
   created_at: string;
 }
 
@@ -539,34 +540,6 @@ function ProfilePageInner() {
                     </div>
                   )}
 
-                  {/* Code promo */}
-                  <div className="mt-3 p-4 rounded-2xl" style={{ background: 'rgba(139,92,246,0.07)', border: '1.5px solid rgba(139,92,246,0.15)' }}>
-                    <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(139,92,246,0.7)' }}>🎟 Code promo</p>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Entre ton code…"
-                        value={promoCode}
-                        onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoMsg(null); }}
-                        className="min-w-0 flex-1 px-3 py-2 rounded-xl font-mono text-sm font-bold"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(139,92,246,0.25)', color: '#F0F4FF', outline: 'none' }}
-                        onKeyDown={e => e.key === 'Enter' && !promoLoading && redeemPromoCode()}
-                      />
-                      <button
-                        onClick={redeemPromoCode}
-                        disabled={promoLoading || !promoCode.trim()}
-                        className="shrink-0 px-4 py-2 rounded-xl font-black text-sm transition-all disabled:opacity-40 whitespace-nowrap"
-                        style={{ background: '#8B5CF6', color: 'white' }}>
-                        {promoLoading ? '…' : 'Activer'}
-                      </button>
-                    </div>
-                    {promoMsg && (
-                      <p className="text-xs font-bold mt-2" style={{ color: promoMsg.ok ? '#00E5D1' : '#FF00AA' }}>
-                        {promoMsg.ok ? '✓ ' : '✗ '}{promoMsg.text}
-                      </p>
-                    )}
-                  </div>
-
                   {/* Lien upgrade pour les non-admins en gratuit */}
                   {!isAdmin && profile.subscription_tier === 'decouverte' && (
                     <Link href="/pricing"
@@ -600,6 +573,34 @@ function ProfilePageInner() {
                     <span style={{ color: 'rgba(139,92,246,0.6)' }}>›</span>
                   </Link>
                 )}
+
+                {/* Lien communauté */}
+                <Link href="/community"
+                  className="flex items-center justify-between px-4 py-3 rounded-xl muz-card-lift"
+                  style={{ background: 'rgba(0,229,209,0.07)', border: '1px solid rgba(0,229,209,0.2)' }}>
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontSize: '1.1rem' }}>🌐</span>
+                    <span className="font-bold text-sm" style={{ color: '#00E5D1' }}>Packs de la communauté</span>
+                  </div>
+                  <span style={{ color: 'rgba(0,229,209,0.5)' }}>›</span>
+                </Link>
+
+                {/* Newsletter — affichage seul, pas de désinscription possible */}
+                <div className="flex items-center justify-between px-4 py-3 rounded-xl"
+                  style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.18)' }}>
+                  <div>
+                    <p className="font-bold text-sm" style={{ color: 'rgba(240,244,255,0.7)' }}>
+                      Newsletter Muzquiz
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                      Abonné(e) ✓
+                      <span className="ml-2 px-1.5 py-0.5 rounded-full font-black text-xs"
+                        style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.2)' }}>
+                        À venir
+                      </span>
+                    </p>
+                  </div>
+                </div>
 
                 <button
                   onClick={() => { setEditing(true); setEditNickname(profile.nickname); setEditColor(profile.avatar_color); setEditAvatarUrl(profile.avatar_url ?? null); }}

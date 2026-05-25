@@ -14,10 +14,10 @@ const blackHan = Black_Han_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.muzquiz.fr'),
   title: {
-    default: 'MUZQUIZ — Quiz & Blind Test en temps réel',
+    default: 'MUZQUIZ - Quiz & Blind Test en temps réel',
     template: '%s | MUZQUIZ',
   },
-  description: 'Organisez des quiz et blind tests multijoueurs en temps réel. Buzzers virtuels sur smartphone, classements live, packs musicaux. Parfait pour bars, animateurs et événements.',
+  description: 'La plateforme de quiz et blind test interactif. Jouez en temps réel avec vos buzzers virtuels !',
   keywords: [
     'quiz en ligne', 'blind test', 'quiz multijoueur', 'quiz temps réel',
     'blind test en ligne', 'buzzer quiz', 'animation bar', 'quiz bar',
@@ -42,21 +42,21 @@ export const metadata: Metadata = {
     locale: 'fr_FR',
     url: 'https://www.muzquiz.fr',
     siteName: 'MUZQUIZ',
-    title: 'MUZQUIZ — Quiz & Blind Test en temps réel',
-    description: 'Organisez des quiz et blind tests multijoueurs en temps réel. Buzzers virtuels sur smartphone, classements live, packs musicaux.',
+    title: 'MUZQUIZ - Quiz & Blind Test en temps réel',
+    description: 'La plateforme de quiz et blind test interactif. Jouez en temps réel avec vos buzzers virtuels !',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'MUZQUIZ — Quiz & Blind Test en temps réel',
+        alt: 'MUZQUIZ - Quiz & Blind Test en temps réel',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MUZQUIZ — Quiz & Blind Test en temps réel',
-    description: 'Organisez des quiz et blind tests multijoueurs en temps réel. Buzzers virtuels, classements live, packs musicaux.',
+    title: 'MUZQUIZ - Quiz & Blind Test en temps réel',
+    description: 'La plateforme de quiz et blind test interactif. Jouez en temps réel avec vos buzzers virtuels !',
     images: ['/og-image.png'],
   },
   alternates: {

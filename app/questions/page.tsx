@@ -286,6 +286,17 @@ export default function QuestionsPage() {
     if (userId) await loadPacks(userId);
   };
 
+  const toggleSharePack = async (e: React.MouseEvent, pack: QuestionPack) => {
+    e.stopPropagation();
+    const newShared = !(pack as any).is_shared;
+    const { error } = await supabase
+      .from('question_packs')
+      .update({ is_shared: newShared })
+      .eq('id', pack.id);
+    if (error) { alert('Erreur : ' + error.message); return; }
+    if (userId) await loadPacks(userId);
+  };
+
   // === MANUEL ===
   const openQForm = (q?: CustomQuestion) => {
     if (q) {
@@ -666,7 +677,7 @@ export default function QuestionsPage() {
 
             <div className="flex flex-col gap-3">
               {sortedPacks.map(pack => (
-                <div key={pack.id} className="muz-card muz-card-lift p-4 flex items-center gap-4 cursor-pointer" onClick={() => openPack(pack)}>
+                <div key={pack.id} className="muz-card muz-card-lift p-4 flex items-center gap-2 cursor-pointer" onClick={() => openPack(pack)}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-black text-base" style={{ color: '#F0F4FF' }}>{pack.name}</span>
@@ -681,6 +692,18 @@ export default function QuestionsPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Bouton Partager */}
+                    <button
+                      onClick={e => toggleSharePack(e, pack)}
+                      title={(pack as any).is_shared ? 'Retirer de la communauté' : 'Partager avec la communauté'}
+                      className="h-8 px-2 rounded-lg flex items-center justify-center text-xs font-black transition-all hover:scale-110 whitespace-nowrap"
+                      style={{
+                        background: (pack as any).is_shared ? 'rgba(0,229,209,0.15)' : 'rgba(139,92,246,0.1)',
+                        color: (pack as any).is_shared ? '#00E5D1' : '#8B5CF6',
+                        border: `1px solid ${(pack as any).is_shared ? 'rgba(0,229,209,0.3)' : 'rgba(139,92,246,0.25)'}`,
+                      }}>
+                      {(pack as any).is_shared ? '✓ Partagé' : '↗ Partager'}
+                    </button>
                     <button onClick={e => { e.stopPropagation(); deletePack(pack.id); }}
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black transition-all hover:scale-110"
                       style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}>×</button>

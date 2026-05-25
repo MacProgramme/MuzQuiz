@@ -635,26 +635,53 @@ export default function Home() {
         </p>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { href: '/pour-les-bars',        emoji: '🍺', label: 'Bars & Restaurants' },
-            { href: '/pour-les-animateurs',  emoji: '🎤', label: 'Animateurs'          },
-            { href: '/pour-les-evenements',  emoji: '🎉', label: 'Événements'          },
-            { href: '/pour-les-streamers',   emoji: '🎮', label: 'Streamers'           },
+            { href: '/pour-les-bars',        label: 'Bars & Restaurants' },
+            { href: '/pour-les-animateurs',  label: 'Animateurs'          },
+            { href: '/pour-les-evenements',  label: 'Particuliers'         },
+            { href: '/pour-les-streamers',   label: 'Streamers'           },
           ].map(item => (
             <Link key={item.href} href={item.href}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl font-bold text-xs transition-all hover:opacity-80"
+              className="flex items-center justify-center px-3 py-2.5 rounded-xl font-bold text-xs transition-all hover:opacity-80"
               style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(240,244,255,0.45)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <span>{item.emoji}</span>
               {item.label}
             </Link>
           ))}
         </div>
       </div>
 
+      {/* Liens communauté */}
+      <div className="w-full max-w-md mt-6 flex gap-3">
+        <Link href="/forum"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-3 rounded-2xl font-black text-xs sm:text-sm transition-all hover:scale-[1.03] hover:opacity-90"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,0,170,0.1) 0%, rgba(139,92,246,0.08) 100%)',
+            border: '1.5px solid rgba(255,0,170,0.25)',
+            color: '#FF00AA',
+          }}>
+          Forum
+        </Link>
+        <Link href="/weekly-quiz"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-3 rounded-2xl font-black text-xs sm:text-sm transition-all hover:scale-[1.03] hover:opacity-90"
+          style={{
+            background: 'linear-gradient(135deg, rgba(0,229,209,0.1) 0%, rgba(139,92,246,0.08) 100%)',
+            border: '1.5px solid rgba(0,229,209,0.25)',
+            color: '#00E5D1',
+          }}>
+          Quiz semaine
+        </Link>
+      </div>
+
       {/* Footer */}
       <Link href="/pricing"
-        className="mt-5 text-xs font-bold tracking-wide uppercase transition-all hover:opacity-100"
-        style={{ color: 'rgba(139,92,246,0.55)', letterSpacing: '0.08em' }}>
-        Formules & abonnements →
+        className="mt-6 px-8 py-4 rounded-2xl font-black text-base transition-all hover:scale-[1.04] hover:opacity-100 flex items-center gap-2"
+        style={{
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(255,0,170,0.14) 100%)',
+          border: '2px solid rgba(139,92,246,0.45)',
+          color: '#C4B5FD',
+          boxShadow: '0 0 24px rgba(139,92,246,0.2)',
+          letterSpacing: '0.02em',
+        }}>
+        Formules &amp; abonnements →
       </Link>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-bold"
         style={{ color: 'rgba(240,244,255,0.2)' }}>
