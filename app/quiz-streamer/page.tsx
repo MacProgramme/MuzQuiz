@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { MuzquizLogo } from '@/components/MuzquizLogo';
+
 
 export const metadata: Metadata = {
   title: 'Quiz Twitch, Blind Test et Jeux Interactifs pour Streamers',
@@ -22,32 +22,26 @@ export const metadata: Metadata = {
 
 const AVANTAGES = [
   {
-    emoji: '✏️',
     title: 'Quiz personnalisés',
     desc: 'Créez des quiz autour de vos inside jokes, votre univers, vos emotes, votre historique de stream. Vos viewers répondent à des questions que seuls ceux qui vous suivent vraiment peuvent réussir — c\'est exactement ce qui crée de l\'engagement.',
   },
   {
-    emoji: '🖼️',
     title: 'Quiz images interactifs',
     desc: 'Reconnaître un personnage de jeu vidéo, un logo de studio, une capture d\'écran floue, une célébrité de la scène gaming ou un mème culte — le quiz image sur Twitch crée des réactions immédiates dans le chat. Chaque image est une bombe à retardement.',
   },
   {
-    emoji: '🎵',
     title: 'Blind tests musicaux',
     desc: 'OST de jeux vidéo, génériques cultes, musiques de votre playlist de stream — transformez votre bibliothèque musicale en blind test interactif. Vos viewers adorent prouver qu\'ils reconnaissent vos morceaux préférés en deux notes.',
   },
   {
-    emoji: '🏆',
     title: 'Classement en direct',
     desc: 'Le leaderboard s\'affiche en temps réel pendant votre stream. Chaque question fait bouger le classement et relance la compétition. Vos viewers se battent pour leur position — et votre chat s\'enflamme à chaque changement de tête.',
   },
   {
-    emoji: '🎛️',
     title: 'Contrôle total de l\'animation',
     desc: 'Vous avancez à votre rythme, pas à celui d\'un timer automatique. Pause quand vous commentez une réponse, question suivante quand vous sentez que la salle est prête. MuzQuiz s\'adapte à votre style de stream, pas l\'inverse.',
   },
   {
-    emoji: '📱',
     title: 'Connexion rapide par smartphone',
     desc: 'Vos viewers scannent un QR code ou tapent un code sur muzquiz.fr depuis leur téléphone, tablette ou PC. Zéro téléchargement, zéro compte à créer. En dix secondes, ils sont dans la partie. La friction zéro, c\'est plus de participants.',
   },
@@ -102,7 +96,7 @@ export default function QuizStreamerPage() {
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(245,158,11,0.15)' }}>
-        <Link href="/"><MuzquizLogo width={120} textSize="1.8rem" /></Link>
+        <Link href="/" className="text-xl font-black" style={{ color: '#F0F4FF' }}>MUZQUIZ</Link>
         <div className="flex items-center gap-3">
           <Link href="/pricing" className="text-sm font-bold hidden sm:block" style={{ color: 'rgba(240,244,255,0.5)' }}>Tarifs</Link>
           <Link href="/signup" className="text-sm font-black px-4 py-2 rounded-xl" style={{ background: '#F59E0B', color: '#0D1B3E' }}>
@@ -117,7 +111,7 @@ export default function QuizStreamerPage() {
           className="inline-block mb-5 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest"
           style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.25)' }}
         >
-          🎮 Pour les streamers
+          Pour les streamers
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-black mb-6 leading-tight" style={{ color: '#F0F4FF' }}>
@@ -165,7 +159,6 @@ export default function QuizStreamerPage() {
               className="p-6 rounded-2xl flex flex-col gap-3"
               style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)' }}
             >
-              <div className="text-3xl">{a.emoji}</div>
               <h3 className="font-black text-base" style={{ color: '#F0F4FF' }}>{a.title}</h3>
               <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{a.desc}</p>
             </div>
@@ -187,7 +180,7 @@ export default function QuizStreamerPage() {
 
           <div className="flex flex-col gap-6 text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.6)' }}>
             <div>
-              <h3 className="font-black text-base mb-2" style={{ color: '#F59E0B' }}>🎮 Reconnaître un jeu vidéo</h3>
+              <h3 className="font-black text-base mb-2" style={{ color: '#F59E0B' }}>Reconnaître un jeu vidéo</h3>
               <p>
                 Un screenshot tronqué, un HUD partiel, une texture iconique — vos viewers gaming adorent prouver leur culture vidéoludique. Le quiz image sur les jeux crée immédiatement de la compétition entre vos viewers casualels et les hardcores. Et quand personne ne trouve, le débat dans le chat vaut souvent l&apos;animation elle-même.
               </p>
@@ -205,13 +198,13 @@ export default function QuizStreamerPage() {
               </p>
             </div>
             <div>
-              <h3 className="font-black text-base mb-2" style={{ color: '#F59E0B' }}>🌟 Reconnaître une célébrité</h3>
+              <h3 className="font-black text-base mb-2" style={{ color: '#F59E0B' }}>Reconnaître une célébrité</h3>
               <p>
                 Streamers, pros esport, personnalités gaming, acteurs ou chanteurs selon votre audience — le quiz célébrité crée des moments de légèreté qui changent le rythme d&apos;un live. Parfait comme transition entre deux segments, ou comme clôture de session avant d&apos;annoncer les résultats finaux.
               </p>
             </div>
             <div>
-              <h3 className="font-black text-base mb-2" style={{ color: '#F59E0B' }}>🎬 Reconnaître un film ou une série</h3>
+              <h3 className="font-black text-base mb-2" style={{ color: '#F59E0B' }}>Reconnaître un film ou une série</h3>
               <p>
                 Affiche minimaliste, plan iconique, décor caractéristique — le quiz film et série sur Twitch touche une corde sensible. Culture commune, nostalgie partagée, débats dans le chat qui durent après la session. C&apos;est le format qui fait dire &quot;encore un !&quot; à vos viewers.
               </p>
@@ -313,7 +306,6 @@ export default function QuizStreamerPage() {
             border: '1.5px solid rgba(245,158,11,0.28)',
           }}
         >
-          <div className="text-4xl mb-4">🎮</div>
           <h2 className="text-2xl sm:text-3xl font-black mb-4" style={{ color: '#F0F4FF' }}>
             Prêt à faire participer votre<br />communauté en direct ?
           </h2>

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 export const metadata: Metadata = {
   title: 'Logiciel Quiz pour Animateurs — Quiz Image, Blind Test & IA',
@@ -22,32 +21,26 @@ export const metadata: Metadata = {
 
 const AVANTAGES = [
   {
-    emoji: '✏️',
     title: 'Quiz personnalisés',
     desc: 'Créez vos propres quiz selon votre événement, votre client ou votre public. Chaque animation est unique : questions sur mesure, thème adapté, ton qui colle à l\'ambiance. Vous arrêtez de recycler les mêmes contenus génériques.',
   },
   {
-    emoji: '🖼️',
     title: 'Quiz image interactifs',
     desc: 'Ajoutez des images, logos, célébrités, films, objets, lieux ou marques pour rendre vos animations plus immersives. Un quiz image capte immédiatement l\'attention et différencie vos prestations de celles qui reposent uniquement sur du texte.',
   },
   {
-    emoji: '🎵',
     title: 'Blind tests musicaux',
     desc: 'Créez vos propres blind tests ou utilisez les contenus existants pour animer facilement vos soirées. Musique, années, genres, artistes : construisez des sessions musicales qui correspondent vraiment à votre audience.',
   },
   {
-    emoji: '🏆',
     title: 'Classement en direct',
     desc: 'Affichez les scores en temps réel sur écran géant afin de maintenir la compétition jusqu\'à la dernière question. Vos participants vivent l\'événement intensément, et votre animation gagne en spectaculaire sans aucun effort supplémentaire de votre part.',
   },
   {
-    emoji: '🎛️',
     title: 'Contrôle total de l\'animation',
     desc: 'Lancez, mettez en pause, reprenez ou passez à la question suivante depuis votre interface animateur. Vous gardez la maîtrise totale du rythme et du déroulé — pour coller à l\'énergie de la salle à chaque instant.',
   },
   {
-    emoji: '🤖',
     title: 'Création rapide avec l\'IA',
     desc: 'Générez des questions et des quiz complets à partir d\'un simple thème afin de gagner un temps précieux dans la préparation de vos événements. Ce qui prenait une heure se fait en quelques minutes. Plus de temps pour votre animation, moins pour la préparation.',
   },
@@ -72,7 +65,7 @@ export default function PourLesAnimateursPage() {
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(139,92,246,0.2)' }}>
-        <Link href="/"><MuzquizLogo width={120} textSize="1.8rem" /></Link>
+        <Link href="/" className="text-xl font-black" style={{ color: '#F0F4FF' }}>MUZQUIZ</Link>
         <div className="flex items-center gap-3">
           <Link href="/pricing" className="text-sm font-bold hidden sm:block" style={{ color: 'rgba(240,244,255,0.5)' }}>Tarifs</Link>
           <Link href="/signup" className="text-sm font-black px-4 py-2 rounded-xl" style={{ background: '#8B5CF6', color: 'white' }}>
@@ -87,7 +80,7 @@ export default function PourLesAnimateursPage() {
           className="inline-block mb-5 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest"
           style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.25)' }}
         >
-          🎤 Pour les animateurs
+          Pour les animateurs
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-black mb-6 leading-tight" style={{ color: '#F0F4FF' }}>
@@ -135,7 +128,6 @@ export default function PourLesAnimateursPage() {
               className="p-6 rounded-2xl flex flex-col gap-3"
               style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}
             >
-              <div className="text-3xl">{a.emoji}</div>
               <h3 className="font-black text-base" style={{ color: '#F0F4FF' }}>{a.title}</h3>
               <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{a.desc}</p>
             </div>
@@ -289,7 +281,6 @@ export default function PourLesAnimateursPage() {
             border: '1.5px solid rgba(139,92,246,0.28)',
           }}
         >
-          <div className="text-4xl mb-4">🎤</div>
           <h2 className="text-2xl sm:text-3xl font-black mb-4" style={{ color: '#F0F4FF' }}>
             Testez sur votre prochaine animation
           </h2>

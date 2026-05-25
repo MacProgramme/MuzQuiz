@@ -9,9 +9,11 @@ const ADMIN_EMAILS = [
 ];
 
 function adminClient() {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) throw new Error('Configuration serveur manquante (SUPABASE_SERVICE_ROLE_KEY). Contactez l\'administrateur.');
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    serviceKey,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 }
