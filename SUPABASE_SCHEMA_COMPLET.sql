@@ -173,7 +173,7 @@ UPDATE profiles SET newsletter_subscribed = true WHERE newsletter_subscribed = f
 
 CREATE TABLE IF NOT EXISTS forum_posts (
   id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
-  author_id   UUID        REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  author_id   UUID        REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   title       TEXT        NOT NULL,
   content     TEXT        NOT NULL,
   created_at  TIMESTAMPTZ DEFAULT NOW(),
@@ -183,7 +183,7 @@ CREATE TABLE IF NOT EXISTS forum_posts (
 CREATE TABLE IF NOT EXISTS forum_replies (
   id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
   post_id     UUID        REFERENCES forum_posts(id) ON DELETE CASCADE NOT NULL,
-  author_id   UUID        REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  author_id   UUID        REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   content     TEXT        NOT NULL,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );

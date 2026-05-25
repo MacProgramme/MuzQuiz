@@ -590,40 +590,6 @@ export default function RoomPage() {
                     )}
                     {/* Options */}
                     <div className="max-h-52 overflow-y-auto">
-                      {/* Séparateur packs MUZQUIZ */}
-                      <div className="px-3 py-1.5 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                        <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(0,229,209,0.5)' }}>Packs MUZQUIZ</span>
-                      </div>
-                      {BUILTIN_PACKS
-                        .filter(p => {
-                          const roomIsBlind = isBlindTestMode(room.mode as any);
-                          return roomIsBlind ? p.mode === 'blind_test' : p.mode === 'quiz';
-                        })
-                        .map(pack => (
-                          <button key={pack.id}
-                            onClick={() => { selectPack(pack.id, pack.mode === 'blind_test' ? 'blind_test_qcm' : 'qcm'); setPackDropdownOpen(false); }}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
-                            <MuzquizLogo width={16} showText={false} color={room.pack_id === pack.id ? '#00E5D1' : 'rgba(0,229,209,0.6)'} />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#00E5D1' : '#F0F4FF' }}>
-                                {pack.name}
-                              </p>
-                              <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                                {pack.questions.length}q · Muzquiz
-                              </p>
-                            </div>
-                            {room.pack_id === pack.id && <span className="text-xs font-black flex-shrink-0" style={{ color: '#00E5D1' }}>✓</span>}
-                          </button>
-                        ))}
-                      {/* Séparateur packs perso */}
-                      {hostPacks.filter(p => {
-                        const roomIsBlind = isBlindTestMode(room.mode as any);
-                        return roomIsBlind === isBlindTestMode(p.mode as any);
-                      }).length > 0 && (
-                        <div className="px-3 py-1.5 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                          <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.5)' }}>Mes packs</span>
-                        </div>
-                      )}
                       {/* Packs filtrés — uniquement ceux compatibles avec le mode de la salle */}
                       {hostPacks
                         .filter(p => {
