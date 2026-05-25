@@ -152,7 +152,8 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    type: promoCode.type,
+    type: codeType,
     message,
+    ...(codeType === 'discount' ? { discount_percent: promoCode.discount_percent ?? 10 } : {}),
   });
 }

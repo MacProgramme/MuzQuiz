@@ -12,6 +12,7 @@ const PLANS = [
     tier: 'decouverte',
     name: 'Moustachu Découverte',
     price: '0€',
+    priceValue: 0,
     period: 'pour toujours',
     accent: '#8B5CF6',
     accentLight: 'rgba(139,92,246,0.10)',
@@ -35,7 +36,8 @@ const PLANS = [
   {
     tier: 'essentiel',
     name: 'Moustachu Essentiel',
-    price: '9€',
+    price: '9,99€',
+    priceValue: 9.99,
     period: '/ mois',
     accent: '#00E5D1',
     accentLight: 'rgba(0,229,209,0.08)',
@@ -59,7 +61,8 @@ const PLANS = [
   {
     tier: 'pro',
     name: 'Moustachu Pro',
-    price: '19€',
+    price: '19,99€',
+    priceValue: 19.99,
     period: '/ mois',
     accent: '#FF00AA',
     accentLight: 'rgba(255,0,170,0.08)',
@@ -83,7 +86,8 @@ const PLANS = [
   {
     tier: 'expert',
     name: 'Moustachu Expert',
-    price: '39€',
+    price: '29,99€',
+    priceValue: 29.99,
     period: '/ mois',
     accent: '#F59E0B',
     accentLight: 'rgba(245,158,11,0.08)',
@@ -113,6 +117,7 @@ export default function PricingPage() {
   const [promoCode, setPromoCode] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoResult, setPromoResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [appliedDiscount, setAppliedDiscount] = useState<number | null>(null);
 
   // ── Checkout Stripe ──────────────────────────────────────────────────────
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null); // tier en cours
@@ -206,7 +211,12 @@ export default function PricingPage() {
     });
     const data = await res.json();
     setPromoResult({ success: res.ok && data.success, message: data.message ?? data.error ?? 'Erreur inconnue' });
-    if (res.ok && data.success) setPromoCode('');
+    if (res.ok && data.success) {
+      setPromoCode('');
+      if (data.type === 'discount' && data.discount_percent) {
+        setAppliedDiscount(data.discount_percent);
+      }
+    }
     setPromoLoading(false);
   };
 
@@ -299,10 +309,27 @@ export default function PricingPage() {
                 <h2 className="text-base font-black mb-2 leading-tight" style={{ color: plan.accent }}>
                   {plan.name}
                 </h2>
-                <div>
-                  <span className="text-3xl font-black" style={{ color: '#F0F4FF' }}>{plan.price}</span>
-                  <span className="text-sm ml-1" style={{ color: 'rgba(240,244,255,0.4)' }}>{plan.period}</span>
-                </div>
+                {appliedDiscount && plan.paid && plan.priceValue > 0 ? (
+                  <div>
+                    <div className="flex items-center justify-center gap-2 mb-0.5">
+                      <span className="text-sm line-through" style={{ color: 'rgba(240,244,255,0.3)' }}>{plan.price}</span>
+                      <span className="text-xs font-black px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,229,209,0.15)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.3)' }}>
+                        -{appliedDiscount}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-3xl font-black" style={{ color: '#00E5D1' }}>
+                        {(plan.priceValue * (1 - appliedDiscount / 100)).toFixed(2).replace('.', ',')}€
+                      </span>
+                      <span className="text-sm ml-1" style={{ color: 'rgba(240,244,255,0.4)' }}>{plan.period}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <span className="text-3xl font-black" style={{ color: '#F0F4FF' }}>{plan.price}</span>
+                    <span className="text-sm ml-1" style={{ color: 'rgba(240,244,255,0.4)' }}>{plan.period}</span>
+                  </div>
+                )}
               </div>
 
               {/* Features */}
@@ -418,17 +445,4 @@ export default function PricingPage() {
             },
             {
               q: "Est-ce que je reçois une facture après chaque paiement ?",
-              a: "Oui ! Stripe envoie automatiquement une facture PDF par email après chaque prélèvement mensuel.",
-            },
-          ].map((item, i) => (
-            <div key={i} className="muz-card muz-card-lift p-4">
-              <p className="font-bold mb-1" style={{ color: '#F0F4FF' }}>{item.q}</p>
-              <p className="text-sm" style={{ color: 'rgba(240,244,255,0.45)' }}>{item.a}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-    </main>
-  );
-}
+              a: "Oui ! Stripe envoie automatiquement une facture PDF p
