@@ -2,158 +2,20 @@
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
-export const metadata = {
-  title: 'Conditions Générales de Vente — MUZQUIZ',
-  alternates: { canonical: 'https://www.muzquiz.fr/cgv' },
-};
+export const metadata = { title: 'Conditions Générales de Vente — MUZQUIZ' };
 
-const list = (items: string[]) => (
-  <ul className="mt-2 flex flex-col gap-1 ml-3">
-    {items.map(i => <li key={i} style={{ color: 'rgba(240,244,255,0.65)' }}>— {i}</li>)}
-  </ul>
-);
-
-const OFFRES = [
-  {
-    name: 'Moustachu Découverte',
-    price: '0 €',
-    items: ["jusqu'à 10 joueurs", 'Quiz', 'Buzz Quiz', 'création manuelle illimitée de questions et quiz'],
-  },
-  {
-    name: 'Moustachu Essentiel',
-    price: '9,99 € / mois',
-    items: ["jusqu'à 20 joueurs", 'Quiz', 'Buzz Quiz', 'Quiz Image', 'saisie manuelle illimitée', 'import Excel illimité', 'génération IA limitée à 10 questions et 10 quiz par mois'],
-  },
-  {
-    name: 'Moustachu Pro',
-    price: '19,99 € / mois',
-    items: ["jusqu'à 100 joueurs", 'Quiz', 'Buzz Quiz', 'Quiz Image', 'Blind Test Audio', 'saisie manuelle illimitée', 'import Excel illimité', 'génération IA limitée à 20 questions et 40 quiz par mois'],
-  },
-  {
-    name: 'Moustachu Expert',
-    price: '29,99 € / mois',
-    items: ["jusqu'à 250 joueurs", 'Quiz', 'Buzz Quiz', 'Quiz Image', 'Blind Test Audio', 'saisie manuelle illimitée', 'import Excel illimité', 'génération IA limitée à 20 questions et 80 quiz par mois'],
-  },
+const plans = [
+  { name: "Moustachu Découverte", price: "Gratuit", description: "Accès aux modes Quiz et Buzz Quiz, jusqu'à 10 joueurs, questions par défaut" },
+  { name: "Moustachu Essentiel", price: "9,99 € / mois", description: "Quiz du Jour, jusqu'à 20 joueurs, 3 packs personnalisés" },
+  { name: "Moustachu Pro", price: "19,99 € / mois", description: "Tous les modes (Blind Test inclus), jusqu'à 50 joueurs, packs illimités, écran public" },
+  { name: "Moustachu Expert", price: "29,99 € / mois", description: "Toutes les fonctionnalités Pro, jusqu'à 100 joueurs, support prioritaire" },
 ];
 
-const SECTIONS = [
-  {
-    num: '1', title: 'Identification du vendeur',
-    content: (
-      <div className="p-4 rounded-xl text-sm flex flex-col gap-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <p><strong style={{ color: '#F0F4FF' }}>Dimitri Bouville – La Caravane Game</strong></p>
-        <p><span style={{ color: 'rgba(240,244,255,0.5)' }}>Statut :</span> Micro-entrepreneur</p>
-        <p><span style={{ color: 'rgba(240,244,255,0.5)' }}>SIRET :</span> 80424567800029</p>
-        <p><span style={{ color: 'rgba(240,244,255,0.5)' }}>Adresse :</span> 29 rue du Traité de Rome, 14370 Moult-Chicheboville, France</p>
-        <p><span style={{ color: 'rgba(240,244,255,0.5)' }}>E-mail :</span>{' '}<a href="mailto:lacaravanegame@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>lacaravanegame@gmail.com</a></p>
-        <p className="mt-1 text-xs" style={{ color: 'rgba(240,244,255,0.4)' }}>TVA non applicable, article 293 B du Code général des impôts.</p>
-      </div>
-    ),
-  },
-  {
-    num: '2', title: 'Objet',
-    content: <p>Les présentes CGV définissent les conditions de souscription, de paiement, de renouvellement et de résiliation des abonnements proposés sur la plateforme MUZ QUIZ. Toute commande implique l&apos;acceptation sans réserve des présentes CGV.</p>,
-  },
-  {
-    num: '3', title: 'Description des offres',
-    content: (
-      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {OFFRES.map(o => (
-          <div key={o.name} className="p-4 rounded-xl text-sm" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <p className="font-black" style={{ color: '#F0F4FF' }}>{o.name}</p>
-            <p className="text-xs mt-0.5 mb-2" style={{ color: '#FF00AA' }}>{o.price}</p>
-            {list(o.items)}
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  {
-    num: '4', title: 'Évolution des offres',
-    content: <p>Les fonctionnalités, limitations et caractéristiques des offres peuvent évoluer afin d&apos;améliorer le service. Les modifications n&apos;affecteront pas les périodes déjà facturées.</p>,
-  },
-  {
-    num: '5', title: 'Prix',
-    content: <><p>Les prix sont exprimés en euros. La TVA n&apos;est pas applicable conformément à l&apos;article 293 B du Code général des impôts. Les prix affichés sont ceux applicables au moment de la commande.</p><p className="mt-2">Le vendeur peut modifier ses tarifs à tout moment. Toute modification prendra effet lors du prochain renouvellement de l&apos;abonnement.</p></>,
-  },
-  {
-    num: '6', title: 'Souscription',
-    content: <><p>La souscription s&apos;effectue directement depuis le site MUZ QUIZ. L&apos;utilisateur doit disposer d&apos;un compte valide, fournir des informations exactes, accepter les présentes CGV et effectuer le paiement demandé. La validation du paiement vaut conclusion du contrat.</p></>,
-  },
-  {
-    num: '7', title: 'Paiement',
-    content: <><p>Les paiements sont réalisés de manière sécurisée via <strong style={{ color: '#F0F4FF' }}>Stripe Payments Europe Ltd.</strong> MUZ QUIZ ne collecte ni ne conserve les numéros complets de cartes bancaires. En cas d&apos;échec de paiement, certaines fonctionnalités peuvent être suspendues jusqu&apos;à régularisation.</p></>,
-  },
-  {
-    num: '8', title: 'Renouvellement automatique',
-    content: <p>Les abonnements payants sont souscrits pour une durée mensuelle et renouvelés automatiquement à chaque échéance sauf résiliation par l&apos;utilisateur avant la date de renouvellement. Le renouvellement entraîne le prélèvement automatique du montant correspondant à l&apos;offre souscrite.</p>,
-  },
-  {
-    num: '9', title: 'Résiliation',
-    content: <><p>L&apos;utilisateur peut résilier son abonnement à tout moment depuis son espace personnel ou en adressant une demande à <a href="mailto:lacaravanegame@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>lacaravanegame@gmail.com</a>.</p><p className="mt-2">La résiliation prend effet à la fin de la période déjà payée. L&apos;utilisateur conserve l&apos;accès aux fonctionnalités jusqu&apos;à cette date.</p></>,
-  },
-  {
-    num: '10', title: 'Absence de remboursement',
-    content: <><p>Sauf disposition légale contraire, aucun remboursement total ou partiel ne sera accordé :</p>{list(['après activation du service', "pour une période d'abonnement déjà commencée", "en cas de non-utilisation du service", "en cas d'oubli de résiliation"])}</>,
-  },
-  {
-    num: '11', title: 'Droit de rétractation',
-    content: <p>Conformément aux articles L221-18 et suivants du Code de la consommation, le consommateur dispose en principe d&apos;un délai de quatorze jours pour exercer son droit de rétractation. Toutefois, conformément à l&apos;article L221-28, ce droit peut être perdu lorsque l&apos;utilisateur demande expressément l&apos;exécution immédiate du service et reconnaît perdre son droit de rétractation une fois l&apos;exécution commencée.</p>,
-  },
-  {
-    num: '12', title: 'Suspension du service',
-    content: <p>Le vendeur peut suspendre temporairement tout ou partie du service pour maintenance, raisons de sécurité, incident technique, fraude ou non-paiement. Cette suspension ne donne droit à aucune indemnisation sauf disposition légale impérative contraire.</p>,
-  },
-  {
-    num: '13', title: "Obligations de l'utilisateur",
-    content: <><p>L&apos;utilisateur s&apos;engage à respecter les CGU, fournir des informations exactes et ne pas utiliser le service à des fins illicites. Toute violation peut entraîner la suspension ou la suppression du compte.</p></>,
-  },
-  {
-    num: '14', title: "Services utilisant l'intelligence artificielle",
-    content: <p>Certaines fonctionnalités permettent la génération de contenus assistée par IA. Les contenus générés peuvent contenir des erreurs ou des approximations. L&apos;utilisateur demeure seul responsable de la vérification et de l&apos;utilisation des contenus générés. Aucune garantie d&apos;exactitude n&apos;est accordée.</p>,
-  },
-  {
-    num: '15', title: 'Disponibilité du service',
-    content: <p>Le vendeur met en œuvre les moyens raisonnables pour assurer la disponibilité du service. Cependant, aucune garantie de disponibilité permanente n&apos;est fournie. Des interruptions peuvent intervenir pour maintenance, mises à jour ou incident indépendant de la volonté du vendeur.</p>,
-  },
-  {
-    num: '16', title: 'Responsabilité',
-    content: <p>Le vendeur est soumis à une obligation de moyens. Dans tous les cas autorisés par la loi, l&apos;indemnisation maximale pouvant être due à l&apos;utilisateur est limitée au montant total effectivement payé au cours des douze derniers mois précédant le litige.</p>,
-  },
-  {
-    num: '17', title: 'Force majeure',
-    content: <p>Le vendeur ne pourra être tenu responsable lorsqu&apos;un manquement résulte d&apos;un événement échappant raisonnablement à son contrôle : catastrophe naturelle, panne générale d&apos;Internet, cyberattaque, conflit social, décision administrative ou défaillance majeure d&apos;un prestataire.</p>,
-  },
-  {
-    num: '18', title: 'Données personnelles',
-    content: <p>Les données personnelles collectées dans le cadre des abonnements sont traitées conformément à la <Link href="/confidentialite" className="underline" style={{ color: '#8B5CF6' }}>Politique de confidentialité</Link> accessible sur le site.</p>,
-  },
-  {
-    num: '19', title: 'Médiation de la consommation',
-    content: <><p>Conformément aux articles L.612-1 et suivants du Code de la consommation, tout consommateur a le droit de recourir gratuitement à un médiateur de la consommation en vue de la résolution amiable d&apos;un litige.</p><p className="mt-2 text-sm p-3 rounded-lg" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', color: 'rgba(245,158,11,0.8)' }}>⚠ À compléter avec le nom et les coordonnées du médiateur choisi officiellement pour l&apos;activité.</p></>,
-  },
-  {
-    num: '20', title: "Plateforme européenne de règlement des litiges",
-    content: <p>La Commission européenne met à disposition une plateforme de règlement en ligne des litiges :{' '}<a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noreferrer" className="underline" style={{ color: '#8B5CF6' }}>https://ec.europa.eu/consumers/odr</a></p>,
-  },
-  {
-    num: '21', title: 'Droit applicable',
-    content: <p>Les présentes CGV sont soumises au droit français.</p>,
-  },
-  {
-    num: '22', title: 'Juridiction compétente',
-    content: <p>En cas de litige, les parties rechercheront d&apos;abord une solution amiable. À défaut, les juridictions françaises compétentes seront seules habilitées à connaître du litige, sous réserve des dispositions protectrices applicables aux consommateurs.</p>,
-  },
-  {
-    num: '23', title: 'Contact',
-    content: <p><a href="mailto:lacaravanegame@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>lacaravanegame@gmail.com</a></p>,
-  },
-];
-
-export default function CgvPage() {
+export default function CGV() {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
       <div className="max-w-2xl mx-auto px-6 py-12">
+
         <div className="flex items-center justify-between mb-10">
           <Link href="/" className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
             style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
@@ -161,23 +23,154 @@ export default function CgvPage() {
           </Link>
           <MuzquizLogo width={80} textSize="1.2rem" />
         </div>
+
         <h1 className="text-3xl font-black mb-2" style={{ color: '#F0F4FF' }}>Conditions Générales de Vente</h1>
-        <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.35)' }}>Dernière mise à jour : mai 2026</p>
-        <div className="flex flex-col gap-8" style={{ color: 'rgba(240,244,255,0.72)', lineHeight: '1.75', fontSize: '0.9rem' }}>
-          {SECTIONS.map(s => (
-            <section key={s.num}>
-              <h2 className="text-base font-black mb-4" style={{ color: '#00E5D1' }}>{s.num}. {s.title}</h2>
-              {s.content}
-            </section>
-          ))}
+        <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.35)' }}>Dernière mise à jour : mai 2025</p>
+
+        <div className="flex flex-col gap-8" style={{ color: 'rgba(240,244,255,0.75)', lineHeight: '1.7' }}>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>1. Vendeur</h2>
+            <div className="p-4 rounded-xl text-sm" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p><strong style={{ color: '#F0F4FF' }}>Nom :</strong> [NOM DE SOCIÉTÉ]</p>
+              <p className="mt-1"><strong style={{ color: '#F0F4FF' }}>Statut :</strong> Auto-entrepreneur</p>
+              <p className="mt-1"><strong style={{ color: '#F0F4FF' }}>SIRET :</strong> [NUMÉRO SIRET]</p>
+              <p className="mt-1"><strong style={{ color: '#F0F4FF' }}>E-mail :</strong> antoine.gegedu27@gmail.com</p>
+              <p className="mt-1 text-xs" style={{ color: 'rgba(240,244,255,0.4)' }}>TVA non applicable — art. 293 B du CGI</p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>2. Produits et tarifs</h2>
+            <p className="mb-4">MUZQUIZ propose les abonnements mensuels suivants :</p>
+            <div className="flex flex-col gap-3">
+              {plans.map((plan) => (
+                <div key={plan.name} className="p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-black text-sm" style={{ color: '#F0F4FF' }}>{plan.name}</span>
+                    <span className="font-black text-sm" style={{ color: '#FF00AA' }}>{plan.price}</span>
+                  </div>
+                  <p className="text-xs" style={{ color: 'rgba(240,244,255,0.4)' }}>{plan.description}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>
+              Les prix sont indiqués en euros, toutes taxes comprises. TVA non applicable selon l&apos;article 293 B du CGI.
+              L&apos;éditeur se réserve le droit de modifier ses tarifs à tout moment. Les abonnements en cours ne sont
+              pas affectés par une modification tarifaire jusqu&apos;au renouvellement suivant.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>3. Commande et paiement</h2>
+            <p>
+              La souscription à un abonnement payant s&apos;effectue directement depuis la plateforme. Le paiement est
+              réalisé via un prestataire de paiement sécurisé. En finalisant votre commande, vous acceptez les présentes CGV.
+            </p>
+            <p className="mt-3">
+              L&apos;abonnement est à renouvellement mensuel automatique. Le montant est prélevé chaque mois à la date
+              anniversaire de la souscription.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>4. Droit de rétractation</h2>
+            <p>
+              Conformément à l&apos;article L221-18 du Code de la consommation, vous disposez d&apos;un délai de{' '}
+              <strong style={{ color: '#F0F4FF' }}>14 jours</strong> à compter de la souscription pour exercer votre
+              droit de rétractation, sans avoir à justifier de motifs ni à payer de pénalités.
+            </p>
+            <p className="mt-3">
+              Cependant, en cochant la case prévue à cet effet lors de la souscription, vous reconnaissez expressément
+              renoncer à votre droit de rétractation pour les services dont l&apos;exécution a commencé avant
+              l&apos;expiration du délai de 14 jours, conformément à l&apos;article L221-28 du Code de la consommation.
+            </p>
+            <p className="mt-3">
+              Pour exercer ce droit (si applicable), envoyez une demande à{' '}
+              <a href="mailto:antoine.gegedu27@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>
+                antoine.gegedu27@gmail.com
+              </a>{' '}
+              en précisant votre adresse e-mail de compte et la date de souscription.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>5. Résiliation et annulation</h2>
+            <p>
+              Vous pouvez résilier votre abonnement à tout moment depuis votre espace personnel ou en contactant
+              l&apos;éditeur par e-mail. La résiliation prend effet à la fin de la période de facturation en cours.
+              Aucun remboursement au prorata n&apos;est effectué pour la période restante.
+            </p>
+            <p className="mt-3">
+              En cas de non-paiement, l&apos;éditeur se réserve le droit de suspendre l&apos;accès aux fonctionnalités
+              payantes sans préavis.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>6. Exécution du service</h2>
+            <p>
+              L&apos;accès aux fonctionnalités de l&apos;abonnement souscrit est activé immédiatement après confirmation
+              du paiement. Le service est fourni par voie électronique, de manière continue pendant la durée de
+              l&apos;abonnement.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>7. Responsabilité du vendeur</h2>
+            <p>
+              L&apos;éditeur s&apos;engage à fournir le service avec soin et compétence. Sa responsabilité ne pourra
+              être engagée qu&apos;en cas de faute prouvée. En tout état de cause, la responsabilité de l&apos;éditeur
+              est limitée au montant des sommes versées par l&apos;acheteur au cours des 12 derniers mois.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>8. Données personnelles</h2>
+            <p>
+              Les données collectées lors de la commande sont traitées conformément à notre{' '}
+              <Link href="/confidentialite" className="underline" style={{ color: '#8B5CF6' }}>
+                Politique de confidentialité
+              </Link>.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>9. Médiation et litiges</h2>
+            <p>
+              En cas de litige, nous vous invitons à contacter notre service en priorité à{' '}
+              <a href="mailto:antoine.gegedu27@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>
+                antoine.gegedu27@gmail.com
+              </a>.
+            </p>
+            <p className="mt-3">
+              Conformément aux articles L.616-1 et R.616-1 du Code de la consommation, vous pouvez recourir gratuitement
+              à un service de médiation. La Commission européenne met également à disposition une plateforme de règlement
+              en ligne des litiges accessible à :{' '}
+              <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer"
+                className="underline" style={{ color: '#8B5CF6' }}>
+                ec.europa.eu/consumers/odr
+              </a>.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>10. Droit applicable</h2>
+            <p>
+              Les présentes CGV sont soumises au droit français. Tout litige sera soumis aux juridictions compétentes
+              du ressort du siège de l&apos;éditeur.
+            </p>
+          </section>
+
         </div>
+
         <div className="mt-14 pt-6 flex flex-wrap gap-4 text-xs font-bold"
           style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.3)' }}>
           <Link href="/mentions-legales" className="hover:opacity-80">Mentions légales</Link>
           <Link href="/cgu" className="hover:opacity-80">CGU</Link>
           <Link href="/confidentialite" className="hover:opacity-80">Confidentialité</Link>
-          <Link href="/cookies" className="hover:opacity-80">Cookies</Link>
         </div>
+
       </div>
     </div>
   );

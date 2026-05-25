@@ -2,192 +2,54 @@
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 
-export const metadata = {
-  title: 'Politique de confidentialité — MUZQUIZ',
-  alternates: { canonical: 'https://www.muzquiz.fr/confidentialite' },
-};
+export const metadata = { title: 'Politique de confidentialité — MUZQUIZ' };
 
-type Section = { num: string; title: string; items?: string[]; content: React.ReactNode };
-
-const block = (children: React.ReactNode) => (
-  <div className="p-4 rounded-xl text-sm flex flex-col gap-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-    {children}
-  </div>
-);
-
-const list = (items: string[]) => (
-  <ul className="mt-2 flex flex-col gap-1 ml-3">
-    {items.map(i => <li key={i} style={{ color: 'rgba(240,244,255,0.65)' }}>— {i}</li>)}
-  </ul>
-);
-
-const SECTIONS: Section[] = [
-  {
-    num: '1', title: 'Responsable du traitement',
-    content: block(<>
-      <p><strong style={{ color: '#F0F4FF' }}>Dimitri Bouville – La Caravane Game</strong></p>
-      <p><span style={{ color: 'rgba(240,244,255,0.5)' }}>Statut :</span> Micro-entrepreneur</p>
-      <p><span style={{ color: 'rgba(240,244,255,0.5)' }}>SIRET :</span> 80424567800029</p>
-      <p><span style={{ color: 'rgba(240,244,255,0.5)' }}>Adresse :</span> 29 rue du Traité de Rome, 14370 Moult-Chicheboville, France</p>
-      <p><span style={{ color: 'rgba(240,244,255,0.5)' }}>E-mail :</span>{' '}
-        <a href="mailto:lacaravanegame@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>lacaravanegame@gmail.com</a>
-      </p>
-    </>),
-  },
-  {
-    num: '2', title: 'Objet de la présente politique',
-    content: <p>La présente politique a pour objet d&apos;informer les utilisateurs du site MUZ QUIZ sur la manière dont leurs données personnelles sont collectées, utilisées, conservées et protégées conformément au Règlement Général sur la Protection des Données (RGPD) et à la législation française applicable.</p>,
-  },
-  {
-    num: '3', title: 'Données collectées',
-    content: <>
-      <p>Selon l&apos;utilisation du service, les données suivantes peuvent être collectées.</p>
-      {[
-        { label: 'Création et gestion du compte', items: ['adresse e-mail', 'pseudo', 'mot de passe sécurisé et chiffré', 'photo de profil (facultative)', 'couleur d\'avatar ou préférences utilisateur'] },
-        { label: 'Données de jeu', items: ['scores', 'statistiques de parties', 'classements', 'historique des parties', 'quiz créés', 'questions créées', 'packs personnalisés', 'participation aux événements et défis'] },
-        { label: 'Données techniques', items: ['adresse IP', 'type de navigateur', 'système d\'exploitation', 'informations de connexion', 'journaux techniques de sécurité', 'informations relatives aux appareils utilisés'] },
-        { label: 'Données liées aux abonnements', items: ['formule souscrite', 'date de souscription', 'historique de facturation', 'statut des paiements', 'identifiants de transaction transmis par Stripe'] },
-        { label: 'Connexion via fournisseurs tiers (Google / Discord)', items: ['nom du profil', 'adresse e-mail', 'identifiant utilisateur fourni par le service', 'photo de profil éventuellement associée'] },
-        { label: 'Newsletter et communications (avec consentement)', items: ['adresse e-mail', 'préférences de communication', 'historique d\'inscription ou de désinscription'] },
-      ].map(g => (
-        <div key={g.label} className="mt-3">
-          <p className="text-sm font-bold" style={{ color: '#F0F4FF' }}>{g.label}</p>
-          {list(g.items)}
-        </div>
-      ))}
-    </>,
-  },
-  {
-    num: '4', title: 'Données non collectées',
-    content: <>
-      <p>MUZ QUIZ ne collecte pas volontairement de données sensibles au sens du RGPD, notamment :</p>
-      {list(['origine raciale ou ethnique', 'opinions politiques', 'convictions religieuses', 'données de santé', 'orientation sexuelle', 'données biométriques'])}
-    </>,
-  },
-  {
-    num: '5', title: 'Finalités du traitement',
-    content: <>
-      {[
-        { label: 'Gestion du compte', items: ['créer le compte utilisateur', 'authentifier l\'utilisateur', 'permettre l\'accès aux fonctionnalités du service'] },
-        { label: 'Fonctionnement du jeu', items: ['gérer les parties', 'enregistrer les scores', 'afficher les classements', 'sauvegarder les quiz créés', 'fournir les fonctionnalités souscrites'] },
-        { label: 'Gestion des abonnements', items: ['traiter les paiements', 'gérer les renouvellements', 'gérer les annulations', 'assurer le suivi administratif et comptable'] },
-        { label: 'Amélioration du service', items: ['mesurer l\'audience', 'détecter les dysfonctionnements', 'améliorer les performances', 'développer de nouvelles fonctionnalités'] },
-        { label: 'Sécurité', items: ['prévenir les fraudes', 'lutter contre les abus', 'détecter les accès non autorisés', 'protéger les utilisateurs et les infrastructures techniques'] },
-        { label: 'Communication', items: ['répondre aux demandes de support', 'informer des modifications importantes', 'envoyer des communications liées au fonctionnement du service'] },
-      ].map(g => (
-        <div key={g.label} className="mt-3">
-          <p className="text-sm font-bold" style={{ color: '#F0F4FF' }}>{g.label}</p>
-          {list(g.items)}
-        </div>
-      ))}
-    </>,
-  },
-  {
-    num: '6', title: 'Bases légales du traitement',
-    content: <>
-      {[
-        { label: 'Exécution du contrat', items: ['création du compte', 'utilisation du service', 'gestion des abonnements', 'accès aux fonctionnalités proposées'] },
-        { label: 'Obligation légale', items: ['conservation des données comptables', 'respect des obligations fiscales', 'demandes des autorités compétentes'] },
-        { label: 'Intérêt légitime', items: ['sécurité du service', 'prévention de la fraude', 'amélioration technique de la plateforme', 'gestion des statistiques anonymisées'] },
-        { label: 'Consentement', items: ['utilisation éventuelle de certains cookies', 'envoi d\'une newsletter', 'certaines communications facultatives'] },
-      ].map(g => (
-        <div key={g.label} className="mt-3">
-          <p className="text-sm font-bold" style={{ color: '#F0F4FF' }}>{g.label}</p>
-          {list(g.items)}
-        </div>
-      ))}
-    </>,
-  },
-  {
-    num: '7', title: 'Durée de conservation',
-    content: <>
-      {[
-        { label: 'Compte utilisateur actif', text: 'Les données sont conservées tant que le compte reste actif.' },
-        { label: 'Suppression du compte', text: 'Les données sont supprimées ou anonymisées dans un délai maximal de 30 jours après suppression du compte, sauf obligation légale contraire.' },
-        { label: 'Données de facturation', text: 'Les données comptables sont conservées pendant 10 ans conformément aux obligations légales.' },
-        { label: 'Journaux techniques', text: 'Les logs de connexion et de sécurité sont conservés pour une durée maximale de 90 jours.' },
-        { label: 'Newsletter', text: 'Les données liées à la newsletter sont conservées jusqu\'au retrait du consentement ou à la désinscription.' },
-      ].map(g => (
-        <div key={g.label} className="mt-3">
-          <p className="text-sm font-bold" style={{ color: '#F0F4FF' }}>{g.label}</p>
-          <p className="mt-1">{g.text}</p>
-        </div>
-      ))}
-    </>,
-  },
-  {
-    num: '8', title: 'Destinataires des données',
-    content: <>
-      <p>Les données peuvent être traitées par les prestataires techniques suivants :</p>
-      {[
-        { name: 'Vercel', role: 'Hébergement et déploiement de l\'application.' },
-        { name: 'Supabase', role: 'Base de données, authentification et stockage.' },
-        { name: 'Stripe', role: 'Gestion des paiements et des abonnements.' },
-        { name: 'Google', role: 'Authentification, statistiques et services associés.' },
-        { name: 'Discord', role: 'Authentification utilisateur facultative.' },
-      ].map(p => (
-        <div key={p.name} className="mt-2 ml-3">
-          <span style={{ color: '#F0F4FF', fontWeight: 700 }}>{p.name}</span>
-          <span style={{ color: 'rgba(240,244,255,0.65)' }}> — {p.role}</span>
-        </div>
-      ))}
-      <p className="mt-3">Ces prestataires n&apos;accèdent aux données que dans le cadre des services qu&apos;ils fournissent.</p>
-    </>,
-  },
-  {
-    num: '9', title: 'Transferts internationaux',
-    content: <><p>Certains prestataires peuvent être situés hors de l&apos;Union européenne. Lorsque cela est nécessaire, ces transferts sont encadrés par des garanties appropriées telles que :</p>{list(['clauses contractuelles types approuvées par la Commission européenne', 'mécanismes reconnus par la réglementation applicable', 'mesures complémentaires de sécurité lorsque nécessaire'])}</>,
-  },
-  {
-    num: '10', title: 'Sécurité des données',
-    content: <><p>MUZ QUIZ met en œuvre des mesures de sécurité adaptées, notamment :</p>{list(['chiffrement des communications via HTTPS', 'authentification sécurisée', 'protection des accès administrateurs', 'journalisation des événements de sécurité', 'restrictions d\'accès aux données', 'mécanismes de sauvegarde et de récupération'])}<p className="mt-3">Malgré ces mesures, aucun système ne peut garantir une sécurité absolue.</p></>,
-  },
-  {
-    num: '11', title: 'Vos droits',
-    content: <>
-      <p>Conformément au RGPD, vous disposez des droits suivants :</p>
-      {[
-        { label: 'Droit d\'accès', text: 'Obtenir une copie des données vous concernant.' },
-        { label: 'Droit de rectification', text: 'Corriger des informations inexactes ou incomplètes.' },
-        { label: 'Droit à l\'effacement', text: 'Demander la suppression de vos données personnelles lorsque cela est légalement possible.' },
-        { label: 'Droit à la limitation', text: 'Demander la suspension temporaire d\'un traitement.' },
-        { label: 'Droit d\'opposition', text: 'Vous opposer à certains traitements fondés sur l\'intérêt légitime.' },
-        { label: 'Droit à la portabilité', text: 'Recevoir vos données dans un format structuré et réutilisable.' },
-        { label: 'Retrait du consentement', text: 'Retirer à tout moment votre consentement lorsqu\'un traitement repose sur celui-ci.' },
-      ].map(r => (
-        <div key={r.label} className="mt-2 ml-3">
-          <span style={{ color: '#F0F4FF', fontWeight: 700 }}>{r.label}</span>
-          <span style={{ color: 'rgba(240,244,255,0.65)' }}> — {r.text}</span>
-        </div>
-      ))}
-    </>,
-  },
-  {
-    num: '12', title: 'Exercice des droits',
-    content: <><p>Pour exercer vos droits, contactez :</p><p className="mt-2"><a href="mailto:lacaravanegame@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>lacaravanegame@gmail.com</a></p><p className="mt-2">Une réponse sera apportée dans un délai maximal d&apos;un mois, sauf circonstances particulières prévues par la réglementation.</p></>,
-  },
-  {
-    num: '13', title: 'Réclamation auprès de la CNIL',
-    content: <><p>Si vous estimez que vos droits ne sont pas respectés, vous pouvez déposer une réclamation auprès de :</p><p className="mt-2"><strong style={{ color: '#F0F4FF' }}>CNIL – Commission Nationale de l&apos;Informatique et des Libertés</strong></p><p className="mt-1"><a href="https://www.cnil.fr" target="_blank" rel="noreferrer" className="underline" style={{ color: '#8B5CF6' }}>https://www.cnil.fr</a></p></>,
-  },
-  {
-    num: '14', title: 'Suppression du compte',
-    content: <><p>L&apos;utilisateur peut demander la suppression de son compte à tout moment depuis les fonctionnalités disponibles sur la plateforme ou en adressant une demande à <a href="mailto:lacaravanegame@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>lacaravanegame@gmail.com</a>.</p><p className="mt-2">La suppression entraîne la désactivation du compte ainsi que l&apos;effacement ou l&apos;anonymisation des données associées, sous réserve des obligations légales de conservation.</p></>,
-  },
-  {
-    num: '15', title: 'Modifications de la présente politique',
-    content: <p>La présente politique peut être modifiée afin de tenir compte des évolutions légales, réglementaires ou techniques du service. La date de mise à jour figurant en tête du document sera alors modifiée.</p>,
-  },
-  {
-    num: '16', title: 'Contact',
-    content: block(<><p><a href="mailto:lacaravanegame@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>lacaravanegame@gmail.com</a></p></>),
-  },
+const dataTable = [
+  { category: "Compte utilisateur", data: "Adresse e-mail, pseudo, couleur d'avatar, photo de profil (optionnelle)", basis: "Exécution du contrat" },
+  { category: "Données de jeu", data: "Scores, historique des parties, packs de questions créés, résultats du Quiz du Jour", basis: "Exécution du contrat" },
+  { category: "Connexion anonyme", data: "Pseudo choisi pour la session, identifiant temporaire", basis: "Intérêt légitime" },
+  { category: "Données techniques", data: "Adresse IP, type de navigateur, logs de connexion (collectés par Vercel et Supabase)", basis: "Intérêt légitime (sécurité)" },
+  { category: "Abonnement", data: "Niveau d'abonnement souscrit, historique de facturation (géré par le prestataire de paiement)", basis: "Exécution du contrat" },
 ];
 
-export default function ConfidentialitePage() {
+const retentionTable = [
+  { type: "Données de compte actif", duration: "Durée d'utilisation du service" },
+  { type: "Données après suppression du compte", duration: "30 jours puis suppression définitive" },
+  { type: "Données de connexion anonyme", duration: "30 jours maximum" },
+  { type: "Données de facturation", duration: "10 ans (obligation légale comptable)" },
+  { type: "Logs techniques", duration: "90 jours (selon Vercel et Supabase)" },
+];
+
+const subProcessors = [
+  { name: "Vercel Inc.", role: "Hébergement et déploiement de l'application", location: "États-Unis", link: "vercel.com/legal/privacy-policy" },
+  { name: "Supabase Inc.", role: "Base de données, authentification, stockage fichiers", location: "États-Unis (serveurs EU disponibles)", link: "supabase.com/privacy" },
+  { name: "Google LLC (YouTube)", role: "Lecture des pistes audio pour les blind tests", location: "États-Unis", link: "policies.google.com/privacy" },
+];
+
+const rights = [
+  { right: "Droit d'accès", desc: "Obtenir une copie de vos données personnelles" },
+  { right: "Droit de rectification", desc: "Corriger des données inexactes ou incomplètes" },
+  { right: "Droit à l'effacement", desc: "Demander la suppression de vos données" },
+  { right: "Droit à la portabilité", desc: "Recevoir vos données dans un format lisible par machine" },
+  { right: "Droit d'opposition", desc: "Vous opposer à un traitement basé sur l'intérêt légitime" },
+  { right: "Droit à la limitation", desc: "Demander la suspension temporaire d'un traitement" },
+];
+
+const purposes = [
+  "Créer et gérer votre compte utilisateur",
+  "Permettre le fonctionnement du service de jeu en temps réel",
+  "Gérer votre abonnement et la facturation",
+  "Afficher les classements et scores",
+  "Améliorer le service (analyses d'usage anonymisées)",
+  "Assurer la sécurité et prévenir les abus",
+  "Vous contacter en cas de besoin (support, modifications importantes)",
+];
+
+export default function Confidentialite() {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
       <div className="max-w-2xl mx-auto px-6 py-12">
+
         <div className="flex items-center justify-between mb-10">
           <Link href="/" className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
             style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
@@ -195,22 +57,166 @@ export default function ConfidentialitePage() {
           </Link>
           <MuzquizLogo width={80} textSize="1.2rem" />
         </div>
+
         <h1 className="text-3xl font-black mb-2" style={{ color: '#F0F4FF' }}>Politique de confidentialité</h1>
-        <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.35)' }}>Dernière mise à jour : mai 2026</p>
-        <div className="flex flex-col gap-8" style={{ color: 'rgba(240,244,255,0.72)', lineHeight: '1.75', fontSize: '0.9rem' }}>
-          {SECTIONS.map(s => (
-            <section key={s.num}>
-              <h2 className="text-base font-black mb-4" style={{ color: '#8B5CF6' }}>{s.num}. {s.title}</h2>
-              {s.content}
-            </section>
-          ))}
+        <p className="text-sm mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>Dernière mise à jour : mai 2025</p>
+        <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.4)' }}>
+          Conformément au RGPD (Règlement UE 2016/679) et à la loi Informatique et Libertés.
+        </p>
+
+        <div className="flex flex-col gap-8" style={{ color: 'rgba(240,244,255,0.75)', lineHeight: '1.7' }}>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>1. Responsable du traitement</h2>
+            <div className="p-4 rounded-xl text-sm" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p><strong style={{ color: '#F0F4FF' }}>Identité :</strong> [NOM DE SOCIÉTÉ] (auto-entrepreneur)</p>
+              <p className="mt-1"><strong style={{ color: '#F0F4FF' }}>E-mail :</strong> antoine.gegedu27@gmail.com</p>
+              <p className="mt-1"><strong style={{ color: '#F0F4FF' }}>SIRET :</strong> [NUMÉRO SIRET]</p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>2. Données collectées</h2>
+            <p className="mb-3">Selon votre utilisation du service, nous collectons les données suivantes :</p>
+            <div className="flex flex-col gap-3">
+              {dataTable.map((item) => (
+                <div key={item.category} className="p-4 rounded-xl text-sm"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <p className="font-black mb-1" style={{ color: '#F0F4FF' }}>{item.category}</p>
+                  <p style={{ color: 'rgba(240,244,255,0.6)' }}>{item.data}</p>
+                  <p className="mt-1 text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>Base légale : {item.basis}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>
+              Nous ne collectons pas de données sensibles (origine ethnique, opinions politiques, données de santé, etc.).
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>3. Finalités du traitement</h2>
+            <p>Vos données sont utilisées pour :</p>
+            <ul className="mt-3 flex flex-col gap-2 pl-4">
+              {purposes.map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm">
+                  <span style={{ color: '#FF00AA', flexShrink: 0 }}>—</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>4. Durée de conservation</h2>
+            <div className="flex flex-col gap-0 text-sm rounded-xl overflow-hidden"
+              style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+              {retentionTable.map((item, i) => (
+                <div key={item.type} className="flex items-start justify-between gap-4 px-4 py-3"
+                  style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)' }}>
+                  <span style={{ color: 'rgba(240,244,255,0.7)' }}>{item.type}</span>
+                  <span className="text-right font-bold flex-shrink-0" style={{ color: '#8B5CF6' }}>{item.duration}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>5. Sous-traitants et transferts</h2>
+            <p className="mb-3">Nous faisons appel aux prestataires suivants :</p>
+            <div className="flex flex-col gap-3 text-sm">
+              {subProcessors.map((item) => (
+                <div key={item.name} className="p-4 rounded-xl"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <p className="font-black" style={{ color: '#F0F4FF' }}>{item.name}</p>
+                  <p className="mt-1" style={{ color: 'rgba(240,244,255,0.6)' }}>{item.role}</p>
+                  <p className="mt-1 text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                    Localisation : {item.location} —{' '}
+                    <a href={`https://${item.link}`} target="_blank" rel="noopener noreferrer"
+                      className="underline" style={{ color: '#8B5CF6' }}>
+                      Politique de confidentialité
+                    </a>
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>
+              Ces transferts hors UE sont encadrés par des garanties appropriées (clauses contractuelles types de la
+              Commission européenne ou décision d&apos;adéquation).
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>6. Vos droits</h2>
+            <p className="mb-3">Conformément au RGPD, vous disposez des droits suivants :</p>
+            <div className="flex flex-col gap-2 text-sm">
+              {rights.map((item) => (
+                <div key={item.right} className="flex items-start gap-3 p-3 rounded-xl"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span className="font-black flex-shrink-0" style={{ color: '#FF00AA' }}>{item.right}</span>
+                  <span style={{ color: 'rgba(240,244,255,0.6)' }}>— {item.desc}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4">
+              Pour exercer ces droits, contactez-nous à{' '}
+              <a href="mailto:antoine.gegedu27@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>
+                antoine.gegedu27@gmail.com
+              </a>
+              . Nous répondrons dans un délai maximum de <strong style={{ color: '#F0F4FF' }}>30 jours</strong>.
+            </p>
+            <p className="mt-3 text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>
+              Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de la{' '}
+              <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer"
+                className="underline" style={{ color: '#8B5CF6' }}>CNIL</a>.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>7. Cookies</h2>
+            <p>
+              Le site utilise des cookies et technologies similaires (localStorage) uniquement pour le fonctionnement
+              du service (maintien de session, préférences de jeu). Ces cookies sont strictement nécessaires et ne
+              nécessitent pas de consentement préalable.
+            </p>
+            <p className="mt-3">Nous n&apos;utilisons pas de cookies publicitaires ou de tracking tiers.</p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>8. Sécurité</h2>
+            <p>
+              Vos données sont protégées par des mesures techniques appropriées : connexions chiffrées (HTTPS),
+              authentification sécurisée, accès aux données restreint par des politiques de sécurité au niveau
+              de la base de données (Row Level Security).
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>9. Modifications</h2>
+            <p>
+              Cette politique peut être mise à jour pour refléter des changements dans nos pratiques ou la
+              réglementation. En cas de modification substantielle, les utilisateurs inscrits seront informés par e-mail.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>10. Contact</h2>
+            <p>
+              Pour toute question relative à la protection de vos données :{' '}
+              <a href="mailto:antoine.gegedu27@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>
+                antoine.gegedu27@gmail.com
+              </a>
+            </p>
+          </section>
+
         </div>
+
         <div className="mt-14 pt-6 flex flex-wrap gap-4 text-xs font-bold"
           style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.3)' }}>
           <Link href="/mentions-legales" className="hover:opacity-80">Mentions légales</Link>
           <Link href="/cgu" className="hover:opacity-80">CGU</Link>
           <Link href="/cgv" className="hover:opacity-80">CGV</Link>
         </div>
+
       </div>
     </div>
   );
