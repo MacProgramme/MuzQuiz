@@ -635,15 +635,14 @@ export default function Home() {
         </p>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { href: '/pour-les-bars',        emoji: '🍺', label: 'Bars & Restaurants' },
-            { href: '/pour-les-animateurs',  emoji: '🎤', label: 'Animateurs'          },
-            { href: '/pour-les-evenements',  emoji: '🎉', label: 'Événements'          },
-            { href: '/pour-les-streamers',   emoji: '🎮', label: 'Streamers'           },
+            { href: '/pour-les-bars',        label: 'Bars & Restaurants' },
+            { href: '/pour-les-animateurs',  label: 'Animateurs'          },
+            { href: '/pour-les-evenements',  label: 'Particuliers'         },
+            { href: '/pour-les-streamers',   label: 'Streamers'           },
           ].map(item => (
             <Link key={item.href} href={item.href}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl font-bold text-xs transition-all hover:opacity-80"
+              className="flex items-center justify-center px-3 py-2.5 rounded-xl font-bold text-xs transition-all hover:opacity-80"
               style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(240,244,255,0.45)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <span>{item.emoji}</span>
               {item.label}
             </Link>
           ))}
@@ -659,7 +658,7 @@ export default function Home() {
             border: '1.5px solid rgba(255,0,170,0.25)',
             color: '#FF00AA',
           }}>
-          💬 Forum
+          Forum
         </Link>
         <Link href="/weekly-quiz"
           className="flex-1 flex items-center justify-center gap-1.5 px-3 py-3 rounded-2xl font-black text-xs sm:text-sm transition-all hover:scale-[1.03] hover:opacity-90"
@@ -668,7 +667,7 @@ export default function Home() {
             border: '1.5px solid rgba(0,229,209,0.25)',
             color: '#00E5D1',
           }}>
-          📅 Quiz semaine
+          Quiz semaine
         </Link>
       </div>
 

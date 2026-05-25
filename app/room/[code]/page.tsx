@@ -552,14 +552,14 @@ export default function RoomPage() {
                     background: room.pack_id ? 'rgba(255,0,170,0.08)' : 'rgba(139,92,246,0.08)',
                     border: `1.5px solid ${room.pack_id ? 'rgba(255,0,170,0.35)' : 'rgba(139,92,246,0.3)'}`,
                   }}>
-                  <MuzquizLogo width={18} showText={false} color={room.pack_id ? '#FF00AA' : '#8B5CF6'} />
+                  <MuzquizLogo width={18} showText={false} color={room.pack_id ? '#FF00AA' : 'rgba(240,244,255,0.3)'} />
                   <span className="flex-1 text-sm font-bold truncate"
-                    style={{ color: room.pack_id ? '#FF00AA' : '#8B5CF6' }}>
+                    style={{ color: room.pack_id ? '#FF00AA' : 'rgba(240,244,255,0.4)' }}>
                     {room.pack_id
                       ? (isBuiltinPack(room.pack_id)
                           ? (() => { const bp = BUILTIN_PACKS.find(p => p.id === room.pack_id); return bp ? `${bp.emoji} ${bp.name}` : 'Pack MUZQUIZ'; })()
                           : (hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné'))
-                      : 'Questions MUZQUIZ (défaut)'}
+                      : 'Sélectionner un pack…'}
                   </span>
                   <span style={{ color: 'rgba(240,244,255,0.4)', fontSize: '0.9rem' }}>
                     {packDropdownOpen ? '▲' : '▼'}
@@ -584,16 +584,6 @@ export default function RoomPage() {
                     )}
                     {/* Options */}
                     <div className="max-h-52 overflow-y-auto">
-                      {/* Option défaut */}
-                      <button
-                        onClick={() => { selectPack(null); setPackDropdownOpen(false); }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
-                        <MuzquizLogo width={16} showText={false} />
-                        <span className="text-sm font-bold" style={{ color: !room.pack_id ? '#8B5CF6' : '#F0F4FF' }}>
-                          Questions MUZQUIZ (défaut)
-                        </span>
-                        {!room.pack_id && <span className="ml-auto text-xs font-black" style={{ color: '#8B5CF6' }}>✓</span>}
-                      </button>
                       {/* Séparateur packs MUZQUIZ */}
                       <div className="px-3 py-1.5 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                         <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(0,229,209,0.5)' }}>Packs MUZQUIZ</span>

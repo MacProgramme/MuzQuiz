@@ -193,6 +193,12 @@ export default function AdminPage() {
     setPromoLoading(false);
   };
 
+  // Helper : récupère le token JWT de l'admin pour les API routes
+  const getToken = async (): Promise<string> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ?? '';
+  };
+
   const createPromoCode = async () => {
     if (!newCode.trim()) return;
     setPromoSaving(true);
@@ -210,9 +216,15 @@ export default function AdminPage() {
     } else {
       payload.discount_percent = parseInt(newDiscountPct) || 20;
     }
-    const { error } = await supabase.from('promo_codes').insert(payload);
-    if (error) {
-      setPromoMsg(error.code === '23505' ? '⚠ Ce code existe déjà.' : `Erreur : ${error.message}`);
+    const callerToken = await getToken();
+    const res = await fetch('/api/admin/promo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payload, callerToken }),
+    });
+    if (!res.ok) {
+      const j = await res.json();
+      setPromoMsg(j.error?.includes('duplicate') || j.error?.includes('unique') ? '⚠ Ce code existe déjà.' : `Erreur : ${j.error}`);
     } else {
       setPromoMsg('✓ Code créé !');
       setNewCode('');
@@ -224,12 +236,22 @@ export default function AdminPage() {
   };
 
   const togglePromoCode = async (id: string, isActive: boolean) => {
-    await supabase.from('promo_codes').update({ is_active: !isActive }).eq('id', id);
+    const callerToken = await getToken();
+    await fetch('/api/admin/promo', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, is_active: !isActive, callerToken }),
+    });
     setPromoCodes(prev => prev.map(p => p.id === id ? { ...p, is_active: !isActive } : p));
   };
 
   const deletePromoCode = async (id: string) => {
-    await supabase.from('promo_codes').delete().eq('id', id);
+    const callerToken = await getToken();
+    await fetch('/api/admin/promo', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, callerToken }),
+    });
     setPromoCodes(prev => prev.filter(p => p.id !== id));
   };
 
@@ -237,7 +259,12 @@ export default function AdminPage() {
 
   const changeTier = async (userId: string, tier: SubscriptionTier) => {
     setSaving(userId);
-    await supabase.from('profiles').update({ subscription_tier: tier }).eq('id', userId);
+    const callerToken = await getToken();
+    await fetch('/api/admin/change-tier', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, tier, callerToken }),
+    });
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, subscription_tier: tier } : u));
     setSaving(null);
   };
