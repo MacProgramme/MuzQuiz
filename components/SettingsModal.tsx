@@ -57,20 +57,6 @@ export function SettingsModal({ settings, onSave, onClose }: Props) {
           </div>
         </div>
 
-        {/* Son */}
-        <div className="mb-6 flex items-center justify-between">
-          <label className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.7)' }}>
-            Son
-          </label>
-          <button
-            onClick={() => setLocal(l => ({ ...l, sound_enabled: !l.sound_enabled }))}
-            className="w-14 h-7 rounded-full transition-all relative"
-            style={{ background: local.sound_enabled ? '#00E5D1' : 'rgba(255,255,255,0.1)' }}>
-            <span className="absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-lg transition-all"
-              style={{ left: local.sound_enabled ? '1.75rem' : '2px' }} />
-          </button>
-        </div>
-
         <button
           onClick={() => { onSave(local); onClose(); }}
           className="muz-btn-pink w-full py-3 rounded-xl font-black text-base">

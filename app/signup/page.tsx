@@ -17,7 +17,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
   const [avatarColor, setAvatarColor] = useState(AVATAR_COLORS[2]);
-  const [newsletter, setNewsletter] = useState(true); // activé par défaut
+  const [newsletter, setNewsletter] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
 

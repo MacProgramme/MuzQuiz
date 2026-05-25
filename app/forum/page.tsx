@@ -107,13 +107,11 @@ export default function ForumPage() {
   const createPost = async () => {
     if (!newTitle.trim() || !newContent.trim() || !userId) return;
     setPostSaving(true);
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('forum_posts')
-      .insert({ author_id: userId, title: newTitle.trim(), content: newContent.trim() })
-      .select(`id, title, content, created_at, replies_count, profiles!inner(nickname, avatar_color)`)
-      .single();
+      .insert({ author_id: userId, title: newTitle.trim(), content: newContent.trim() });
 
-    if (!error && data) {
+    if (!error) {
       setNewTitle(''); setNewContent('');
       setShowNewPost(false);
       await loadPosts();
