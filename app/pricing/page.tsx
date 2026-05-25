@@ -118,6 +118,38 @@ export default function PricingPage() {
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoResult, setPromoResult] = useState<{ success: boolean; message: string } | null>(null);
   const [appliedDiscount, setAppliedDiscount] = useState<number | null>(null);
+  const [discountLoading, setDiscountLoading] = useState(false);
+
+  // Charger le code promo en attente au montage
+  useEffect(() => {
+    const loadDiscount = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user || session.user.is_anonymous) return;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('pending_discount_percent')
+        .eq('id', session.user.id)
+        .single();
+      if (profile?.pending_discount_percent) {
+        setAppliedDiscount(profile.pending_discount_percent);
+      }
+    };
+    loadDiscount();
+  }, []);
+
+  const clearDiscount = async () => {
+    setDiscountLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      await supabase
+        .from('profiles')
+        .update({ pending_discount_percent: null, pending_discount_code_id: null })
+        .eq('id', session.user.id);
+    }
+    setAppliedDiscount(null);
+    setPromoResult(null);
+    setDiscountLoading(false);
+  };
 
   // ── Checkout Stripe ──────────────────────────────────────────────────────
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null); // tier en cours
@@ -361,33 +393,58 @@ export default function PricingPage() {
           <p className="text-xs font-black uppercase tracking-widest text-center mb-4" style={{ color: 'rgba(240,244,255,0.35)' }}>
             🎟 Tu as un code promo ?
           </p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="text"
-              value={promoCode}
-              onChange={e => setPromoCode(e.target.value.toUpperCase())}
-              onKeyDown={e => e.key === 'Enter' && handlePromo()}
-              placeholder="ex: MUZQUIZ2025"
-              className="min-w-0 flex-1 px-4 py-3 rounded-xl font-mono font-black text-sm text-center tracking-widest outline-none"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)', color: '#F0F4FF' }}
-            />
-            <button
-              onClick={handlePromo}
-              disabled={promoLoading || !promoCode.trim()}
-              className="px-5 py-3 rounded-xl font-black text-sm transition-all hover:scale-[1.03] disabled:opacity-40"
-              style={{ background: '#FF00AA', color: 'white' }}>
-              {promoLoading ? '…' : 'Activer'}
-            </button>
-          </div>
-          {promoResult && (
-            <div className="mt-3 px-4 py-3 rounded-xl text-sm font-bold text-center"
-              style={{
-                background: promoResult.success ? 'rgba(0,229,209,0.08)' : 'rgba(255,80,80,0.08)',
-                border: `1px solid ${promoResult.success ? 'rgba(0,229,209,0.3)' : 'rgba(255,80,80,0.3)'}`,
-                color: promoResult.success ? '#00E5D1' : '#FF6060',
-              }}>
-              {promoResult.message}
+
+          {appliedDiscount ? (
+            /* Code promo actif — afficher le badge + bouton Retirer */
+            <div className="flex items-center justify-between px-4 py-3 rounded-xl"
+              style={{ background: 'rgba(0,229,209,0.08)', border: '1.5px solid rgba(0,229,209,0.3)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(0,229,209,0.15)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.3)' }}>
+                  -{appliedDiscount}%
+                </span>
+                <span className="text-sm font-bold" style={{ color: '#00E5D1' }}>Code promo actif</span>
+              </div>
+              <button
+                onClick={clearDiscount}
+                disabled={discountLoading}
+                className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80 disabled:opacity-40"
+                style={{ background: 'rgba(255,80,80,0.1)', color: '#FF6060', border: '1px solid rgba(255,80,80,0.2)' }}>
+                {discountLoading ? '…' : '✕ Retirer'}
+              </button>
             </div>
+          ) : (
+            /* Formulaire de saisie */
+            <>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={e => setPromoCode(e.target.value.toUpperCase())}
+                  onKeyDown={e => e.key === 'Enter' && handlePromo()}
+                  placeholder="ex: MUZQUIZ2025"
+                  className="min-w-0 flex-1 px-4 py-3 rounded-xl font-mono font-black text-sm text-center tracking-widest outline-none"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)', color: '#F0F4FF' }}
+                />
+                <button
+                  onClick={handlePromo}
+                  disabled={promoLoading || !promoCode.trim()}
+                  className="px-5 py-3 rounded-xl font-black text-sm transition-all hover:scale-[1.03] disabled:opacity-40"
+                  style={{ background: '#FF00AA', color: 'white' }}>
+                  {promoLoading ? '…' : 'Activer'}
+                </button>
+              </div>
+              {promoResult && (
+                <div className="mt-3 px-4 py-3 rounded-xl text-sm font-bold text-center"
+                  style={{
+                    background: promoResult.success ? 'rgba(0,229,209,0.08)' : 'rgba(255,80,80,0.08)',
+                    border: `1px solid ${promoResult.success ? 'rgba(0,229,209,0.3)' : 'rgba(255,80,80,0.3)'}`,
+                    color: promoResult.success ? '#00E5D1' : '#FF6060',
+                  }}>
+                  {promoResult.message}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
