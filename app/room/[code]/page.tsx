@@ -134,6 +134,9 @@ export default function RoomPage() {
   const [questionStartedAt, setQuestionStartedAt] = useState<number>(Date.now());
   // Blind test : true quand l'audio a commencé à jouer (timer synchronisé)
   const [audioStarted, setAudioStarted] = useState(false);
+  // Compte à rebours entre les questions (3-2-1)
+  const [transitionCountdown, setTransitionCountdown] = useState<number | null>(null);
+  const transitionIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const {
     room, players, myPlayer, buzz, setBuzz,
@@ -233,22 +236,34 @@ export default function RoomPage() {
       // (pas sur is_paused, score, ou autres champs de la salle)
       if (prevQuestionRef.current !== r.current_question) {
         prevQuestionRef.current = r.current_question;
-        if (isBlindTestMode(r.mode)) {
-          // En blind test : timer ne démarre que quand l'audio joue chez l'hôte
-          setAudioStarted(false);
-          if (r.question_started_at) {
-            setQuestionStartedAt(r.question_started_at);
-            setAudioStarted(true);
-          }
-        } else {
-          setQuestionStartedAt(Date.now());
-          setAudioStarted(true);
-        }
+        // Réinitialiser l'état de jeu
         setBuzz(null);
         setQcmAnswers([]);
         setQcmRevealed(false);
         setShowLeaderboard(false);
         setTimerKey(k => k + 1);
+        setAudioStarted(false);
+
+        // Lancer le compte à rebours 3-2-1 avant d'afficher la question
+        if (transitionIntervalRef.current) clearInterval(transitionIntervalRef.current);
+        setTransitionCountdown(3);
+        let count = 3;
+        const roomMode = r.mode;
+        transitionIntervalRef.current = setInterval(() => {
+          count--;
+          if (count <= 0) {
+            clearInterval(transitionIntervalRef.current!);
+            transitionIntervalRef.current = null;
+            setTransitionCountdown(null);
+            // Timer démarre APRÈS le compte à rebours
+            if (!isBlindTestMode(roomMode)) {
+              setQuestionStartedAt(Date.now());
+              setAudioStarted(true);
+            }
+          } else {
+            setTransitionCountdown(count);
+          }
+        }, 1000);
       } else if (isBlindTestMode(r.mode) && r.question_started_at && !audioStarted) {
         // La musique vient de démarrer chez l'hôte → synchroniser le timer
         setQuestionStartedAt(r.question_started_at);
@@ -301,6 +316,13 @@ export default function RoomPage() {
   // Garder les refs à jour pour le cleanup
   useEffect(() => { roomRef.current = room; }, [room]);
   useEffect(() => { myPlayerRef.current = myPlayer; }, [myPlayer]);
+
+  // Nettoyer l'intervalle de transition au démontage du composant
+  useEffect(() => {
+    return () => {
+      if (transitionIntervalRef.current) clearInterval(transitionIntervalRef.current);
+    };
+  }, []);
 
   // Auto-fermeture si la salle d'attente est vide (seulement l'hôte) pendant 10s
   useEffect(() => {
@@ -401,6 +423,23 @@ export default function RoomPage() {
       }
       // Partie en cours → contrôleur téléphone
       return (
+        <>
+          {/* Compte à rebours entre les questions */}
+          {transitionCountdown !== null && (
+            <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-5 muz-fade-in"
+              style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
+              <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                Question {(room?.current_question ?? 0) + 1}
+              </p>
+              <div className="text-9xl font-black tabular-nums"
+                style={{ color: '#FF00AA', textShadow: '0 0 60px rgba(255,0,170,0.6)', lineHeight: 1 }}>
+                {transitionCountdown}
+              </div>
+              <p className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
+                Préparez-vous…
+              </p>
+            </div>
+          )}
         <PhoneControllerView
           room={room}
           myPlayer={liveMyPlayer}
@@ -415,9 +454,27 @@ export default function RoomPage() {
           questionStartedAt={questionStartedAt}
           toggleAbsent={toggleAbsent}
         />
+      </>
       );
     }
     return (
+      <>
+        {/* Compte à rebours entre les questions — écran hôte public */}
+        {transitionCountdown !== null && (
+          <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-5 muz-fade-in"
+            style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
+              Question {(room?.current_question ?? 0) + 1}
+            </p>
+            <div className="text-9xl font-black tabular-nums"
+              style={{ color: '#FF00AA', textShadow: '0 0 60px rgba(255,0,170,0.6)', lineHeight: 1 }}>
+              {transitionCountdown}
+            </div>
+            <p className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
+              Préparez-vous…
+            </p>
+          </div>
+        )}
       <PublicScreenView
         room={room}
         players={players}
@@ -438,6 +495,7 @@ export default function RoomPage() {
         endGame={endGame}
         hostInviteCode={hostInviteCode}
       />
+      </>
     );
   }
 
@@ -607,11 +665,9 @@ export default function RoomPage() {
                     {/* Options */}
                     <div className="max-h-64 overflow-y-auto">
 
-                      {/* ── Packs Muzquiz (builtin) ── */}
+                      {/* ── Packs Muzquiz (builtin) — toujours visibles, le mode change automatiquement ── */}
                       {(() => {
-                        const roomIsBlind = isBlindTestMode(room.mode as any);
                         const filtered = BUILTIN_PACKS
-                          .filter(p => isBlindTestMode(p.mode as any) === roomIsBlind)
                           .filter(p => packSearch.trim() === '' || p.name.toLowerCase().includes(packSearch.toLowerCase()));
                         if (filtered.length === 0) return null;
                         return (
@@ -753,6 +809,23 @@ export default function RoomPage() {
 
   // --- Interface de jeu ---
   return (
+    <>
+      {/* Compte à rebours entre les questions — écran joueur */}
+      {transitionCountdown !== null && (
+        <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-5 muz-fade-in"
+          style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
+          <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
+            Question {(room?.current_question ?? 0) + 1}
+          </p>
+          <div className="text-9xl font-black tabular-nums"
+            style={{ color: '#FF00AA', textShadow: '0 0 60px rgba(255,0,170,0.6)', lineHeight: 1 }}>
+            {transitionCountdown}
+          </div>
+          <p className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
+            Préparez-vous…
+          </p>
+        </div>
+      )}
     <div className="flex flex-col min-h-screen" style={{ background: '#0D1B3E' }}>
 
       {/* Confettis lors de la révélation */}
@@ -1003,5 +1076,6 @@ export default function RoomPage() {
         )}
       </div>
     </div>
+    </>
   );
 }
