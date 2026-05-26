@@ -137,6 +137,8 @@ export default function RoomPage() {
   // Compte à rebours entre les questions (3-2-1)
   const [transitionCountdown, setTransitionCountdown] = useState<number | null>(null);
   const transitionIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Timeout de secours : si la musique ne démarre pas dans 8s, on débloque le timer
+  const audioFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     room, players, myPlayer, buzz, setBuzz,
@@ -262,6 +264,8 @@ export default function RoomPage() {
         setShowLeaderboard(false);
         setTimerKey(k => k + 1);
         setAudioStarted(false);
+        // Annuler tout fallback audio en cours de la question précédente
+        if (audioFallbackRef.current) { clearTimeout(audioFallbackRef.current); audioFallbackRef.current = null; }
 
         // Compte à rebours 3-2-1 uniquement pour les blind tests (précharge l'audio)
         // Pour les modes Quiz/Buzz sans audio, on affiche la question directement
@@ -276,6 +280,15 @@ export default function RoomPage() {
               clearInterval(transitionIntervalRef.current!);
               transitionIntervalRef.current = null;
               setTransitionCountdown(null);
+              // Fallback : si la musique ne démarre pas dans 8s (vidéo indispo, etc.),
+              // on débloque le timer quand même pour ne pas bloquer la partie
+              if (audioFallbackRef.current) clearTimeout(audioFallbackRef.current);
+              audioFallbackRef.current = setTimeout(() => {
+                setAudioStarted(current => {
+                  if (!current) setQuestionStartedAt(Date.now());
+                  return true;
+                });
+              }, 8000);
             } else {
               setTransitionCountdown(count);
             }
@@ -290,6 +303,8 @@ export default function RoomPage() {
         // La musique vient de démarrer chez l'hôte → synchroniser le timer
         setQuestionStartedAt(r.question_started_at);
         setAudioStarted(true);
+        // Annuler le fallback — la musique a bien démarré
+        if (audioFallbackRef.current) { clearTimeout(audioFallbackRef.current); audioFallbackRef.current = null; }
       }
       if (r.status === 'finished') router.push(`/room/${code}/results`);
     },

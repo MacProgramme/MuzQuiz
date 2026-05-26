@@ -68,6 +68,8 @@ type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: Props) {
   const [status, setStatus]             = useState<Status>('idle');
   const [videoVisible, setVideoVisible] = useState(false);
+  // Incrémenté pour forcer la recréation du player (ex : retry après erreur)
+  const [retryCount, setRetryCount]     = useState(0);
   const playerRef    = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const readyRef     = useRef(false);
@@ -76,7 +78,7 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
 
   const videoId = extractYoutubeId(url);
 
-  // ── Créer le player quand l'URL change ───────────────────────────────────
+  // ── Créer le player quand l'URL ou retryCount change ─────────────────────
   useEffect(() => {
     mountedRef.current = true;
     if (!videoId) return;
@@ -133,6 +135,7 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
           },
           onError: () => {
             if (!mountedRef.current) return;
+            if (playerRef.current) playerRef.current._errored = true;
             setStatus('error');
           },
         },
@@ -147,19 +150,20 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
       pendingPlay.current = false;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoId, autoPlay]);
+  }, [videoId, autoPlay, retryCount]);
 
   // ── Contrôles manuels ────────────────────────────────────────────────────
   const handlePlay = useCallback(() => {
     if (!videoId) return;
-    if (readyRef.current && playerRef.current) {
+    // En cas d'erreur : recréer complètement le player (retry propre)
+    // En cas de pause/idle : relancer la lecture sur le player existant
+    if (readyRef.current && playerRef.current && !playerRef.current._errored) {
       if (startTime > 0) playerRef.current.seekTo(startTime, true);
       playerRef.current.playVideo();
       setStatus('loading');
     } else {
-      setStatus('loading');
-      pendingPlay.current = true;
-      loadYTAPI();
+      // Recréer le player (erreur ou player non initialisé)
+      setRetryCount(c => c + 1);
     }
   }, [videoId, startTime]);
 
@@ -316,4 +320,4 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
       )}
     </div>
   );
-}
+}
