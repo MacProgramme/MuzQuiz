@@ -82,72 +82,72 @@ export interface BuiltinPack {
 
 // ── Blind Test — Années 80 ───────────────────────────────────────────────────
 const BT_ANNEES80: QCMQuestion[] = [
-  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Duran Duran", "a-ha", "Depeche Mode", "New Order"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=djV11Xbc914", audio_start_time: 14 },
-  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Kim Wilde", "Cyndi Lauper", "Pat Benatar", "Bonnie Tyler"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=PIb6AZdTr-A", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Spandau Ballet", "Wham!", "Pet Shop Boys", "Frankie Goes to Hollywood"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=pIIpUBJ9mAY", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Depeche Mode", "The Human League", "Yazoo", "Soft Cell"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=uPudE8nDog0", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["The Eagles", "Fleetwood Mac", "Toto", "Journey"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=FTQbiNvZqaY", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Madonna", "Tina Turner", "Whitney Houston", "Janet Jackson"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=79fzeNUqMbk", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["ABC", "Culture Club", "Thompson Twins", "Simple Minds"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=JmcA9LIIXWw", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Sting", "Peter Gabriel", "Phil Collins", "Bryan Adams"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=OMOGaugKpzs", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Dire Straits", "Journey", "Foreigner", "REO Speedwagon"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=1k8craCGpgs", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Bauhaus", "The Cure", "Joy Division", "Spandau Ballet"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=DsHcFVkHXqU", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Duran Duran", "a-ha", "Depeche Mode", "New Order"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=djV11Xbc914", audio_start_time: 14 },  // Take On Me — refrain à 14s
+  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Kim Wilde", "Cyndi Lauper", "Pat Benatar", "Bonnie Tyler"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=PIb6AZdTr-A", audio_start_time: 36 }, // Kids in America — riff à 36s
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Spandau Ballet", "Wham!", "Pet Shop Boys", "Frankie Goes to Hollywood"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=pIIpUBJ9mAY", audio_start_time: 20 }, // Wake Me Up — refrain à 20s
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Depeche Mode", "The Human League", "Yazoo", "Soft Cell"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=uPudE8nDog0", audio_start_time: 0 },  // Don't You Want Me — reconnaissable dès le début
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["The Eagles", "Fleetwood Mac", "Toto", "Journey"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=FTQbiNvZqaY", audio_start_time: 49 }, // Africa — intro longue, refrain à 49s
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Madonna", "Tina Turner", "Whitney Houston", "Janet Jackson"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=79fzeNUqMbk", audio_start_time: 10 }, // Material Girl — intro courte
+  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["ABC", "Culture Club", "Thompson Twins", "Simple Minds"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=JmcA9LIIXWw", audio_start_time: 0 },  // Karma Chameleon — reconnaissable dès le début
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Sting", "Peter Gabriel", "Phil Collins", "Bryan Adams"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=OMOGaugKpzs", audio_start_time: 0 },  // Roxanne — reconnaissable dès le début
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Dire Straits", "Journey", "Foreigner", "REO Speedwagon"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=1k8craCGpgs", audio_start_time: 68 }, // Don't Stop Believin' — intro piano longue, chant à 68s
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Bauhaus", "The Cure", "Joy Division", "Spandau Ballet"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=DsHcFVkHXqU", audio_start_time: 42 }, // Gold — refrain à 42s
 ];
 
 // ── Blind Test — Pop Internationale ─────────────────────────────────────────
 const BT_POP_INTERNATIONAL: QCMQuestion[] = [
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Drake", "The Weeknd", "Post Malone", "Bruno Mars"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=4NRXx6U8ABQ", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Shawn Mendes", "Harry Styles", "Ed Sheeran", "Justin Bieber"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Beyoncé", "Rihanna", "Adele", "Amy Winehouse"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=rYEDA3JcQqw", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui interprète ce morceau ?", choices: ["Bruno Mars seul", "Mark Ronson ft. Bruno Mars", "Pharrell Williams", "Justin Timberlake"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=OPf0YbXqDm0", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Ne-Yo", "Pharrell Williams", "Robin Thicke", "John Legend"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=ZbZSe6N_BXs", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Katy Perry", "Ariana Grande", "Taylor Swift", "Selena Gomez"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=nfWlot6h_JM", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Halsey", "Dua Lipa", "Olivia Rodrigo", "Billie Eilish"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=DyDfgMOUjCI", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui interprète ce morceau ?", choices: ["J Balvin", "Bad Bunny", "Luis Fonsi ft. Daddy Yankee", "Maluma"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=kTJczUoc26U", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Adele", "Sam Smith", "Hozier", "James Bay"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=pB-5XG-DbAA", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["P!nk", "Adele", "Florence + The Machine", "Lana Del Rey"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=hLQl3WQQoQ0", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Drake", "The Weeknd", "Post Malone", "Bruno Mars"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=4NRXx6U8ABQ", audio_start_time: 45 }, // Blinding Lights — refrain à 45s
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Shawn Mendes", "Harry Styles", "Ed Sheeran", "Justin Bieber"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=JGwWNGJdvx8", audio_start_time: 15 }, // Shape of You — riff à 15s
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Beyoncé", "Rihanna", "Adele", "Amy Winehouse"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=rYEDA3JcQqw", audio_start_time: 50 }, // Someone Like You — refrain à 50s
+  { type: 'qcm', q: "Qui interprète ce morceau ?", choices: ["Bruno Mars seul", "Mark Ronson ft. Bruno Mars", "Pharrell Williams", "Justin Timberlake"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=OPf0YbXqDm0", audio_start_time: 48 }, // Uptown Funk — refrain à 48s
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Ne-Yo", "Pharrell Williams", "Robin Thicke", "John Legend"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=ZbZSe6N_BXs", audio_start_time: 0 },  // Happy — reconnaissable dès le début
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Katy Perry", "Ariana Grande", "Taylor Swift", "Selena Gomez"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=nfWlot6h_JM", audio_start_time: 18 }, // Shake It Off — hook à 18s
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Halsey", "Dua Lipa", "Olivia Rodrigo", "Billie Eilish"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=DyDfgMOUjCI", audio_start_time: 0 },  // bad guy — reconnaissable dès le début
+  { type: 'qcm', q: "Qui interprète ce morceau ?", choices: ["J Balvin", "Bad Bunny", "Luis Fonsi ft. Daddy Yankee", "Maluma"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=kTJczUoc26U", audio_start_time: 55 }, // Despacito — refrain à 55s
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Adele", "Sam Smith", "Hozier", "James Bay"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=pB-5XG-DbAA", audio_start_time: 42 }, // Stay With Me — refrain à 42s
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["P!nk", "Adele", "Florence + The Machine", "Lana Del Rey"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=hLQl3WQQoQ0", audio_start_time: 44 }, // Hello — refrain à 44s
 ];
 
 // ── Blind Test — Rock Français ───────────────────────────────────────────────
 const BT_ROCK_FRANCAIS: QCMQuestion[] = [
-  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Téléphone", "Indochine", "Trust", "Niagara"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=w9XMD5LQsGw", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Indochine", "Téléphone", "Les Satellites", "Starshooter"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=cTrAA6jCLkM", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Mano Negra", "Noir Désir", "Les Thugs", "Bérurier Noir"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=9mdBBBNfGPM", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["Téléphone", "Bijou", "Trust", "Little Bob Story"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=a_mLBNpERDc", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Les Wampas", "Tryo", "Zebda", "Les Ogres de Barback"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=CXvdEF3MHHU", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Mano Negra", "La Ruda Salska", "Les Wampas", "Burning Heads"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=8Ri4MxWrmyY", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Louise Attaque", "Dionysos", "Deportivo", "Têtes Raides"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=KvI_56jBVXo", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["Noir Désir", "Tryo", "Superbus", "Les Rita Mitsouko"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=Lbzz6JRFQVY", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Rita Mitsouko", "Zazie", "Elli Medeiros", "Taxi Girl"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=JmSIHSYKFoA", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Saez", "Tryo", "Zebda", "Louise Attaque"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=2Ck1K1u4aPc", audio_start_time: 0 },
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Téléphone", "Indochine", "Trust", "Niagara"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=w9XMD5LQsGw", audio_start_time: 30 }, // L'aventurier — refrain à 30s
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Indochine", "Téléphone", "Les Satellites", "Starshooter"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=cTrAA6jCLkM", audio_start_time: 25 }, // Téléphone — refrain à 25s
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Mano Negra", "Noir Désir", "Les Thugs", "Bérurier Noir"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=9mdBBBNfGPM", audio_start_time: 0 },  // Noir Désir — reconnaissable dès le début
+  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["Téléphone", "Bijou", "Trust", "Little Bob Story"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=a_mLBNpERDc", audio_start_time: 0 },  // Antisocial Trust — reconnaissable dès le début
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Les Wampas", "Tryo", "Zebda", "Les Ogres de Barback"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=CXvdEF3MHHU", audio_start_time: 35 }, // Zebda — refrain à 35s
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Mano Negra", "La Ruda Salska", "Les Wampas", "Burning Heads"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=8Ri4MxWrmyY", audio_start_time: 20 }, // Mano Negra — refrain à 20s
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Louise Attaque", "Dionysos", "Deportivo", "Têtes Raides"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=KvI_56jBVXo", audio_start_time: 30 }, // Dionysos — refrain à 30s
+  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["Noir Désir", "Tryo", "Superbus", "Les Rita Mitsouko"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=Lbzz6JRFQVY", audio_start_time: 25 }, // Superbus — refrain à 25s
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Rita Mitsouko", "Zazie", "Elli Medeiros", "Taxi Girl"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=JmSIHSYKFoA", audio_start_time: 0 },  // Rita Mitsouko — reconnaissable dès le début
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Saez", "Tryo", "Zebda", "Louise Attaque"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=2Ck1K1u4aPc", audio_start_time: 30 }, // Saez — refrain à 30s
 ];
 
 // ── Blind Test — Rap 2000 ────────────────────────────────────────────────────
 const BT_RAP2000: QCMQuestion[] = [
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Booba", "Sinik", "Rohff", "Diam's"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=ZmSiJTRrBVY", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Eminem", "50 Cent", "Jay-Z", "Kanye West"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=5qm8PH4xAss", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Pharrell Williams", "Nelly", "Usher", "Chingy"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=E2qs-oIRxwQ", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui interprète ce morceau ?", choices: ["Eminem", "Ja Rule", "DMX", "Ludacris"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=YVkUvmDQ3HY", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel artiste chante cette chanson ?", choices: ["Jay-Z", "Kanye West", "Common", "Mos Def"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=Co0tTeuUVhU", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Nelly ft. Kelly Rowland", "Ja Rule ft. Ashanti", "Jay-Z ft. Beyoncé", "Usher ft. Alicia Keys"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=CKZvWhCqx1s", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["T.I.", "Ludacris", "Lil Wayne", "Young Jeezy"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=7i7iHkSQwMw", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["The Roots", "Black Star", "The Black Eyed Peas", "OutKast"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=WpYeekQkAdc", audio_start_time: 0 },
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["T-Pain", "Akon", "Sean Kingston", "Chris Brown"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=l0A4Xo2-KHw", audio_start_time: 0 },
-  { type: 'qcm', q: "Quel artiste interprète ce titre ?", choices: ["50 Cent", "The Game", "G-Unit", "Dr. Dre"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=eRxB4PC1M44", audio_start_time: 0 },
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Booba", "Sinik", "Rohff", "Diam's"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=ZmSiJTRrBVY", audio_start_time: 30 }, // Diam's — refrain à 30s
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Eminem", "50 Cent", "Jay-Z", "Kanye West"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=5qm8PH4xAss", audio_start_time: 20 }, // In Da Club 50 Cent — beat reconnaissable à 20s
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Pharrell Williams", "Nelly", "Usher", "Chingy"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=E2qs-oIRxwQ", audio_start_time: 15 }, // Nelly — refrain à 15s
+  { type: 'qcm', q: "Qui interprète ce morceau ?", choices: ["Eminem", "Ja Rule", "DMX", "Ludacris"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=YVkUvmDQ3HY", audio_start_time: 0 },  // Eminem — reconnaissable dès le début
+  { type: 'qcm', q: "Quel artiste chante cette chanson ?", choices: ["Jay-Z", "Kanye West", "Common", "Mos Def"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=Co0tTeuUVhU", audio_start_time: 40 }, // Kanye — refrain à 40s
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Nelly ft. Kelly Rowland", "Ja Rule ft. Ashanti", "Jay-Z ft. Beyoncé", "Usher ft. Alicia Keys"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=CKZvWhCqx1s", audio_start_time: 30 }, // Nelly ft. Kelly Rowland — refrain à 30s
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["T.I.", "Ludacris", "Lil Wayne", "Young Jeezy"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=7i7iHkSQwMw", audio_start_time: 0 },  // Lil Wayne — reconnaissable dès le début
+  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["The Roots", "Black Star", "The Black Eyed Peas", "OutKast"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=WpYeekQkAdc", audio_start_time: 28 }, // Black Eyed Peas — refrain à 28s
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["T-Pain", "Akon", "Sean Kingston", "Chris Brown"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=l0A4Xo2-KHw", audio_start_time: 30 }, // Akon — refrain à 30s
+  { type: 'qcm', q: "Quel artiste interprète ce titre ?", choices: ["50 Cent", "The Game", "G-Unit", "Dr. Dre"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=eRxB4PC1M44", audio_start_time: 15 }, // 50 Cent — refrain à 15s
 ];
 
 // ── Blind Test — Disney ──────────────────────────────────────────────────────
 const BT_DISNEY: QCMQuestion[] = [
-  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Pocahontas", "La Petite Sirène", "Aladdin", "La Belle et la Bête"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=GC_mV1IpjWA", audio_start_time: 0 },
-  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Le Livre de la Jungle", "Le Roi Lion", "Tarzan", "Bambi"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=GiIHMtwTFUM", audio_start_time: 0 },
-  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Frozen 2", "La Reine des Neiges", "Brave", "Raiponce"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=L0MK7qz13bU", audio_start_time: 0 },
-  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["La Belle et la Bête", "Cendrillon", "Blanche-Neige", "La Petite Sirène"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=7bCsHPEO0Xk", audio_start_time: 0 },
-  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Hercule", "Mulan", "Aladdin", "Pocahontas"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=MQQZN7e7LH8", audio_start_time: 0 },
-  { type: 'qcm', q: "De quel film Pixar vient cette chanson ?", choices: ["A Bug's Life", "Monsters Inc.", "Toy Story", "Finding Nemo"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=g6b-pWFtSGo", audio_start_time: 0 },
-  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Moana / Vaiana", "Raya", "Encanto", "Wish"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=cPAbx5kgCJo", audio_start_time: 0 },
-  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Mulan", "Pocahontas", "Atlantide", "Hercule"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=p6sONt_HvCo", audio_start_time: 0 },
-  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Pinocchio", "Fantasia", "Dumbo", "Blanche-Neige"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=J2-kYFU0A1A", audio_start_time: 0 },
-  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Lilo & Stitch", "Encanto", "Coco", "Soul"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=LopWnTQFSGI", audio_start_time: 0 },
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Pocahontas", "La Petite Sirène", "Aladdin", "La Belle et la Bête"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=GC_mV1IpjWA", audio_start_time: 30 }, // Under the Sea — refrain à 30s
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Le Livre de la Jungle", "Le Roi Lion", "Tarzan", "Bambi"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=GiIHMtwTFUM", audio_start_time: 0 },  // Circle of Life — reconnaissable dès le début
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Frozen 2", "La Reine des Neiges", "Brave", "Raiponce"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=L0MK7qz13bU", audio_start_time: 0 },  // Let It Go — reconnaissable dès le début
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["La Belle et la Bête", "Cendrillon", "Blanche-Neige", "La Petite Sirène"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=7bCsHPEO0Xk", audio_start_time: 25 }, // Tale As Old As Time — refrain à 25s
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Hercule", "Mulan", "Aladdin", "Pocahontas"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=MQQZN7e7LH8", audio_start_time: 0 },  // A Whole New World — reconnaissable dès le début
+  { type: 'qcm', q: "De quel film Pixar vient cette chanson ?", choices: ["A Bug's Life", "Monsters Inc.", "Toy Story", "Finding Nemo"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=g6b-pWFtSGo", audio_start_time: 0 },  // You've Got a Friend in Me — reconnaissable dès le début
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Moana / Vaiana", "Raya", "Encanto", "Wish"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=cPAbx5kgCJo", audio_start_time: 35 }, // How Far I'll Go — refrain à 35s
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Mulan", "Pocahontas", "Atlantide", "Hercule"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=p6sONt_HvCo", audio_start_time: 30 }, // Reflection — refrain à 30s
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Pinocchio", "Fantasia", "Dumbo", "Blanche-Neige"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=J2-kYFU0A1A", audio_start_time: 0 },  // When You Wish Upon a Star — reconnaissable dès le début
+  { type: 'qcm', q: "De quel film Disney vient cette chanson ?", choices: ["Lilo & Stitch", "Encanto", "Coco", "Soul"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=LopWnTQFSGI", audio_start_time: 28 }, // Remember Me — refrain à 28s
 ];
 
 // ── Quiz — Années 80 ─────────────────────────────────────────────────────────
