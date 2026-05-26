@@ -159,3 +159,10 @@ export interface QCMQuestion {
   audio_start_time?: number | null;
 }
 
+export type Question = BuzzQuestion | QCMQuestion;
+
+export interface RoomSettings {
+  timer_duration: number;
+  max_players: number;
+  sound_enabled: boolean;
+}
