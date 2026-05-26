@@ -160,6 +160,10 @@ ALTER TABLE question_packs
 ALTER TABLE question_packs
   ADD COLUMN IF NOT EXISTS shared_description TEXT NOT NULL DEFAULT '';
 
+-- Timestamp (ms) de démarrage audio pour synchroniser les timers en blind test
+ALTER TABLE rooms
+  ADD COLUMN IF NOT EXISTS question_started_at BIGINT DEFAULT NULL;
+
 -- Newsletter (activée par défaut pour tous les utilisateurs)
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS newsletter_subscribed BOOLEAN NOT NULL DEFAULT true;

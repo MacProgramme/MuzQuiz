@@ -104,6 +104,8 @@ export interface Room {
   pack_id: string | null;
   public_screen: boolean;
   created_at: string;
+  /** Timestamp (ms) quand la musique a commencé à jouer chez l'hôte. null = en attente. */
+  question_started_at: number | null;
 }
 
 export interface Player {

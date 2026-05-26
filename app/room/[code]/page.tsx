@@ -132,6 +132,8 @@ export default function RoomPage() {
   const prevQuestionRef = useRef<number | undefined>(undefined);
   // Timestamp du début de la question courante (mis à jour pour tous les clients)
   const [questionStartedAt, setQuestionStartedAt] = useState<number>(Date.now());
+  // Blind test : true quand l'audio a commencé à jouer (timer synchronisé)
+  const [audioStarted, setAudioStarted] = useState(false);
 
   const {
     room, players, myPlayer, buzz, setBuzz,
@@ -231,12 +233,26 @@ export default function RoomPage() {
       // (pas sur is_paused, score, ou autres champs de la salle)
       if (prevQuestionRef.current !== r.current_question) {
         prevQuestionRef.current = r.current_question;
-        setQuestionStartedAt(Date.now());
+        if (isBlindTestMode(r.mode)) {
+          // En blind test : timer ne démarre que quand l'audio joue chez l'hôte
+          setAudioStarted(false);
+          if (r.question_started_at) {
+            setQuestionStartedAt(r.question_started_at);
+            setAudioStarted(true);
+          }
+        } else {
+          setQuestionStartedAt(Date.now());
+          setAudioStarted(true);
+        }
         setBuzz(null);
         setQcmAnswers([]);
         setQcmRevealed(false);
         setShowLeaderboard(false);
         setTimerKey(k => k + 1);
+      } else if (isBlindTestMode(r.mode) && r.question_started_at && !audioStarted) {
+        // La musique vient de démarrer chez l'hôte → synchroniser le timer
+        setQuestionStartedAt(r.question_started_at);
+        setAudioStarted(true);
       }
       if (r.status === 'finished') router.push(`/room/${code}/results`);
     },
@@ -540,7 +556,7 @@ export default function RoomPage() {
           <div className="flex flex-col items-center gap-3 w-full max-w-md">
 
             {/* Sélection du pack de questions — dropdown avec recherche */}
-            {hostPacks.length > 0 && (
+            {(
               <div className="muz-card w-full p-4">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
@@ -589,31 +605,78 @@ export default function RoomPage() {
                       </div>
                     )}
                     {/* Options */}
-                    <div className="max-h-52 overflow-y-auto">
-                      {/* Packs filtrés — uniquement ceux compatibles avec le mode de la salle */}
-                      {hostPacks
-                        .filter(p => {
-                          const roomIsBlind = isBlindTestMode(room.mode as any);
-                          const packIsBlind = isBlindTestMode(p.mode as any);
-                          return roomIsBlind === packIsBlind;
-                        })
-                        .filter(p => packSearch.trim() === '' || p.name.toLowerCase().includes(packSearch.toLowerCase()))
-                        .map(pack => (
-                          <button key={pack.id}
-                            onClick={() => { selectPack(pack.id, pack.mode); setPackDropdownOpen(false); }}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
-                            <MuzquizLogo width={16} showText={false} color={room.pack_id === pack.id ? '#FF00AA' : undefined} />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#FF00AA' : '#F0F4FF' }}>
-                                {stripLeadingEmoji(pack.name)}
-                              </p>
-                              <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                                {pack.question_count}q · {pack.mode}
-                              </p>
+                    <div className="max-h-64 overflow-y-auto">
+
+                      {/* ── Packs Muzquiz (builtin) ── */}
+                      {(() => {
+                        const roomIsBlind = isBlindTestMode(room.mode as any);
+                        const filtered = BUILTIN_PACKS
+                          .filter(p => isBlindTestMode(p.mode as any) === roomIsBlind)
+                          .filter(p => packSearch.trim() === '' || p.name.toLowerCase().includes(packSearch.toLowerCase()));
+                        if (filtered.length === 0) return null;
+                        return (
+                          <>
+                            <div className="px-3 py-1.5 sticky top-0"
+                              style={{ background: 'rgba(13,27,62,0.98)', borderBottom: '1px solid rgba(255,0,170,0.12)' }}>
+                              <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.6)' }}>
+                                🎵 Packs Muzquiz
+                              </span>
                             </div>
-                            {room.pack_id === pack.id && <span className="text-xs font-black flex-shrink-0" style={{ color: '#FF00AA' }}>✓</span>}
-                          </button>
-                        ))}
+                            {filtered.map(pack => (
+                              <button key={pack.id}
+                                onClick={() => { selectPack(pack.id, pack.mode); setPackDropdownOpen(false); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
+                                <span style={{ fontSize: '1rem' }}>{pack.emoji}</span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#FF00AA' : '#F0F4FF' }}>
+                                    {pack.name}
+                                  </p>
+                                  <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                                    {pack.questions.length}q · {pack.mode}
+                                  </p>
+                                </div>
+                                {room.pack_id === pack.id && <span className="text-xs font-black flex-shrink-0" style={{ color: '#FF00AA' }}>✓</span>}
+                              </button>
+                            ))}
+                          </>
+                        );
+                      })()}
+
+                      {/* ── Mes packs ── */}
+                      {(() => {
+                        const roomIsBlind = isBlindTestMode(room.mode as any);
+                        const filtered = hostPacks
+                          .filter(p => isBlindTestMode(p.mode as any) === roomIsBlind)
+                          .filter(p => packSearch.trim() === '' || p.name.toLowerCase().includes(packSearch.toLowerCase()));
+                        if (filtered.length === 0) return null;
+                        return (
+                          <>
+                            <div className="px-3 py-1.5 sticky top-0"
+                              style={{ background: 'rgba(13,27,62,0.98)', borderBottom: '1px solid rgba(139,92,246,0.12)' }}>
+                              <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(139,92,246,0.5)' }}>
+                                📦 Mes packs
+                              </span>
+                            </div>
+                            {filtered.map(pack => (
+                              <button key={pack.id}
+                                onClick={() => { selectPack(pack.id, pack.mode); setPackDropdownOpen(false); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
+                                <MuzquizLogo width={16} showText={false} color={room.pack_id === pack.id ? '#FF00AA' : undefined} />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#FF00AA' : '#F0F4FF' }}>
+                                    {stripLeadingEmoji(pack.name)}
+                                  </p>
+                                  <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                                    {pack.question_count}q · {pack.mode}
+                                  </p>
+                                </div>
+                                {room.pack_id === pack.id && <span className="text-xs font-black flex-shrink-0" style={{ color: '#FF00AA' }}>✓</span>}
+                              </button>
+                            ))}
+                          </>
+                        );
+                      })()}
+
                     </div>
                   </div>
                 )}
@@ -805,7 +868,24 @@ export default function RoomPage() {
               url={(currentQ as any).youtube_url}
               autoPlay
               startTime={(currentQ as any).audio_start_time ?? 0}
+              onPlay={myPlayer?.is_host ? async () => {
+                // L'hôte enregistre le timestamp de démarrage → tous les clients synchronisent leur timer
+                if (!room.question_started_at) {
+                  await supabase.from('rooms')
+                    .update({ question_started_at: Date.now() })
+                    .eq('id', room.id);
+                }
+              } : undefined}
             />
+            {/* Indicateur d'attente pour les joueurs */}
+            {!audioStarted && !myPlayer?.is_host && (
+              <div className="mt-2 flex items-center justify-center gap-2 text-xs font-bold"
+                style={{ color: 'rgba(240,244,255,0.4)' }}>
+                <div className="w-3 h-3 rounded-full border-2 animate-spin"
+                  style={{ borderColor: '#FF00AA', borderTopColor: 'transparent' }} />
+                En attente du démarrage de la musique…
+              </div>
+            )}
           </div>
         )}
 
@@ -900,7 +980,7 @@ export default function RoomPage() {
                 <div className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
                   {answeredCount} / {players.length} joueur{players.length > 1 ? 's' : ''} ont répondu
                 </div>
-                {myQCMAnswer && (
+                {myQCMAnswer && audioStarted && (
                   <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
                 )}
               </>

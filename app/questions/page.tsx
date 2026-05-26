@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { QuestionPack, CustomQuestion, QuestionType, SubscriptionTier, TIER_LIMITS, normalizeTier, GameMode, isBlindTestMode } from '@/types';
+import { BUILTIN_PACKS } from '@/lib/questions';
 import Link from 'next/link';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { extractYoutubeId } from '@/components/YouTubePlayer';
@@ -675,6 +676,47 @@ export default function QuestionsPage() {
               </p>
             )}
 
+            {/* ── Packs Muzquiz (builtin — lecture seule) ── */}
+            {!packSearch && (
+              <div className="mb-5">
+                <p className="text-xs font-black uppercase tracking-widest mb-3"
+                  style={{ color: 'rgba(255,0,170,0.6)' }}>
+                  🎵 Packs Muzquiz
+                </p>
+                <div className="flex flex-col gap-2">
+                  {BUILTIN_PACKS.map(pack => (
+                    <div key={pack.id} className="muz-card p-4 flex items-center gap-2"
+                      style={{ opacity: 0.85, border: '1px solid rgba(255,0,170,0.15)' }}>
+                      <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{pack.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-black text-sm" style={{ color: '#F0F4FF' }}>{pack.name}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                            style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
+                            {MODE_LABEL[pack.mode]}
+                          </span>
+                        </div>
+                        <p className="text-xs mt-1 font-bold" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                          {pack.questions.length} questions · Disponible pour tous
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                        style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.5)' }}>
+                        Muzquiz
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── Mes packs ── */}
+            {sortedPacks.length > 0 && (
+              <p className="text-xs font-black uppercase tracking-widest mb-3"
+                style={{ color: 'rgba(139,92,246,0.6)' }}>
+                📦 Mes packs
+              </p>
+            )}
             <div className="flex flex-col gap-3">
               {sortedPacks.map(pack => (
                 <div key={pack.id} className="muz-card muz-card-lift p-4 flex items-center gap-2 cursor-pointer" onClick={() => openPack(pack)}>

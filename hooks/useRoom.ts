@@ -375,14 +375,23 @@ export function useRoom(code: string, nickname: string) {
     const status = nextQ >= questions.length ? 'finished' : 'playing';
     // Réinitialiser le timer de question dès qu'on passe à la suivante
     questionStartedAtRef.current = Date.now();
-    await supabase.from('rooms').update({ current_question: nextQ, status }).eq('id', currentRoom.id);
+    await supabase.from('rooms').update({
+      current_question: nextQ,
+      status,
+      question_started_at: null,  // Réinitialisé — en blind test, rempli quand l'audio joue
+    }).eq('id', currentRoom.id);
   };
 
   const startGame = useCallback(async () => {
     if (!room || !myPlayer?.is_host) return;
     questionStartedAtRef.current = Date.now();
     isRevealingRef.current = false;
-    await supabase.from('rooms').update({ status: 'playing', current_question: 0, is_paused: false }).eq('id', room.id);
+    await supabase.from('rooms').update({
+      status: 'playing',
+      current_question: 0,
+      is_paused: false,
+      question_started_at: null,
+    }).eq('id', room.id);
   }, [room, myPlayer]);
 
   const pauseGame = useCallback(async () => {
