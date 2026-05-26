@@ -263,26 +263,29 @@ export default function RoomPage() {
         setTimerKey(k => k + 1);
         setAudioStarted(false);
 
-        // Lancer le compte à rebours 3-2-1 avant d'afficher la question
+        // Compte à rebours 3-2-1 uniquement pour les blind tests (précharge l'audio)
+        // Pour les modes Quiz/Buzz sans audio, on affiche la question directement
         if (transitionIntervalRef.current) clearInterval(transitionIntervalRef.current);
-        setTransitionCountdown(3);
-        let count = 3;
         const roomMode = r.mode;
-        transitionIntervalRef.current = setInterval(() => {
-          count--;
-          if (count <= 0) {
-            clearInterval(transitionIntervalRef.current!);
-            transitionIntervalRef.current = null;
-            setTransitionCountdown(null);
-            // Timer démarre APRÈS le compte à rebours
-            if (!isBlindTestMode(roomMode)) {
-              setQuestionStartedAt(Date.now());
-              setAudioStarted(true);
+        if (isBlindTestMode(roomMode)) {
+          setTransitionCountdown(3);
+          let count = 3;
+          transitionIntervalRef.current = setInterval(() => {
+            count--;
+            if (count <= 0) {
+              clearInterval(transitionIntervalRef.current!);
+              transitionIntervalRef.current = null;
+              setTransitionCountdown(null);
+            } else {
+              setTransitionCountdown(count);
             }
-          } else {
-            setTransitionCountdown(count);
-          }
-        }, 1000);
+          }, 1000);
+        } else {
+          // Pas de son → pas de countdown, on lance le timer immédiatement
+          setTransitionCountdown(null);
+          setQuestionStartedAt(Date.now());
+          setAudioStarted(true);
+        }
       } else if (isBlindTestMode(r.mode) && r.question_started_at && !audioStarted) {
         // La musique vient de démarrer chez l'hôte → synchroniser le timer
         setQuestionStartedAt(r.question_started_at);
@@ -923,12 +926,12 @@ export default function RoomPage() {
           {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
 
-        {/* Lecteur audio pour les blind tests — monté uniquement après le compte à rebours */}
-        {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && transitionCountdown === null && (
+        {/* Lecteur audio pour les blind tests — monté dès le countdown pour précharger en silence */}
+        {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && (
           <div className="w-full max-w-lg">
             <YouTubePlayer
               url={(currentQ as any).youtube_url}
-              autoPlay
+              shouldPlay={transitionCountdown === null}
               startTime={(currentQ as any).audio_start_time ?? 0}
               onPlay={myPlayer?.is_host ? async () => {
                 // L'hôte enregistre le timestamp de démarrage → tous les clients synchronisent leur timer

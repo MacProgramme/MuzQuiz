@@ -55,7 +55,15 @@ function loadYTAPI(): Promise<void> {
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
   url: string;
-  /** Lance la musique automatiquement dès que le player YouTube est prêt */
+  /**
+   * Contrôle la lecture :
+   *  - undefined / non fourni → boutons manuels Play/Pause
+   *  - false  → le player charge en SILENCE (préchargement pendant le countdown)
+   *  - true   → démarre la lecture dès que le player est prêt (ou immédiatement
+   *              s'il l'est déjà). Passe de false→true quand le countdown finit.
+   */
+  shouldPlay?: boolean;
+  /** @deprecated — utiliser shouldPlay. Conservé pour compatibilité. */
   autoPlay?: boolean;
   onPlay?: () => void;
   /** Timestamp (secondes) où la musique doit démarrer. 0 = début. */
@@ -65,21 +73,23 @@ interface Props {
 type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
-export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: Props) {
-  const [status, setStatus]           = useState<Status>('idle');
+export function YouTubePlayer({ url, shouldPlay, autoPlay = false, onPlay, startTime = 0 }: Props) {
+  const [status, setStatus]             = useState<Status>('idle');
   const [videoVisible, setVideoVisible] = useState(false);
   const playerRef    = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  // true quand onReady a été appelé → playVideo() est sûr
   const readyRef     = useRef(false);
-  // Si l'utilisateur a cliqué Play avant que onReady arrive, on rejoue au bon moment
   const pendingPlay  = useRef(false);
-  // Pour éviter les effets de bord sur le composant démonté
   const mountedRef   = useRef(true);
+
+  // Ref qui garde toujours la valeur courante de shouldPlay
+  // sans provoquer de remontage du player quand elle change.
+  const shouldPlayRef = useRef<boolean>(shouldPlay ?? autoPlay);
+  shouldPlayRef.current = shouldPlay ?? autoPlay;
 
   const videoId = extractYoutubeId(url);
 
-  // ── Initialiser le player quand l'URL change ──────────────────────────────
+  // ── Créer / recréer le player quand la vidéo change ──────────────────────
   useEffect(() => {
     mountedRef.current = true;
     if (!videoId) return;
@@ -88,10 +98,13 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
     try { playerRef.current?.destroy?.(); } catch {}
     playerRef.current = null;
     readyRef.current  = false;
-    // Si autoPlay demandé, déclencher playVideo() dès que onReady se déclenche
-    pendingPlay.current = autoPlay;
+
+    // Doit-on jouer dès que le player est prêt ?
+    const playImmediately = shouldPlayRef.current;
+    pendingPlay.current   = playImmediately;
+
     if (containerRef.current) containerRef.current.innerHTML = '';
-    setStatus(autoPlay ? 'loading' : 'idle');
+    setStatus(playImmediately ? 'loading' : 'idle');
     setVideoVisible(false);
 
     const slot = document.createElement('div');
@@ -105,26 +118,27 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
         width: '100%',
         height: '100%',
         playerVars: {
-          autoplay: autoPlay ? 1 : 0,
+          // autoplay: 0 — on ne laisse pas YouTube décider.
+          // Le player charge et buffère en silence ;
+          // on appelle playVideo() manuellement au bon moment.
+          autoplay: 0,
           controls: 1,
           rel: 0,
           playsinline: 1,
           modestbranding: 1,
           iv_load_policy: 3,
           fs: 0,
-          // Démarre la vidéo au timestamp voulu (pris en compte au premier chargement)
           start: startTime > 0 ? startTime : 0,
         },
         events: {
           onReady: () => {
             if (!mountedRef.current) return;
             readyRef.current = true;
-            // Seek au bon timestamp avant de lancer
             if (startTime > 0) {
               playerRef.current?.seekTo?.(startTime, true);
             }
-            // L'utilisateur avait cliqué Play avant que l'API soit prête
-            if (pendingPlay.current) {
+            // Jouer si demandé (soit au montage, soit entre-temps via shouldPlay)
+            if (pendingPlay.current || shouldPlayRef.current) {
               pendingPlay.current = false;
               playerRef.current?.playVideo?.();
             }
@@ -132,10 +146,10 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
           onStateChange: (e: any) => {
             if (!mountedRef.current) return;
             const s: number = e.data;
-            if (s === 1) { setStatus('playing'); onPlay?.(); }      // PLAYING
-            else if (s === 2) setStatus('paused');                   // PAUSED
-            else if (s === 0) setStatus('idle');                     // ENDED
-            else if (s === 3) setStatus('loading');                  // BUFFERING
+            if (s === 1) { setStatus('playing'); onPlay?.(); }  // PLAYING
+            else if (s === 2) setStatus('paused');               // PAUSED
+            else if (s === 0) setStatus('idle');                 // ENDED
+            else if (s === 3) setStatus('loading');              // BUFFERING
           },
           onError: () => {
             if (!mountedRef.current) return;
@@ -148,29 +162,44 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
     return () => {
       mountedRef.current = false;
       try { playerRef.current?.destroy?.(); } catch {}
-      playerRef.current  = null;
-      readyRef.current   = false;
+      playerRef.current   = null;
+      readyRef.current    = false;
       pendingPlay.current = false;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoId, autoPlay]);
+  }, [videoId]); // NE PAS ajouter shouldPlay ici — effet séparé ci-dessous
 
-  // ── Contrôles (dans le handler de clic → autoplay autorisé) ───────────────
+  // ── Réagir aux changements de shouldPlay SANS remonter le player ──────────
+  // Typiquement : countdown finit → shouldPlay passe de false à true
+  useEffect(() => {
+    if (shouldPlay === undefined) return; // mode manuel, on ne fait rien
+
+    if (shouldPlay) {
+      if (readyRef.current && playerRef.current) {
+        // Player déjà prêt (il a chargé pendant le countdown) → lecture immédiate
+        if (startTime > 0) playerRef.current.seekTo(startTime, true);
+        playerRef.current.playVideo();
+        setStatus('loading'); // confirmé par onStateChange → PLAYING
+      } else {
+        // Player pas encore prêt → onReady l'activera
+        pendingPlay.current = true;
+        setStatus('loading');
+      }
+    }
+    // shouldPlay → false : on ne met pas en pause automatiquement
+    // (l'hôte peut contrôler manuellement)
+  }, [shouldPlay, startTime]);
+
+  // ── Contrôles manuels ─────────────────────────────────────────────────────
   const handlePlay = useCallback(() => {
     if (!videoId) return;
     if (readyRef.current && playerRef.current) {
-      // Appel SYNCHRONE dans le clic → navigateur autorise la lecture
-      // Si la lecture est relancée depuis l'état idle/stopped, on repositionne au timestamp
-      if (startTime > 0) {
-        playerRef.current.seekTo(startTime, true);
-      }
+      if (startTime > 0) playerRef.current.seekTo(startTime, true);
       playerRef.current.playVideo();
-      setStatus('loading'); // sera confirmé par onStateChange → PLAYING
+      setStatus('loading');
     } else {
-      // Player pas encore prêt : on le note, onReady s'en chargera
       setStatus('loading');
       pendingPlay.current = true;
-      // S'assurer que l'API charge (cas rare où le script n'a pas encore fini)
       loadYTAPI();
     }
   }, [videoId, startTime]);
@@ -209,7 +238,6 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
           aspectRatio: videoVisible ? '16/9' : undefined,
           overflow: 'hidden',
           borderRadius: videoVisible ? '0.75rem' : 0,
-          // visibility:hidden maintient l'audio ; height:0 cache visuellement
           visibility: videoVisible ? 'visible' : 'hidden',
           transition: 'height 0.3s',
           pointerEvents: videoVisible ? 'auto' : 'none',
@@ -262,7 +290,7 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
           <p className="text-xs font-bold uppercase tracking-widest"
             style={{ color: status === 'playing' ? 'rgba(255,0,170,0.8)' : 'rgba(240,244,255,0.4)' }}>
             {status === 'playing' ? 'En cours…'
-              : status === 'loading' ? 'Connexion YouTube…'
+              : status === 'loading' ? 'Chargement…'
               : status === 'paused'  ? 'En pause'
               : status === 'error'   ? 'Erreur YouTube'
               : 'Blind Test'}
@@ -270,10 +298,10 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
           <p className="text-sm font-bold truncate"
             style={{ color: status === 'playing' ? '#F0F4FF' : 'rgba(240,244,255,0.5)' }}>
             {status === 'playing' ? 'Identifie la musique !'
-              : status === 'loading' ? 'Chargement du lecteur…'
+              : status === 'loading' ? 'Démarrage…'
               : status === 'paused'  ? 'Appuie sur ▶ pour reprendre'
-              : status === 'error'   ? 'Vidéo introuvable ou lecture désactivée'
-              : 'Appuie sur Play pour lancer'}
+              : status === 'error'   ? 'Vidéo indisponible — appuie sur ▶ pour réessayer'
+              : 'Prêt'}
           </p>
         </div>
 
@@ -299,17 +327,13 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
                 className="flex items-center justify-center font-bold text-sm px-3 py-2 rounded-xl transition-all hover:opacity-90"
                 style={{ background: 'rgba(255,0,170,0.18)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.35)' }}
                 title="Pause"
-              >
-                ⏸
-              </button>
+              >⏸</button>
               <button
                 onClick={handleStop}
                 className="flex items-center justify-center font-bold text-sm px-3 py-2 rounded-xl transition-all hover:opacity-90"
                 style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(240,244,255,0.5)' }}
                 title="Stop"
-              >
-                ⏹
-              </button>
+              >⏹</button>
             </>
           )}
           {status === 'paused' && (
@@ -318,17 +342,13 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
                 onClick={handlePlay}
                 className="flex items-center justify-center font-black text-sm px-4 py-2 rounded-xl transition-all hover:opacity-90"
                 style={{ background: '#FF00AA', color: 'white', minWidth: 72 }}
-              >
-                ▶ Play
-              </button>
+              >▶ Play</button>
               <button
                 onClick={handleStop}
                 className="flex items-center justify-center font-bold text-sm px-3 py-2 rounded-xl transition-all hover:opacity-90"
                 style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(240,244,255,0.5)' }}
                 title="Stop"
-              >
-                ⏹
-              </button>
+              >⏹</button>
             </>
           )}
         </div>
