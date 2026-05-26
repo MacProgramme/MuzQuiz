@@ -13,7 +13,7 @@ import { SettingsModal } from '@/components/SettingsModal';
 import { InterLeaderboard } from '@/components/InterLeaderboard';
 import { PublicScreenView } from '@/components/PublicScreenView';
 import { PhoneControllerView, ScorePreview, RemainingTimer } from '@/components/PhoneControllerView';
-import { FREE_QUESTION_LIMIT, getQuestionsForMode, BUILTIN_PACKS, isBuiltinPack } from '@/lib/questions';
+import { FREE_QUESTION_LIMIT, getQuestionsForMode } from '@/lib/questions';
 import { Buzz, QCMAnswer, Player, GameMode, isBuzzMechanic, isBlindTestMode } from '@/types';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
 import { RoomQRCode } from '@/components/RoomQRCode';
@@ -636,9 +636,7 @@ export default function RoomPage() {
                   <span className="flex-1 text-sm font-bold truncate"
                     style={{ color: room.pack_id ? '#FF00AA' : 'rgba(240,244,255,0.4)' }}>
                     {room.pack_id
-                      ? (isBuiltinPack(room.pack_id)
-                          ? (() => { const bp = BUILTIN_PACKS.find(p => p.id === room.pack_id); return bp ? bp.name : 'Pack MUZQUIZ'; })()
-                          : stripLeadingEmoji(hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné'))
+                      ? stripLeadingEmoji(hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné')
                       : 'Sélectionner un pack…'}
                   </span>
                   <span style={{ color: 'rgba(240,244,255,0.4)', fontSize: '0.9rem' }}>
@@ -665,52 +663,21 @@ export default function RoomPage() {
                     {/* Options */}
                     <div className="max-h-64 overflow-y-auto">
 
-                      {/* ── Packs Muzquiz (builtin) — toujours visibles, le mode change automatiquement ── */}
+                      {/* ── Packs Muzquiz (packs de l'hôte depuis Supabase) ── */}
                       {(() => {
-                        const filtered = BUILTIN_PACKS
+                        const filtered = hostPacks
                           .filter(p => packSearch.trim() === '' || p.name.toLowerCase().includes(packSearch.toLowerCase()));
-                        if (filtered.length === 0) return null;
+                        if (filtered.length === 0) return (
+                          <div className="px-4 py-6 text-center text-xs font-bold" style={{ color: 'rgba(240,244,255,0.3)' }}>
+                            Aucun pack disponible
+                          </div>
+                        );
                         return (
                           <>
                             <div className="px-3 py-1.5 sticky top-0"
                               style={{ background: 'rgba(13,27,62,0.98)', borderBottom: '1px solid rgba(255,0,170,0.12)' }}>
                               <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,0,170,0.6)' }}>
                                 🎵 Packs Muzquiz
-                              </span>
-                            </div>
-                            {filtered.map(pack => (
-                              <button key={pack.id}
-                                onClick={() => { selectPack(pack.id, pack.mode); setPackDropdownOpen(false); }}
-                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
-                                <span style={{ fontSize: '1rem' }}>{pack.emoji}</span>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#FF00AA' : '#F0F4FF' }}>
-                                    {pack.name}
-                                  </p>
-                                  <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
-                                    {pack.questions.length}q · {pack.mode}
-                                  </p>
-                                </div>
-                                {room.pack_id === pack.id && <span className="text-xs font-black flex-shrink-0" style={{ color: '#FF00AA' }}>✓</span>}
-                              </button>
-                            ))}
-                          </>
-                        );
-                      })()}
-
-                      {/* ── Mes packs ── */}
-                      {(() => {
-                        const roomIsBlind = isBlindTestMode(room.mode as any);
-                        const filtered = hostPacks
-                          .filter(p => isBlindTestMode(p.mode as any) === roomIsBlind)
-                          .filter(p => packSearch.trim() === '' || p.name.toLowerCase().includes(packSearch.toLowerCase()));
-                        if (filtered.length === 0) return null;
-                        return (
-                          <>
-                            <div className="px-3 py-1.5 sticky top-0"
-                              style={{ background: 'rgba(13,27,62,0.98)', borderBottom: '1px solid rgba(139,92,246,0.12)' }}>
-                              <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(139,92,246,0.5)' }}>
-                                📦 Mes packs
                               </span>
                             </div>
                             {filtered.map(pack => (
