@@ -139,6 +139,8 @@ export default function RoomPage() {
   const transitionIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Timeout de secours : si la musique ne démarre pas dans 8s, on débloque le timer
   const audioFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Vrai quand YouTube bloque la vidéo (embedding désactivé par le label)
+  const [videoBlocked, setVideoBlocked] = useState(false);
 
   const {
     room, players, myPlayer, buzz, setBuzz,
@@ -264,6 +266,7 @@ export default function RoomPage() {
         setShowLeaderboard(false);
         setTimerKey(k => k + 1);
         setAudioStarted(false);
+        setVideoBlocked(false);
         // Annuler tout fallback audio en cours de la question précédente
         if (audioFallbackRef.current) { clearTimeout(audioFallbackRef.current); audioFallbackRef.current = null; }
 
@@ -956,6 +959,7 @@ export default function RoomPage() {
               url={(currentQ as any).youtube_url}
               autoPlay
               startTime={(currentQ as any).audio_start_time ?? 0}
+              onVideoError={() => setVideoBlocked(true)}
               onPlay={myPlayer?.is_host ? async () => {
                 // L'hôte enregistre le timestamp de démarrage → tous les clients synchronisent leur timer
                 if (!room.question_started_at) {
@@ -965,13 +969,32 @@ export default function RoomPage() {
                 }
               } : undefined}
             />
+            {/* Bouton "Passer la musique" pour l'hôte quand la vidéo est bloquée */}
+            {videoBlocked && myPlayer?.is_host && (
+              <button
+                onClick={() => {
+                  setAudioStarted(true);
+                  setQuestionStartedAt(Date.now());
+                  if (audioFallbackRef.current) { clearTimeout(audioFallbackRef.current); audioFallbackRef.current = null; }
+                }}
+                className="mt-2 w-full py-2.5 rounded-xl font-black text-sm transition-all hover:opacity-90"
+                style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B', border: '1.5px solid rgba(245,158,11,0.4)' }}
+              >
+                ⏭ Passer la musique — lancer le timer
+              </button>
+            )}
             {/* Indicateur d'attente pour les joueurs */}
-            {!audioStarted && !myPlayer?.is_host && (
+            {!audioStarted && !myPlayer?.is_host && !videoBlocked && (
               <div className="mt-2 flex items-center justify-center gap-2 text-xs font-bold"
                 style={{ color: 'rgba(240,244,255,0.4)' }}>
                 <div className="w-3 h-3 rounded-full border-2 animate-spin"
                   style={{ borderColor: '#FF00AA', borderTopColor: 'transparent' }} />
                 En attente du démarrage de la musique…
+              </div>
+            )}
+            {!audioStarted && !myPlayer?.is_host && videoBlocked && (
+              <div className="mt-2 text-center text-xs font-bold" style={{ color: 'rgba(245,158,11,0.7)' }}>
+                ⚠ Vidéo bloquée — l'hôte va passer à la suite
               </div>
             )}
           </div>
