@@ -58,6 +58,8 @@ interface Props {
   /** Lance automatiquement la musique dès que le player est prêt */
   autoPlay?: boolean;
   onPlay?: () => void;
+  /** Appelé quand YouTube bloque la vidéo (embedding désactivé, vidéo supprimée…) */
+  onVideoError?: () => void;
   /** Timestamp (secondes) où démarrer. 0 = début. */
   startTime?: number;
 }
@@ -65,7 +67,7 @@ interface Props {
 type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
-export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: Props) {
+export function YouTubePlayer({ url, autoPlay = false, onPlay, onVideoError, startTime = 0 }: Props) {
   const [status, setStatus]             = useState<Status>('idle');
   const [videoVisible, setVideoVisible] = useState(false);
   // Incrémenté pour forcer la recréation du player (ex : retry après erreur)
@@ -137,6 +139,7 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
             if (!mountedRef.current) return;
             if (playerRef.current) playerRef.current._errored = true;
             setStatus('error');
+            onVideoError?.();
           },
         },
       });
@@ -260,7 +263,7 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, startTime = 0 }: 
             {status === 'playing' ? 'Identifie la musique !'
               : status === 'loading' ? 'Démarrage…'
               : status === 'paused'  ? 'Appuie sur ▶ pour reprendre'
-              : status === 'error'   ? 'Vidéo indisponible — appuie sur ▶ pour réessayer'
+              : status === 'error'   ? 'Vidéo bloquée par YouTube (label musical)'
               : 'Prêt'}
           </p>
         </div>
