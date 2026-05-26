@@ -130,9 +130,9 @@ function DailyTab({ userId }: { userId: string }) {
       });
       if (data) {
         const all: DailyEntry[] = data;
-        setEntries(all.slice(0, 10));
+        setEntries(all.slice(0, 3));
         const me = all.find((e) => e.user_id === userId);
-        if (me && Number(me.rank) > 10) setMyEntry(me);
+        if (me && Number(me.rank) > 3) setMyEntry(me);
       }
       setLoading(false);
     };

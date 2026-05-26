@@ -25,6 +25,12 @@ const TIER_COLORS: Record<SubscriptionTier, { bg: string; text: string; label: s
   expert:     { bg: 'rgba(245,158,11,0.12)',   text: '#F59E0B',               label: 'Expert'     },
 };
 
+/** Retire les emoji et espaces en tête d'un nom de pack */
+function cleanPackName(name: string): string {
+  // Retire tout caractère non-ASCII ou non-lettre/chiffre en début de chaîne
+  return name.replace(/^[^\w\sÀ-ÿ]+\s*/g, '').trim();
+}
+
 function inputStyle(focused = false): React.CSSProperties {
   return {
     background: 'rgba(255,255,255,0.06)',
@@ -778,11 +784,7 @@ export default function QuestionsPage() {
                         onClick={() => openPack(pack)}>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-black text-base" style={{ color: '#F0F4FF' }}>{pack.name}</span>
-                            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-                              style={{ background: 'rgba(255,170,0,0.12)', color: '#FFAA00', border: '1px solid rgba(255,170,0,0.3)' }}>
-                              ⭐ Muzquiz
-                            </span>
+                            <span className="font-black text-base" style={{ color: '#F0F4FF' }}>{cleanPackName(pack.name)}</span>
                             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
                               style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.25)' }}>
                               {MODE_LABEL[pack.mode]}
@@ -821,7 +823,7 @@ export default function QuestionsPage() {
                 <div key={pack.id} className="muz-card muz-card-lift p-4 flex items-center gap-2 cursor-pointer" onClick={() => openPack(pack)}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-black text-base" style={{ color: '#F0F4FF' }}>{pack.name}</span>
+                      <span className="font-black text-base" style={{ color: '#F0F4FF' }}>{cleanPackName(pack.name)}</span>
                       <span className="text-xs px-2 py-0.5 rounded-full font-bold"
                         style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.25)' }}>
                         {MODE_LABEL[pack.mode]}

@@ -853,12 +853,13 @@ export default function RoomPage() {
 
       {/* (menu flottant supprimé — contrôles dans le header) */}
 
-      {/* Classement inter-question */}
+      {/* Classement inter-question — top 3 + mon rang seulement */}
       <InterLeaderboard
         players={players}
         correctPlayerIds={correctPlayerIds}
         visible={showLeaderboard}
         pointsEarned={earnedThisRound}
+        myPlayerId={myPlayer?.id}
       />
 
       {/* Header */}
@@ -872,7 +873,14 @@ export default function RoomPage() {
             </span>
           </div>
           <Timer key={timerKey} duration={room.timer_duration}
-            running={room.is_paused ? false : qcmRevealed ? false : isBuzzMechanic(room.mode) ? !buzz : true}
+            running={
+              room.is_paused ? false
+              : qcmRevealed  ? false
+              // Blind test : le timer ne part qu'une fois la musique lancée (audioStarted)
+              : isBlindTestMode(room.mode) ? (audioStarted && (isBuzzMechanic(room.mode) ? !buzz : true))
+              : isBuzzMechanic(room.mode) ? !buzz
+              : true
+            }
             onExpire={() => {
               if (myPlayer.is_host && !qcmRevealed && !room.is_paused) revealQCMAndNext();
             }} />
@@ -926,12 +934,12 @@ export default function RoomPage() {
           {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
 
-        {/* Lecteur audio pour les blind tests — monté dès le countdown pour précharger en silence */}
-        {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && (
+        {/* Lecteur audio pour les blind tests — monté après le countdown (autoPlay déclenche la lecture) */}
+        {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && transitionCountdown === null && (
           <div className="w-full max-w-lg">
             <YouTubePlayer
               url={(currentQ as any).youtube_url}
-              shouldPlay={transitionCountdown === null}
+              autoPlay
               startTime={(currentQ as any).audio_start_time ?? 0}
               onPlay={myPlayer?.is_host ? async () => {
                 // L'hôte enregistre le timestamp de démarrage → tous les clients synchronisent leur timer

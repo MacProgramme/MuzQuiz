@@ -62,6 +62,13 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://www.muzquiz.fr',
   },
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
