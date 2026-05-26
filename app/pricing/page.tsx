@@ -155,8 +155,9 @@ export default function PricingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null); // tier en cours
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-  // ── CGU ──────────────────────────────────────────────────────────────────
+  // ── CGU + Newsletter ─────────────────────────────────────────────────────
   const [acceptedCGU, setAcceptedCGU] = useState(false);
+  const [newsletter, setNewsletter] = useState(true);
 
   const handleCheckout = async (tier: string) => {
     setCheckoutError(null);
@@ -183,7 +184,7 @@ export default function PricingPage() {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ tier }),
+      body: JSON.stringify({ tier, newsletter }),
     });
 
     const data = await res.json();
@@ -269,6 +270,19 @@ export default function PricingPage() {
               style={{ color: '#FF00AA' }}>
               politique de confidentialité
             </a>
+          </span>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={newsletter}
+            onChange={e => setNewsletter(e.target.checked)}
+            className="mt-0.5 flex-shrink-0"
+            style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#FF00AA' }}
+          />
+          <span className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.6)' }}>
+            M&apos;abonner à la newsletter Muzquiz
           </span>
         </label>
 
