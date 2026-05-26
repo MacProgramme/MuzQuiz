@@ -16,6 +16,8 @@ interface Props {
   correctPlayerIds: string[];
   visible: boolean;
   pointsEarned?: Record<string, number>;
+  /** ID du joueur local — filtre l'affichage : top 3 + mon rang seulement */
+  myPlayerId?: string;
 }
 
 function RankArrow({ diff }: { diff: number }) {
@@ -26,11 +28,10 @@ function RankArrow({ diff }: { diff: number }) {
 
 const COUNTDOWN_DURATION = 5;
 
-export function InterLeaderboard({ players, correctPlayerIds, visible, pointsEarned = {} }: Props) {
+export function InterLeaderboard({ players, correctPlayerIds, visible, pointsEarned = {}, myPlayerId }: Props) {
   const [ranked, setRanked] = useState<RankedPlayer[]>([]);
   const [count, setCount] = useState(COUNTDOWN_DURATION);
 
-  // Calculer le classement quand visible (ou quand les scores changent)
   useEffect(() => {
     if (!visible) return;
     const sorted = [...players].sort((a, b) => b.score - a.score);
@@ -49,7 +50,6 @@ export function InterLeaderboard({ players, correctPlayerIds, visible, pointsEar
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, players, JSON.stringify(pointsEarned), JSON.stringify(correctPlayerIds)]);
 
-  // Countdown 5 → 0
   useEffect(() => {
     if (!visible) { setCount(COUNTDOWN_DURATION); return; }
     setCount(COUNTDOWN_DURATION);
@@ -61,8 +61,83 @@ export function InterLeaderboard({ players, correctPlayerIds, visible, pointsEar
 
   if (!visible || ranked.length === 0) return null;
 
-  // Délai entre chaque joueur (du dernier au premier) — max 400ms par joueur
-  const stepMs = Math.min(400, Math.floor(2800 / ranked.length));
+  // ── Filtrage : top 3 + mon rang si je suis 4e ou plus ──────────────────────
+  const top3 = ranked.filter(p => p.rank <= 3);
+  const me   = myPlayerId ? ranked.find(p => p.id === myPlayerId) : null;
+  const meOutsideTop3 = me && me.rank > 3;
+
+  // Délai d'animation : les rangs élevés apparaissent en premier
+  const stepMs = Math.min(400, Math.floor(2800 / Math.max(top3.length, 1)));
+
+  function PlayerRow({ p }: { p: RankedPlayer }) {
+    const isMe    = p.id === myPlayerId;
+    const isFirst = p.rank === 1;
+    const delayMs = (top3.length - p.rank) * stepMs; // rang 3 = 0ms, rang 1 = 2×step
+
+    return (
+      <div className="muz-lb-item" style={{ animationDelay: `${Math.max(0, delayMs)}ms` }}>
+        <div
+          className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+          style={{
+            background: isMe
+              ? 'rgba(139,92,246,0.18)'
+              : isFirst
+              ? 'rgba(245,158,11,0.15)'
+              : p.rank === 2 ? 'rgba(156,163,175,0.08)'
+              : p.rank === 3 ? 'rgba(180,83,9,0.08)'
+              : 'rgba(255,255,255,0.04)',
+            border: isMe
+              ? '1.5px solid rgba(139,92,246,0.6)'
+              : isFirst
+              ? '1.5px solid rgba(245,158,11,0.6)'
+              : p.rank === 2 ? '1.5px solid rgba(156,163,175,0.3)'
+              : p.rank === 3 ? '1.5px solid rgba(180,83,9,0.3)'
+              : '1.5px solid rgba(255,255,255,0.06)',
+            boxShadow: isFirst ? '0 0 20px rgba(245,158,11,0.15)' : 'none',
+          }}
+        >
+          {/* Rang */}
+          {p.rank <= 3 ? (
+            <div className="flex items-center justify-center flex-shrink-0" style={{ width: 40 }}>
+              <MustacheMedal rank={p.rank as 1|2|3} width={40} />
+            </div>
+          ) : (
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center font-black flex-shrink-0"
+              style={{ background: isMe ? '#8B5CF6' : 'rgba(255,255,255,0.08)', color: '#F0F4FF', fontSize: '0.8rem' }}
+            >
+              #{p.rank}
+            </div>
+          )}
+
+          {/* Pseudo */}
+          <span className="flex-1 font-bold text-sm truncate"
+            style={{ color: isMe ? '#8B5CF6' : '#F0F4FF', fontWeight: isFirst || isMe ? 900 : 700 }}>
+            {p.nickname}{isMe && <span className="text-xs opacity-60 ml-1">(toi)</span>}
+          </span>
+
+          {/* +pts */}
+          {p.delta > 0 && (
+            <span className="text-xs font-black px-2 py-0.5 rounded-full flex-shrink-0"
+              style={{ background: 'rgba(0,229,209,0.15)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.3)' }}>
+              +{p.delta}
+            </span>
+          )}
+
+          {/* Score */}
+          <span className="font-black text-base flex-shrink-0"
+            style={{ color: isMe ? '#8B5CF6' : '#F0F4FF', minWidth: '3.5rem', textAlign: 'right' }}>
+            {p.score}
+          </span>
+
+          {/* Flèche */}
+          <div className="w-5 flex-shrink-0 flex items-center justify-center">
+            <RankArrow diff={p.prevRank - p.rank} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -74,86 +149,21 @@ export function InterLeaderboard({ players, correctPlayerIds, visible, pointsEar
         <p className="text-xs font-bold uppercase tracking-widest mb-1"
           style={{ color: 'rgba(240,244,255,0.4)' }}>Classement</p>
         <h2 className="text-3xl font-black" style={{ color: '#F0F4FF', fontFamily: 'var(--font-black-han)' }}>
-          En ce moment…
+          Top 3
         </h2>
       </div>
 
-      {/* Liste — du dernier au premier, chacun apparaît après son délai CSS */}
+      {/* Top 3 */}
       <div className="w-full max-w-sm flex flex-col gap-2">
-        {ranked.map((p) => {
-          // Dernier rang (ex: 5/5) apparaît en premier → délai = 0
-          // Premier rang (1/5) apparaît en dernier → délai = (n-1) * step
-          const delayMs = (ranked.length - p.rank) * stepMs;
-          const isFirst = p.rank === 1;
+        {top3.map(p => <PlayerRow key={p.id} p={p} />)}
 
-          return (
-            <div
-              key={p.id}
-              className="muz-lb-item"
-              style={{ animationDelay: `${delayMs}ms` }}
-            >
-              <div
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-                style={{
-                  background: isFirst
-                    ? 'rgba(245,158,11,0.15)'
-                    : p.rank === 2 ? 'rgba(156,163,175,0.08)'
-                    : p.rank === 3 ? 'rgba(180,83,9,0.08)'
-                    : 'rgba(255,255,255,0.04)',
-                  border: isFirst
-                    ? '1.5px solid rgba(245,158,11,0.6)'
-                    : p.rank === 2 ? '1.5px solid rgba(156,163,175,0.3)'
-                    : p.rank === 3 ? '1.5px solid rgba(180,83,9,0.3)'
-                    : '1.5px solid rgba(255,255,255,0.06)',
-                  boxShadow: isFirst ? '0 0 20px rgba(245,158,11,0.15)' : 'none',
-                }}
-              >
-                {/* Rang */}
-                {p.rank <= 3 ? (
-                  <div className="flex items-center justify-center flex-shrink-0" style={{ width: 40 }}>
-                    <MustacheMedal rank={p.rank as 1|2|3} width={40} />
-                  </div>
-                ) : (
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center font-black flex-shrink-0"
-                    style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      color: '#F0F4FF',
-                      fontSize: '0.8rem',
-                    }}
-                  >
-                    #{p.rank}
-                  </div>
-                )}
-
-                {/* Pseudo */}
-                <span className="flex-1 font-bold text-sm truncate"
-                  style={{ color: '#F0F4FF', fontWeight: isFirst ? 900 : 700 }}>
-                  {p.nickname}
-                </span>
-
-                {/* +100 */}
-                {p.delta > 0 && (
-                  <span className="text-xs font-black px-2 py-0.5 rounded-full flex-shrink-0"
-                    style={{ background: 'rgba(0,229,209,0.15)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.3)' }}>
-                    +{p.delta}
-                  </span>
-                )}
-
-                {/* Score */}
-                <span className="font-black text-base flex-shrink-0"
-                  style={{ color: '#8B5CF6', minWidth: '3.5rem', textAlign: 'right' }}>
-                  {p.score}
-                </span>
-
-                {/* Flèche */}
-                <div className="w-5 flex-shrink-0 flex items-center justify-center">
-                  <RankArrow diff={p.prevRank - p.rank} />
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {/* Mon rang si je suis hors top 3 */}
+        {meOutsideTop3 && me && (
+          <>
+            <div className="text-center text-xs py-1" style={{ color: 'rgba(240,244,255,0.25)' }}>• • •</div>
+            <PlayerRow p={me} />
+          </>
+        )}
       </div>
 
       {/* Countdown */}

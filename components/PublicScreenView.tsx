@@ -424,12 +424,12 @@ export function PublicScreenView({
           </div>
         </div>
 
-        {/* Lecteur audio (blind test) — monté dès le countdown pour précharger en silence */}
-        {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && (
+        {/* Lecteur audio (blind test) — monté après le countdown */}
+        {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && !transitionActive && (
           <div className="px-12 pb-2 max-w-xl mx-auto w-full">
             <YouTubePlayer
               url={(currentQuestion as any).youtube_url}
-              shouldPlay={!transitionActive}
+              autoPlay
               startTime={(currentQuestion as any).audio_start_time ?? 0}
             />
           </div>
@@ -558,12 +558,12 @@ export function PublicScreenView({
           </div>
         </div>
 
-        {/* Lecteur audio (buzz blind test) — monté dès le countdown pour précharger en silence */}
-        {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && (
+        {/* Lecteur audio (buzz blind test) — monté après le countdown */}
+        {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && !transitionActive && (
           <div className="px-12 pb-2 max-w-xl mx-auto w-full">
             <YouTubePlayer
               url={(currentQuestion as any).youtube_url}
-              shouldPlay={!transitionActive}
+              autoPlay
               startTime={(currentQuestion as any).audio_start_time ?? 0}
             />
           </div>
