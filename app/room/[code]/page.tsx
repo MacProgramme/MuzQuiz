@@ -178,16 +178,29 @@ export default function RoomPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.id, room?.status]);
 
-  // Charger les packs de l'hôte quand on est en salle d'attente
+  // Charger les packs Muzquiz (depuis le compte admin configuré) pour la salle d'attente.
+  // Si NEXT_PUBLIC_MUZQUIZ_OWNER_ID est défini → on charge toujours depuis ce compte (accessible à tous).
+  // Sinon → fallback sur les packs du joueur connecté.
   useEffect(() => {
-    if (!myPlayer?.is_host || !room || room.status !== 'waiting') return;
+    if (!room || room.status !== 'waiting') return;
     const loadHostPacks = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
+      const muzquizOwnerId = process.env.NEXT_PUBLIC_MUZQUIZ_OWNER_ID;
+      let ownerId: string | null = null;
+
+      if (muzquizOwnerId) {
+        // Packs publics Muzquiz — accessibles à tous, abonnement ou non
+        ownerId = muzquizOwnerId;
+      } else {
+        // Fallback : packs du joueur connecté (utile en développement local)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+        ownerId = session.user.id;
+      }
+
       const { data } = await supabase
         .from('question_packs')
         .select('id, name, mode')
-        .eq('owner_id', session.user.id)
+        .eq('owner_id', ownerId)
         .order('created_at', { ascending: false });
       if (!data) return;
       const withCounts = await Promise.all(data.map(async (p) => {
@@ -198,7 +211,7 @@ export default function RoomPage() {
     };
     loadHostPacks();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myPlayer?.is_host, room?.status]);
+  }, [room?.status]);
 
   // Sélectionner un pack (hôte) — met à jour pack_id ET mode en DB
   // Préserve le mécanisme buzz si la salle est en mode buzz
@@ -663,9 +676,11 @@ export default function RoomPage() {
                     {/* Options */}
                     <div className="max-h-64 overflow-y-auto">
 
-                      {/* ── Packs Muzquiz (packs de l'hôte depuis Supabase) ── */}
+                      {/* ── Packs Muzquiz — filtrés par mode (quiz↔quiz, blind_test↔blind_test) ── */}
                       {(() => {
+                        const roomIsBlind = isBlindTestMode(room.mode as any);
                         const filtered = hostPacks
+                          .filter(p => isBlindTestMode(p.mode as any) === roomIsBlind)
                           .filter(p => packSearch.trim() === '' || p.name.toLowerCase().includes(packSearch.toLowerCase()));
                         if (filtered.length === 0) return (
                           <div className="px-4 py-6 text-center text-xs font-bold" style={{ color: 'rgba(240,244,255,0.3)' }}>

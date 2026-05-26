@@ -220,18 +220,177 @@ const QUIZ_DISNEY: QCMQuestion[] = [
   { type: 'qcm', q: "Quel animal est Simba dans 'Le Roi Lion' ?", choices: ["Tigre", "Léopard", "Lion", "Guépard"], correct: 2 },
 ];
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ── NOUVEAUX PACKS MUZQUIZ — affichés dans le dropdown pour tous les joueurs
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Quiz — Culture Générale ──────────────────────────────────────────────────
+const QUIZ_CULTURE_GENERALE: QCMQuestion[] = [
+  { type: 'qcm', q: "Quel est le pays le plus peuplé du monde ?", choices: ["Chine", "Inde", "États-Unis", "Indonésie"], correct: 1 },
+  { type: 'qcm', q: "Combien d'os y a-t-il dans le corps humain adulte ?", choices: ["186", "196", "206", "216"], correct: 2 },
+  { type: 'qcm', q: "Qui a peint 'La Nuit étoilée' ?", choices: ["Monet", "Gauguin", "Van Gogh", "Cézanne"], correct: 2 },
+  { type: 'qcm', q: "Quelle est la plus haute montagne du monde ?", choices: ["K2", "Mont Blanc", "Kilimandjaro", "Everest"], correct: 3 },
+  { type: 'qcm', q: "En quelle année a été construite la Tour Eiffel ?", choices: ["1879", "1884", "1889", "1894"], correct: 2 },
+  { type: 'qcm', q: "Qui a inventé le téléphone ?", choices: ["Thomas Edison", "Nikola Tesla", "Alexander Graham Bell", "Guglielmo Marconi"], correct: 2 },
+  { type: 'qcm', q: "Quelle est la devise de la France ?", choices: ["Dieu, Honneur, Patrie", "Liberté, Égalité, Fraternité", "Force, Courage, Honneur", "Travail, Famille, Patrie"], correct: 1 },
+  { type: 'qcm', q: "Quel est le plus rapide animal terrestre ?", choices: ["Lion", "Guépard", "Autruche", "Lévrier"], correct: 1 },
+  { type: 'qcm', q: "Quel est l'élément chimique dont le symbole est 'Na' ?", choices: ["Magnésium", "Nickel", "Neptunium", "Sodium"], correct: 3 },
+  { type: 'qcm', q: "Combien de pays composent l'Union Européenne ?", choices: ["24", "25", "27", "30"], correct: 2 },
+  { type: 'qcm', q: "Quel est le plus grand océan du monde ?", choices: ["Atlantique", "Antarctique", "Indien", "Pacifique"], correct: 3 },
+  { type: 'qcm', q: "En quelle année a eu lieu la chute du mur de Berlin ?", choices: ["1987", "1988", "1989", "1990"], correct: 2 },
+  { type: 'qcm', q: "Quelle planète est surnommée la 'planète rouge' ?", choices: ["Jupiter", "Vénus", "Mars", "Saturne"], correct: 2 },
+  { type: 'qcm', q: "Qui a écrit 'Les Misérables' ?", choices: ["Gustave Flaubert", "Victor Hugo", "Émile Zola", "Alexandre Dumas"], correct: 1 },
+  { type: 'qcm', q: "Quel pays a remporté le plus de Coupes du Monde de football ?", choices: ["Allemagne", "France", "Argentine", "Brésil"], correct: 3 },
+];
+
+// ── Quiz — Cinéma & Séries ────────────────────────────────────────────────────
+const QUIZ_CINEMA_SERIES: QCMQuestion[] = [
+  { type: 'qcm', q: "Qui joue Iron Man dans l'univers Marvel ?", choices: ["Chris Evans", "Chris Hemsworth", "Robert Downey Jr.", "Mark Ruffalo"], correct: 2 },
+  { type: 'qcm', q: "Dans quelle série trouve-t-on Walter White et Jesse Pinkman ?", choices: ["Dexter", "Breaking Bad", "Narcos", "Better Call Saul"], correct: 1 },
+  { type: 'qcm', q: "Quel réalisateur a créé le film 'Inception' ?", choices: ["Steven Spielberg", "James Cameron", "Christopher Nolan", "Ridley Scott"], correct: 2 },
+  { type: 'qcm', q: "Quelle actrice joue Hermione Granger dans Harry Potter ?", choices: ["Keira Knightley", "Natalie Portman", "Emma Stone", "Emma Watson"], correct: 3 },
+  { type: 'qcm', q: "Quel acteur joue Jack Dawson dans Titanic ?", choices: ["Brad Pitt", "Matt Damon", "Leonardo DiCaprio", "Tom Hanks"], correct: 2 },
+  { type: 'qcm', q: "Dans quelle série trouve-t-on le Trône de Fer ?", choices: ["The Witcher", "Vikings", "Game of Thrones", "The Last Kingdom"], correct: 2 },
+  { type: 'qcm', q: "Quel film Pixar met en scène le robot WALL-E ?", choices: ["Ratatouille", "WALL-E", "Cars", "Up"], correct: 1 },
+  { type: 'qcm', q: "Qui joue James Bond dans 'Casino Royale' de 2006 ?", choices: ["Pierce Brosnan", "Daniel Craig", "Sean Connery", "Roger Moore"], correct: 1 },
+  { type: 'qcm', q: "Combien de saisons compte la série 'Friends' ?", choices: ["8", "9", "10", "11"], correct: 2 },
+  { type: 'qcm', q: "Dans quel film entend-on la réplique 'Houston, we have a problem' ?", choices: ["Gravity", "Interstellar", "Apollo 13", "The Martian"], correct: 2 },
+  { type: 'qcm', q: "Quel film d'animation de 1994 met en scène un lion nommé Simba ?", choices: ["Bambi", "Dumbo", "Tarzan", "Le Roi Lion"], correct: 3 },
+  { type: 'qcm', q: "Quelle série Netflix met en scène des enfants face à des phénomènes surnaturels à Hawkins ?", choices: ["Dark", "The OA", "Stranger Things", "Mindhunter"], correct: 2 },
+];
+
+// ── Quiz — Sport & Champions ─────────────────────────────────────────────────
+const QUIZ_SPORT_CHAMPIONS: QCMQuestion[] = [
+  { type: 'qcm', q: "Combien de joueurs composent une équipe de basketball ?", choices: ["4", "5", "6", "7"], correct: 1 },
+  { type: 'qcm', q: "Qui détient le record du monde du 100 mètres masculin ?", choices: ["Carl Lewis", "Asafa Powell", "Usain Bolt", "Tyson Gay"], correct: 2 },
+  { type: 'qcm', q: "En quelle année la France a-t-elle remporté sa première Coupe du Monde de football ?", choices: ["1994", "1996", "1998", "2002"], correct: 2 },
+  { type: 'qcm', q: "Quel sport se joue avec un volant ?", choices: ["Tennis de table", "Squash", "Badminton", "Padel"], correct: 2 },
+  { type: 'qcm', q: "Quel joueur de football a remporté le plus de Ballons d'Or ?", choices: ["Cristiano Ronaldo", "Lionel Messi", "Pelé", "Ronaldo"], correct: 1 },
+  { type: 'qcm', q: "Combien de joueurs composent une équipe de rugby à XV ?", choices: ["13", "14", "15", "16"], correct: 2 },
+  { type: 'qcm', q: "Quel pays a accueilli les Jeux Olympiques d'été en 2021 ?", choices: ["Chine", "France", "Japon", "États-Unis"], correct: 2 },
+  { type: 'qcm', q: "Dans quel sport pratique-t-on un 'Grand Chelem' ?", choices: ["Golf", "Tennis", "Athlétisme", "Natation"], correct: 1 },
+  { type: 'qcm', q: "Quel club de football a remporté le plus de Ligues des Champions UEFA ?", choices: ["Barcelona", "Bayern Munich", "Real Madrid", "AC Milan"], correct: 2 },
+  { type: 'qcm', q: "En combien de sets se dispute un match de tennis masculin en Grand Chelem ?", choices: ["2", "3", "5", "7"], correct: 2 },
+  { type: 'qcm', q: "Quel pays a remporté le plus de médailles d'or aux Jeux Olympiques ?", choices: ["Russie", "Chine", "Allemagne", "États-Unis"], correct: 3 },
+  { type: 'qcm', q: "Quel est le sport national du Canada ?", choices: ["Curling", "Hockey sur glace", "Lacrosse", "Basketball"], correct: 1 },
+];
+
+// ── Quiz — Science & Technologie ─────────────────────────────────────────────
+const QUIZ_SCIENCE_TECHNO: QCMQuestion[] = [
+  { type: 'qcm', q: "Quelle planète est la plus grande du système solaire ?", choices: ["Saturne", "Neptune", "Jupiter", "Uranus"], correct: 2 },
+  { type: 'qcm', q: "Qui a découvert la pénicilline ?", choices: ["Marie Curie", "Louis Pasteur", "Alexander Fleming", "Robert Koch"], correct: 2 },
+  { type: 'qcm', q: "En quelle année a été lancé le premier iPhone ?", choices: ["2005", "2006", "2007", "2008"], correct: 2 },
+  { type: 'qcm', q: "Quel est l'élément le plus abondant dans l'univers ?", choices: ["Oxygène", "Carbone", "Hélium", "Hydrogène"], correct: 3 },
+  { type: 'qcm', q: "Combien de chromosomes possède l'être humain ?", choices: ["23", "46", "48", "52"], correct: 1 },
+  { type: 'qcm', q: "Qui a fondé Microsoft ?", choices: ["Steve Jobs", "Elon Musk", "Bill Gates", "Jeff Bezos"], correct: 2 },
+  { type: 'qcm', q: "Quel organe produit l'insuline ?", choices: ["Le foie", "Le pancréas", "Les reins", "La rate"], correct: 1 },
+  { type: 'qcm', q: "À quelle température l'eau bout-elle au niveau de la mer ?", choices: ["90°C", "95°C", "100°C", "105°C"], correct: 2 },
+  { type: 'qcm', q: "Quelle est la vitesse approximative de la lumière ?", choices: ["200 000 km/s", "250 000 km/s", "300 000 km/s", "350 000 km/s"], correct: 2 },
+  { type: 'qcm', q: "Quel langage de programmation est à la base du web côté client ?", choices: ["Python", "Java", "JavaScript", "PHP"], correct: 2 },
+  { type: 'qcm', q: "Quelle entreprise a développé le système d'exploitation Android ?", choices: ["Apple", "Microsoft", "Google", "Samsung"], correct: 2 },
+  { type: 'qcm', q: "Combien de neurones environ contient le cerveau humain ?", choices: ["10 millions", "100 millions", "86 milliards", "1 trillion"], correct: 2 },
+];
+
+// ── Quiz — Histoire & Civilisations ─────────────────────────────────────────
+const QUIZ_HISTOIRE_CIVILISATIONS: QCMQuestion[] = [
+  { type: 'qcm', q: "En quelle année a eu lieu la chute de l'Empire romain d'Occident ?", choices: ["376", "410", "476", "527"], correct: 2 },
+  { type: 'qcm', q: "Quel pharaon a fait construire la grande pyramide de Gizeh ?", choices: ["Ramsès II", "Khéops", "Toutânkhamon", "Akhenaton"], correct: 1 },
+  { type: 'qcm', q: "En quelle année a commencé la Première Guerre mondiale ?", choices: ["1912", "1913", "1914", "1915"], correct: 2 },
+  { type: 'qcm', q: "Qui était le premier Président de la Ve République française ?", choices: ["Georges Pompidou", "Charles de Gaulle", "René Coty", "Vincent Auriol"], correct: 1 },
+  { type: 'qcm', q: "Quelle civilisation a inventé l'écriture cunéiforme ?", choices: ["Égyptienne", "Grecque", "Sumérienne", "Romaine"], correct: 2 },
+  { type: 'qcm', q: "En quelle année Christophe Colomb a-t-il atteint l'Amérique ?", choices: ["1488", "1490", "1492", "1498"], correct: 2 },
+  { type: 'qcm', q: "Quelle guerre a duré de 1337 à 1453 ?", choices: ["Guerre de Trente Ans", "Guerre de Sept Ans", "Guerre de Cent Ans", "Guerre de Succession"], correct: 2 },
+  { type: 'qcm', q: "Qui était l'épouse de Napoléon lors de son couronnement en 1804 ?", choices: ["Marie-Louise", "Joséphine de Beauharnais", "Marie-Antoinette", "Marie Walewska"], correct: 1 },
+  { type: 'qcm', q: "Quel événement symbolique a déclenché la Révolution française le 14 juillet 1789 ?", choices: ["La fuite du roi", "La prise de la Bastille", "L'exécution de Robespierre", "La mort de Louis XVI"], correct: 1 },
+  { type: 'qcm', q: "En quelle année a eu lieu la réunification allemande ?", choices: ["1988", "1989", "1990", "1991"], correct: 2 },
+  { type: 'qcm', q: "Qui a dirigé l'URSS pendant la Seconde Guerre mondiale ?", choices: ["Lénine", "Trotski", "Staline", "Khrouchtchev"], correct: 2 },
+  { type: 'qcm', q: "Quel empire était gouverné par Gengis Khan au XIIIe siècle ?", choices: ["Empire ottoman", "Empire mongol", "Empire perse", "Empire chinois"], correct: 1 },
+];
+
+// ── Blind Test — Classiques (80s, 90s, 2000s) ────────────────────────────────
+const BT_CLASSIQUES: QCMQuestion[] = [
+  { type: 'qcm', q: "Quel groupe interprète cette chanson ?", choices: ["Pearl Jam", "Soundgarden", "Nirvana", "Alice in Chains"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=hTWKbfoikeg", audio_start_time: 0 },   // Smells Like Teen Spirit
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["The Rolling Stones", "Queen", "Led Zeppelin", "The Who"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=fJ9rUzIMcZQ", audio_start_time: 49 },     // Bohemian Rhapsody — "Mama just killed a man"
+  { type: 'qcm', q: "Quel groupe interprète ce morceau ?", choices: ["AC/DC", "Aerosmith", "Guns N' Roses", "Metallica"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=1w7OgIMMRc4", audio_start_time: 0 },          // Sweet Child O' Mine
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Foreigner", "Journey", "Survivor", "REO Speedwagon"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=btPJPFnesV4", audio_start_time: 0 },           // Eye of the Tiger
+  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Jay-Z", "Dr. Dre", "Eminem", "50 Cent"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=_Yhyp-_hX2s", audio_start_time: 0 },                          // Lose Yourself
+  { type: 'qcm', q: "Quel groupe chante ce titre ?", choices: ["Korn", "System of a Down", "Papa Roach", "Linkin Park"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=eVTXPUF4Oz4", audio_start_time: 0 },             // In the End
+  { type: 'qcm', q: "Quel groupe interprète cette chanson ?", choices: ["Interpol", "The Strokes", "The Killers", "Franz Ferdinand"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=gGdGFtwCNBE", audio_start_time: 0 }, // Mr. Brightside
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["Blur", "Radiohead", "Oasis", "The Verve"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=bx1Bh8ZvH84", audio_start_time: 0 },                     // Wonderwall
+  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Mariah Carey", "Céline Dion", "Whitney Houston", "Jennifer Lopez"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=3JWTaaS7LdU", audio_start_time: 55 }, // I Will Always Love You
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["John Mellencamp", "Tom Petty", "Bryan Adams", "Don Henley"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=eFjjO_lhf9c", audio_start_time: 0 },            // Summer of '69
+];
+
+// ── Blind Test — Hits Actuels (2010 → aujourd'hui) ───────────────────────────
+const BT_HITS_ACTUELS: QCMQuestion[] = [
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["One Direction", "BTS", "Backstreet Boys", "Jonas Brothers"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=gdZLi9oWNZg", audio_start_time: 0 },    // Dynamite
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Dua Lipa", "Ariana Grande", "Selena Gomez", "Olivia Rodrigo"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=oygrmKOua_0", audio_start_time: 0 },           // Don't Start Now
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Ed Sheeran", "Harry Styles", "Shawn Mendes", "Sam Smith"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=H5v3kku4y6Q", audio_start_time: 0 },               // As It Was
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Dua Lipa", "Olivia Rodrigo", "Billie Eilish", "Sabrina Carpenter"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=ZmDBbnmKpqQ", audio_start_time: 48 },     // drivers license
+  { type: 'qcm', q: "Qui interprète ce morceau ?", choices: ["Drake", "Post Malone", "Travis Scott", "Juice WRLD"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=wXhTHyIgQ_U", audio_start_time: 0 },                   // Circles
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Dua Lipa", "Olivia Rodrigo", "Taylor Swift", "Camila Cabello"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=TUVcZfQe-Kw", audio_start_time: 30 },         // Levitating
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Ariana Grande", "Olivia Rodrigo", "Doja Cat", "Billie Eilish"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=gNi_6U5Pm_o", audio_start_time: 0 },           // good 4 u
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Stromae", "Aya Nakamura", "Maître Gims", "Ninho"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=sgECLMoW_L8", audio_start_time: 30 },                      // Djadja
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Two Door Cinema Club", "MGMT", "Tame Impala", "Glass Animals"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=mRD0-GxqHVo", audio_start_time: 30 },  // Heat Waves
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Justin Bieber", "Ed Sheeran", "Shawn Mendes", "Niall Horan"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=tQ0yjYMhNs8", audio_start_time: 30 },           // Peaches
+];
+
+// ── Blind Test — Chansons Françaises ─────────────────────────────────────────
+const BT_CHANSONS_FRANCAISES: QCMQuestion[] = [
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Black M", "Booba", "Stromae", "Maître Gims"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=qpLQK9ggME4", audio_start_time: 0 },        // Alors on danse
+  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Zaz", "Indila", "Alizée", "Yelle"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=3phbVx1Dl08", audio_start_time: 25 },               // Dernière Danse
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Hoshi", "Pomme", "Angèle", "Roméo Elvis"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=fhNgzJHh-G8", audio_start_time: 0 },             // Balance Ton Quoi
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Yelle", "Housse de Racket", "Christine and the Queens", "La Femme"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=G7SBcDTKlwE", audio_start_time: 0 }, // Tilted
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["IAM", "Assassin", "MC Solaar", "Oxmo Puccino"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=jDEXOOhB03s", audio_start_time: 0 },        // Nouveau Western
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Vianney", "Julien Doré", "Gaëtan Roussel", "Romain Didier"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=0yBtf5sJ1Xw", audio_start_time: 30 }, // Paris-Seychelles
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Aya Nakamura", "Awa Imani", "Wejdene", "Yseult"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=XrpBwj4bvEo", audio_start_time: 0 },     // Coeur (Clara Luciani)
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Vald", "Nekfeu", "Disiz", "Keny Arkana"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=6O0ANbFvmgA", audio_start_time: 30 },              // Étoiles
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Grand Corps Malade", "Oxmo Puccino", "Gaël Faye", "Kery James"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=bO3lLPvFnPs", audio_start_time: 0 }, // Funambule
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Lomepal", "Orelsan", "Roméo Elvis", "Eddy de Pretto"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=fNFq4cBCVgE", audio_start_time: 0 }, // Basique
+];
+
+// ── Blind Test — Rap & Hip-Hop ────────────────────────────────────────────────
+const BT_RAP_HIPHOP: QCMQuestion[] = [
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["J. Cole", "Kendrick Lamar", "Travis Scott", "Drake"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=tvTRZJ-4EyI", audio_start_time: 0 },    // HUMBLE.
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Drake", "Post Malone", "Tyga", "21 Savage"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=UceaB4D0jpo", audio_start_time: 30 },             // Rockstar
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Nicki Minaj", "Cardi B", "Doja Cat", "Megan Thee Stallion"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=PEGccV-NOm8", audio_start_time: 30 }, // Bodak Yellow
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Nekfeu", "Lomepal", "Orelsan", "Vald"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=v6WA-4A4pEM", audio_start_time: 0 },                  // La Fête est finie
+  { type: 'qcm', q: "Quel duo interprète ce titre ?", choices: ["Booba & Kaaris", "Ninho & Niska", "PNL", "MHD & Gradur"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=LHcpMNODFCI", audio_start_time: 0 }, // Au DD
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Jul", "Sch", "Ninho", "Niska"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=jNQ0XRWUCP4", audio_start_time: 30 },                        // Dior (SCH)
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Travis Scott", "Young Thug", "Future", "Migos"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=6ONRf7h3Mdk", audio_start_time: 45 },        // SICKO MODE
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Drake", "Childish Gambino", "Chance the Rapper", "Kanye West"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=xpVfcZ0ZcFM", audio_start_time: 45 }, // God's Plan
+  { type: 'qcm', q: "Quel artiste interprète ce titre ?", choices: ["MHD", "Gradur", "JuL", "Rim'K"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=Y9YFKU_JKak", audio_start_time: 0 },               // Bande Organisée (Jul)
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Ninho", "Niska", "Koba LaD", "Freeze Corleone"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=Sv7YJDdSCfg", audio_start_time: 20 },       // Millions
+];
+
+// ── Blind Test — Années 2000 (Pop, RnB, Électro) ─────────────────────────────
+const BT_ANNEES2000: QCMQuestion[] = [
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Basement Jaxx", "Faithless", "Chemical Brothers", "Daft Punk"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=FGBhQbmPwH8", audio_start_time: 0 }, // One More Time
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Mariah Carey", "Destiny's Child", "Alicia Keys", "Beyoncé"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=ViwtNLUqkMY", audio_start_time: 0 },          // Crazy in Love
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Duffy", "Lily Allen", "Amy Winehouse", "Adele"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=KUmZp8pR1uc", audio_start_time: 0 },                       // Rehab
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Katy Perry", "Ke$ha", "Nicki Minaj", "Lady Gaga"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=bESGLojNYSo", audio_start_time: 30 },                   // Poker Face
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Beyoncé", "Rihanna", "Ciara", "Mariah Carey"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=CvBfHwUxHIk", audio_start_time: 30 },                        // Umbrella
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Jessica Simpson", "Christina Aguilera", "Britney Spears", "Paris Hilton"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=LOZuxwVk7TU", audio_start_time: 0 }, // Toxic
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["*NSYNC", "Justin Timberlake", "Backstreet Boys", "Boyz II Men"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=DksSPZTZES0", audio_start_time: 0 },        // Cry Me a River
+  { type: 'qcm', q: "Quel groupe chante cette chanson ?", choices: ["LMFAO", "Pitbull", "Taio Cruz", "Black Eyed Peas"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=uSD4vsh1zDA", audio_start_time: 0 },             // I Gotta Feeling
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Danity Kane", "Destiny's Child", "En Vogue", "TLC"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=sQgd6MccwZc", audio_start_time: 30 },           // Say My Name
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Nelly Furtado", "Fergie", "Kelis", "Pink"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=5lSKVmJMO-s", audio_start_time: 0 },                            // Maneater
+];
+
 // ── Catalogue complet des packs builtin ─────────────────────────────────────
 export const BUILTIN_PACKS: BuiltinPack[] = [
-  { id: 'builtin:bt_annees80',        name: 'Blind Test — Années 80',        mode: 'blind_test', emoji: '🕹️', questions: BT_ANNEES80 },
-  { id: 'builtin:bt_pop',             name: 'Blind Test — Pop Internationale', mode: 'blind_test', emoji: '🌍', questions: BT_POP_INTERNATIONAL },
-  { id: 'builtin:bt_rock_fr',         name: 'Blind Test — Rock Français',    mode: 'blind_test', emoji: '🎸', questions: BT_ROCK_FRANCAIS },
-  { id: 'builtin:bt_rap2000',         name: 'Blind Test — Rap 2000',         mode: 'blind_test', emoji: '🎤', questions: BT_RAP2000 },
-  { id: 'builtin:bt_disney',          name: 'Blind Test — Disney',           mode: 'blind_test', emoji: '✨', questions: BT_DISNEY },
-  { id: 'builtin:quiz_annees80',      name: 'Quiz — Années 80',              mode: 'quiz',       emoji: '📼', questions: QUIZ_ANNEES80 },
-  { id: 'builtin:quiz_pop',           name: 'Quiz — Pop Internationale',     mode: 'quiz',       emoji: '🎶', questions: QUIZ_POP_INTERNATIONAL },
-  { id: 'builtin:quiz_rock_fr',       name: 'Quiz — Rock Français',          mode: 'quiz',       emoji: '🤘', questions: QUIZ_ROCK_FRANCAIS },
-  { id: 'builtin:quiz_rap2000',       name: 'Quiz — Rap 2000',               mode: 'quiz',       emoji: '🔊', questions: QUIZ_RAP2000 },
-  { id: 'builtin:quiz_disney',        name: 'Quiz — Disney',                 mode: 'quiz',       emoji: '🏰', questions: QUIZ_DISNEY },
+  // ── 5 packs Quiz ──
+  { id: 'builtin:quiz_culture',   name: '🌐 Culture Générale',        mode: 'quiz',       emoji: '🌐', questions: QUIZ_CULTURE_GENERALE },
+  { id: 'builtin:quiz_cinema',    name: '🎬 Cinéma & Séries',         mode: 'quiz',       emoji: '🎬', questions: QUIZ_CINEMA_SERIES },
+  { id: 'builtin:quiz_sport',     name: '⚽ Sport & Champions',        mode: 'quiz',       emoji: '⚽', questions: QUIZ_SPORT_CHAMPIONS },
+  { id: 'builtin:quiz_science',   name: '🔬 Science & Technologie',   mode: 'quiz',       emoji: '🔬', questions: QUIZ_SCIENCE_TECHNO },
+  { id: 'builtin:quiz_histoire',  name: '🏛️ Histoire & Civilisations', mode: 'quiz',       emoji: '🏛️', questions: QUIZ_HISTOIRE_CIVILISATIONS },
+  // ── 5 packs Blind Test ──
+  { id: 'builtin:bt_classiques',  name: '🎸 Blind Test Classiques',   mode: 'blind_test', emoji: '🎸', questions: BT_CLASSIQUES },
+  { id: 'builtin:bt_actuels',     name: '🎵 Blind Test Hits Actuels', mode: 'blind_test', emoji: '🎵', questions: BT_HITS_ACTUELS },
+  { id: 'builtin:bt_fr',         name: 'Fr Blind Test Chansons FR',  mode: 'blind_test', emoji: '🇫🇷', questions: BT_CHANSONS_FRANCAISES },
+  { id: 'builtin:bt_rap',         name: '🎤 Blind Test Rap & Hip-Hop', mode: 'blind_test', emoji: '🎤', questions: BT_RAP_HIPHOP },
+  { id: 'builtin:bt_2000',        name: '💿 Blind Test Années 2000',  mode: 'blind_test', emoji: '💿', questions: BT_ANNEES2000 },
 ];
 
 export function isBuiltinPack(packId: string | null | undefined): boolean {
