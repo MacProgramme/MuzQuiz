@@ -105,7 +105,9 @@ export default function QuestionsPage() {
   const router = useRouter();
   const [tier, setTier] = useState<SubscriptionTier>('decouverte');
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [packs, setPacks] = useState<(QuestionPack & { question_count: number })[]>([]);
+  const [defaultPacks, setDefaultPacks] = useState<(QuestionPack & { question_count: number })[]>([]);
   const [selectedPack, setSelectedPack] = useState<QuestionPack | null>(null);
   const [questions, setQuestions] = useState<CustomQuestion[]>([]);
   const [view, setView] = useState<View>('packs');
@@ -118,6 +120,7 @@ export default function QuestionsPage() {
   const [showPackForm, setShowPackForm] = useState(false);
   const [packName, setPackName] = useState('');
   const [packMode, setPackMode] = useState<GameMode>('quiz');
+  const [packIsDefault, setPackIsDefault] = useState(false); // admin seulement
   const [packSaving, setPackSaving] = useState(false);
 
   // Formulaire question manuelle
@@ -171,12 +174,15 @@ export default function QuestionsPage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_tier, ai_uses_count, ai_uses_month')
+        .select('subscription_tier, ai_uses_count, ai_uses_month, is_admin')
         .eq('id', user.id)
         .single();
 
       const userTier = normalizeTier(profile?.subscription_tier);
       setTier(userTier);
+
+      const admin = !!(profile as any)?.is_admin;
+      setIsAdmin(admin);
 
       // Calculer les utilisations IA du mois en cours
       const nowMonth = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
@@ -187,6 +193,7 @@ export default function QuestionsPage() {
       }
 
       await loadPacks(user.id);
+      if (admin) await loadDefaultPacks();
       setLoading(false);
     };
     load();
@@ -197,6 +204,7 @@ export default function QuestionsPage() {
       .from('question_packs')
       .select('*')
       .eq('owner_id', uid)
+      .eq('is_default', false) // Packs personnels uniquement — les packs par défaut sont dans loadDefaultPacks
       .order('created_at', { ascending: false });
     if (!data) return;
     const withCounts = await Promise.all(data.map(async (p) => {
@@ -204,6 +212,21 @@ export default function QuestionsPage() {
       return { ...p, question_count: count ?? 0 };
     }));
     setPacks(withCounts as any);
+  };
+
+  // Charge tous les packs par défaut Muzquiz (is_default = true) — admin seulement
+  const loadDefaultPacks = async () => {
+    const { data } = await supabase
+      .from('question_packs')
+      .select('*')
+      .eq('is_default', true)
+      .order('created_at', { ascending: false });
+    if (!data) return;
+    const withCounts = await Promise.all(data.map(async (p) => {
+      const { count } = await supabase.from('custom_questions').select('id', { count: 'exact', head: true }).eq('pack_id', p.id);
+      return { ...p, question_count: count ?? 0 };
+    }));
+    setDefaultPacks(withCounts as any);
   };
 
   const loadQuestions = async (packId: string) => {
@@ -267,14 +290,24 @@ export default function QuestionsPage() {
   const createPack = async () => {
     if (!packName.trim() || !userId) return;
     setPackSaving(true);
-    const { data } = await supabase.from('question_packs').insert({
-      owner_id: userId, name: packName.trim(), mode: packMode,
-    }).select('*').single();
-    if (data) { await loadPacks(userId); setShowPackForm(false); setPackName(''); setPackMode('quiz'); }
+    const payload: any = { owner_id: userId, name: packName.trim(), mode: packMode };
+    if (isAdmin && packIsDefault) payload.is_default = true;
+    const { data } = await supabase.from('question_packs').insert(payload).select('*').single();
+    if (data) {
+      if (isAdmin && packIsDefault) {
+        await loadDefaultPacks();
+      } else {
+        await loadPacks(userId);
+      }
+      setShowPackForm(false);
+      setPackName('');
+      setPackMode('quiz');
+      setPackIsDefault(false);
+    }
     setPackSaving(false);
   };
 
-  const deletePack = async (packId: string) => {
+  const deletePack = async (packId: string, isDefaultPk = false) => {
     if (!confirm('Supprimer ce pack et toutes ses questions ?')) return;
     // Refresh session pour s'assurer que le token est valide
     const { data: { session } } = await supabase.auth.getSession();
@@ -283,7 +316,8 @@ export default function QuestionsPage() {
     await supabase.from('rooms').update({ pack_id: null }).eq('pack_id', packId);
     const { error } = await supabase.from('question_packs').delete().eq('id', packId);
     if (error) { alert('Erreur suppression : ' + error.message); return; }
-    if (userId) await loadPacks(userId);
+    if (isDefaultPk) { await loadDefaultPacks(); }
+    else if (userId) { await loadPacks(userId); }
   };
 
   const toggleSharePack = async (e: React.MouseEvent, pack: QuestionPack) => {
@@ -589,7 +623,8 @@ export default function QuestionsPage() {
                         { value: 'blind_test' as GameMode, label: 'Blind Test', color: '#00E5D1', desc: 'Identification musicale',  minTier: 'pro'        as SubscriptionTier },
                       ]).map(m => {
                         const tierOrder: SubscriptionTier[] = ['decouverte', 'essentiel', 'pro', 'expert'];
-                        const locked = tierOrder.indexOf(tier) < tierOrder.indexOf(m.minTier);
+                        // Les admins peuvent créer des packs Blind Test même sans abonnement Pro
+                        const locked = !isAdmin && tierOrder.indexOf(tier) < tierOrder.indexOf(m.minTier);
                         const active = packMode === m.value;
                         return (
                           <button key={m.value}
@@ -611,8 +646,32 @@ export default function QuestionsPage() {
                       })}
                     </div>
                   </div>
+                  {/* Toggle "Pack par défaut Muzquiz" — visible uniquement pour les admins */}
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => setPackIsDefault(v => !v)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full text-left"
+                      style={{
+                        background: packIsDefault ? 'rgba(255,170,0,0.1)' : 'rgba(255,255,255,0.04)',
+                        border: `1.5px solid ${packIsDefault ? 'rgba(255,170,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                      }}>
+                      <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
+                        style={{ background: packIsDefault ? '#FFAA00' : 'rgba(255,255,255,0.08)', border: `1.5px solid ${packIsDefault ? '#FFAA00' : 'rgba(255,255,255,0.15)'}` }}>
+                        {packIsDefault && <span className="text-white text-xs font-black">✓</span>}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black" style={{ color: packIsDefault ? '#FFAA00' : 'rgba(240,244,255,0.6)' }}>
+                          ⭐ Pack par défaut Muzquiz
+                        </p>
+                        <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                          Visible par tous les joueurs — section Packs Muzquiz
+                        </p>
+                      </div>
+                    </button>
+                  )}
                   <div className="flex gap-2 mt-1">
-                    <button onClick={() => setShowPackForm(false)}
+                    <button onClick={() => { setShowPackForm(false); setPackIsDefault(false); }}
                       className="flex-1 py-2.5 rounded-xl text-sm font-bold"
                       style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.5)' }}>
                       Annuler
@@ -675,11 +734,86 @@ export default function QuestionsPage() {
               </p>
             )}
 
-            {/* ── Packs Muzquiz ── */}
+            {/* ══════════════════════════════════════════════════════
+                SECTION ADMIN — Packs par défaut Muzquiz (is_default)
+                Visible uniquement pour les admins (is_admin = true)
+            ═══════════════════════════════════════════════════════ */}
+            {isAdmin && (
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-widest"
+                      style={{ color: 'rgba(255,170,0,0.8)' }}>
+                      ⭐ Packs par défaut Muzquiz
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                      style={{ background: 'rgba(255,170,0,0.12)', color: '#FFAA00', border: '1px solid rgba(255,170,0,0.3)' }}>
+                      {defaultPacks.length} pack{defaultPacks.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold px-2 py-1 rounded-lg"
+                    style={{ background: 'rgba(255,170,0,0.08)', color: 'rgba(255,170,0,0.6)', border: '1px solid rgba(255,170,0,0.2)' }}>
+                    Admin
+                  </span>
+                </div>
+                <p className="text-xs mb-4" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                  Ces packs sont visibles par tous les joueurs dans la salle de jeu. Modifie-les librement — les changements sont instantanés.
+                </p>
+                {defaultPacks.length === 0 ? (
+                  <div className="muz-card p-6 text-center"
+                    style={{ border: '1px dashed rgba(255,170,0,0.25)', background: 'rgba(255,170,0,0.03)' }}>
+                    <p className="text-sm font-bold" style={{ color: 'rgba(240,244,255,0.45)' }}>
+                      Aucun pack par défaut pour l'instant
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: 'rgba(240,244,255,0.25)' }}>
+                      Crée un pack et coche "⭐ Pack par défaut Muzquiz"
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {defaultPacks.map(pack => (
+                      <div key={pack.id}
+                        className="muz-card muz-card-lift p-4 flex items-center gap-2 cursor-pointer"
+                        style={{ border: '1.5px solid rgba(255,170,0,0.2)' }}
+                        onClick={() => openPack(pack)}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-black text-base" style={{ color: '#F0F4FF' }}>{pack.name}</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                              style={{ background: 'rgba(255,170,0,0.12)', color: '#FFAA00', border: '1px solid rgba(255,170,0,0.3)' }}>
+                              ⭐ Muzquiz
+                            </span>
+                            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                              style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.25)' }}>
+                              {MODE_LABEL[pack.mode]}
+                            </span>
+                          </div>
+                          {pack.description && (
+                            <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(240,244,255,0.4)' }}>{pack.description}</p>
+                          )}
+                          <p className="text-xs mt-1 font-bold" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                            {pack.question_count} question{pack.question_count !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button onClick={e => { e.stopPropagation(); deletePack(pack.id, true); }}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black transition-all hover:scale-110"
+                            style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}>×</button>
+                          <span style={{ color: 'rgba(240,244,255,0.3)', fontSize: '1.2rem' }}>›</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-4 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+              </div>
+            )}
+
+            {/* ── Mes packs personnels ── */}
             {sortedPacks.length > 0 && (
               <p className="text-xs font-black uppercase tracking-widest mb-3"
                 style={{ color: 'rgba(255,0,170,0.6)' }}>
-                🎵 Packs Muzquiz
+                {isAdmin ? '📦 Mes packs personnels' : '🎵 Mes packs'}
               </p>
             )}
             <div className="flex flex-col gap-3">

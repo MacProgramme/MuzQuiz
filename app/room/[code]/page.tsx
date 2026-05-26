@@ -178,32 +178,38 @@ export default function RoomPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.id, room?.status]);
 
-  // Charger les packs Muzquiz (depuis le compte admin configuré) pour la salle d'attente.
-  // Si NEXT_PUBLIC_MUZQUIZ_OWNER_ID est défini → on charge toujours depuis ce compte (accessible à tous).
-  // Sinon → fallback sur les packs du joueur connecté.
+  // Charger les packs Muzquiz par défaut (is_default = true) pour la salle d'attente.
+  // Ces packs sont créés par les admins et visibles par tous les joueurs.
+  // Fallback dev : si aucun pack is_default, on charge ceux du joueur connecté.
   useEffect(() => {
     if (!room || room.status !== 'waiting') return;
     const loadHostPacks = async () => {
-      const muzquizOwnerId = process.env.NEXT_PUBLIC_MUZQUIZ_OWNER_ID;
-      let ownerId: string | null = null;
-
-      if (muzquizOwnerId) {
-        // Packs publics Muzquiz — accessibles à tous, abonnement ou non
-        ownerId = muzquizOwnerId;
-      } else {
-        // Fallback : packs du joueur connecté (utile en développement local)
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) return;
-        ownerId = session.user.id;
-      }
-
-      const { data } = await supabase
+      // 1. Charger les packs officiels Muzquiz (is_default = true)
+      const { data: defaultPacks } = await supabase
         .from('question_packs')
         .select('id, name, mode')
-        .eq('owner_id', ownerId)
+        .eq('is_default', true)
         .order('created_at', { ascending: false });
-      if (!data) return;
-      const withCounts = await Promise.all(data.map(async (p) => {
+
+      let packsToShow = defaultPacks ?? [];
+
+      // 2. Fallback dev : si aucun pack par défaut en base, on prend ceux du joueur connecté
+      if (packsToShow.length === 0) {
+        const muzquizOwnerId = process.env.NEXT_PUBLIC_MUZQUIZ_OWNER_ID;
+        const { data: { session } } = await supabase.auth.getSession();
+        const fallbackId = muzquizOwnerId ?? session?.user?.id ?? null;
+        if (fallbackId) {
+          const { data: fallback } = await supabase
+            .from('question_packs')
+            .select('id, name, mode')
+            .eq('owner_id', fallbackId)
+            .order('created_at', { ascending: false });
+          packsToShow = fallback ?? [];
+        }
+      }
+
+      if (packsToShow.length === 0) return;
+      const withCounts = await Promise.all(packsToShow.map(async (p) => {
         const { count } = await supabase.from('custom_questions').select('id', { count: 'exact', head: true }).eq('pack_id', p.id);
         return { ...p, question_count: count ?? 0 };
       }));
@@ -507,6 +513,7 @@ export default function RoomPage() {
         resumeGame={resumeGame}
         endGame={endGame}
         hostInviteCode={hostInviteCode}
+        transitionActive={transitionCountdown !== null}
       />
       </>
     );
@@ -916,8 +923,8 @@ export default function RoomPage() {
           {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
 
-        {/* Lecteur audio pour les blind tests */}
-        {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && (
+        {/* Lecteur audio pour les blind tests — monté uniquement après le compte à rebours */}
+        {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && transitionCountdown === null && (
           <div className="w-full max-w-lg">
             <YouTubePlayer
               url={(currentQ as any).youtube_url}
