@@ -2,7 +2,7 @@
 -- SEED : 10 packs de questions par défaut MUZQUIZ
 -- 5 packs QCM + 5 packs Blind Test
 -- À exécuter UNE SEULE FOIS dans Supabase → SQL Editor
--- Les packs sont publics (lecture pour tous) car RLS = SELECT true
+-- is_default = true → visibles par tous, éditables par les admins Muzquiz
 -- Propriétaire = compte admin antoine.gegedu27@gmail.com
 -- ================================================================
 
@@ -30,8 +30,8 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════
   -- QCM 1 : Culture Générale
   -- ══════════════════════════════════════════════════════════════
-  INSERT INTO question_packs (id, owner_id, name, description, mode)
-  VALUES (gen_random_uuid(), admin_id, '🌍 Culture Générale', 'Quiz de culture générale — histoire, géographie, sciences, art.', 'qcm')
+  INSERT INTO question_packs (id, owner_id, name, description, mode, is_default)
+  VALUES (gen_random_uuid(), admin_id, '🌍 Culture Générale', 'Quiz de culture générale — histoire, géographie, sciences, art.', 'qcm', true)
   RETURNING id INTO pack_cg;
 
   INSERT INTO custom_questions (pack_id, owner_id, question, choice_a, choice_b, choice_c, choice_d, correct_index) VALUES
@@ -54,8 +54,8 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════
   -- QCM 2 : Cinéma & Séries
   -- ══════════════════════════════════════════════════════════════
-  INSERT INTO question_packs (id, owner_id, name, description, mode)
-  VALUES (gen_random_uuid(), admin_id, '🎬 Cinéma & Séries', 'Films cultes, réalisateurs, répliques et séries télévisées.', 'qcm')
+  INSERT INTO question_packs (id, owner_id, name, description, mode, is_default)
+  VALUES (gen_random_uuid(), admin_id, '🎬 Cinéma & Séries', 'Films cultes, réalisateurs, répliques et séries télévisées.', 'qcm', true)
   RETURNING id INTO pack_cine;
 
   INSERT INTO custom_questions (pack_id, owner_id, question, choice_a, choice_b, choice_c, choice_d, correct_index) VALUES
@@ -75,8 +75,8 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════
   -- QCM 3 : Sport & Champions
   -- ══════════════════════════════════════════════════════════════
-  INSERT INTO question_packs (id, owner_id, name, description, mode)
-  VALUES (gen_random_uuid(), admin_id, '⚽ Sport & Champions', 'Football, tennis, olympisme et sports collectifs.', 'qcm')
+  INSERT INTO question_packs (id, owner_id, name, description, mode, is_default)
+  VALUES (gen_random_uuid(), admin_id, '⚽ Sport & Champions', 'Football, tennis, olympisme et sports collectifs.', 'qcm', true)
   RETURNING id INTO pack_sport;
 
   INSERT INTO custom_questions (pack_id, owner_id, question, choice_a, choice_b, choice_c, choice_d, correct_index) VALUES
@@ -96,8 +96,8 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════
   -- QCM 4 : Science & Technologie
   -- ══════════════════════════════════════════════════════════════
-  INSERT INTO question_packs (id, owner_id, name, description, mode)
-  VALUES (gen_random_uuid(), admin_id, '🔬 Science & Technologie', 'Physique, biologie, informatique et grandes découvertes scientifiques.', 'qcm')
+  INSERT INTO question_packs (id, owner_id, name, description, mode, is_default)
+  VALUES (gen_random_uuid(), admin_id, '🔬 Science & Technologie', 'Physique, biologie, informatique et grandes découvertes scientifiques.', 'qcm', true)
   RETURNING id INTO pack_science;
 
   INSERT INTO custom_questions (pack_id, owner_id, question, choice_a, choice_b, choice_c, choice_d, correct_index) VALUES
@@ -117,8 +117,8 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════
   -- QCM 5 : Histoire & Civilisations
   -- ══════════════════════════════════════════════════════════════
-  INSERT INTO question_packs (id, owner_id, name, description, mode)
-  VALUES (gen_random_uuid(), admin_id, '🏛️ Histoire & Civilisations', 'De l''Antiquité à nos jours — événements marquants et grandes figures.', 'qcm')
+  INSERT INTO question_packs (id, owner_id, name, description, mode, is_default)
+  VALUES (gen_random_uuid(), admin_id, '🏛️ Histoire & Civilisations', 'De l''Antiquité à nos jours — événements marquants et grandes figures.', 'qcm', true)
   RETURNING id INTO pack_histoire;
 
   INSERT INTO custom_questions (pack_id, owner_id, question, choice_a, choice_b, choice_c, choice_d, correct_index) VALUES
@@ -138,8 +138,8 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════
   -- BLIND TEST 1 : Classiques (années 80-90-2000)
   -- ══════════════════════════════════════════════════════════════
-  INSERT INTO question_packs (id, owner_id, name, description, mode)
-  VALUES (gen_random_uuid(), admin_id, '🎸 Blind Test Classiques', 'Les tubes indémodables des années 80, 90 et 2000.', 'blind_test')
+  INSERT INTO question_packs (id, owner_id, name, description, mode, is_default)
+  VALUES (gen_random_uuid(), admin_id, '🎸 Blind Test Classiques', 'Les tubes indémodables des années 80, 90 et 2000.', 'blind_test', true)
   RETURNING id INTO pack_bt_classiques;
 
   INSERT INTO custom_questions (pack_id, owner_id, question, choice_a, choice_b, choice_c, choice_d, correct_index, youtube_url, audio_start_time) VALUES
@@ -176,8 +176,8 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════
   -- BLIND TEST 2 : Hits Actuels (2010-2024)
   -- ══════════════════════════════════════════════════════════════
-  INSERT INTO question_packs (id, owner_id, name, description, mode)
-  VALUES (gen_random_uuid(), admin_id, '🎵 Blind Test Hits Actuels', 'Les tubes incontournables de 2010 à aujourd''hui.', 'blind_test')
+  INSERT INTO question_packs (id, owner_id, name, description, mode, is_default)
+  VALUES (gen_random_uuid(), admin_id, '🎵 Blind Test Hits Actuels', 'Les tubes incontournables de 2010 à aujourd''hui.', 'blind_test', true)
   RETURNING id INTO pack_bt_actuels;
 
   INSERT INTO custom_questions (pack_id, owner_id, question, choice_a, choice_b, choice_c, choice_d, correct_index, youtube_url, audio_start_time) VALUES
@@ -214,8 +214,8 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════
   -- BLIND TEST 3 : Chansons Françaises
   -- ══════════════════════════════════════════════════════════════
-  INSERT INTO question_packs (id, owner_id, name, description, mode)
-  VALUES (gen_random_uuid(), admin_id, '🇫🇷 Blind Test Chansons Françaises', 'Les plus grands tubes de la chanson française, de tous les âges.', 'blind_test')
+  INSERT INTO question_packs (id, owner_id, name, description, mode, is_default)
+  VALUES (gen_random_uuid(), admin_id, '🇫🇷 Blind Test Chansons Françaises', 'Les plus grands tubes de la chanson française, de tous les âges.', 'blind_test', true)
   RETURNING id INTO pack_bt_french;
 
   INSERT INTO custom_questions (pack_id, owner_id, question, choice_a, choice_b, choice_c, choice_d, correct_index, youtube_url, audio_start_time) VALUES
@@ -252,8 +252,8 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════
   -- BLIND TEST 4 : Rap & Hip-Hop
   -- ══════════════════════════════════════════════════════════════
-  INSERT INTO question_packs (id, owner_id, name, description, mode)
-  VALUES (gen_random_uuid(), admin_id, '🎤 Blind Test Rap & Hip-Hop', 'Les classiques et hits du rap français et international.', 'blind_test')
+  INSERT INTO question_packs (id, owner_id, name, description, mode, is_default)
+  VALUES (gen_random_uuid(), admin_id, '🎤 Blind Test Rap & Hip-Hop', 'Les classiques et hits du rap français et international.', 'blind_test', true)
   RETURNING id INTO pack_bt_rap;
 
   INSERT INTO custom_questions (pack_id, owner_id, question, choice_a, choice_b, choice_c, choice_d, correct_index, youtube_url, audio_start_time) VALUES
@@ -290,8 +290,8 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════
   -- BLIND TEST 5 : Années 2000 (Pop & RnB)
   -- ══════════════════════════════════════════════════════════════
-  INSERT INTO question_packs (id, owner_id, name, description, mode)
-  VALUES (gen_random_uuid(), admin_id, '💿 Blind Test Années 2000', 'Pop, RnB et électro — les tubes des années 2000 qui ont marqué une génération.', 'blind_test')
+  INSERT INTO question_packs (id, owner_id, name, description, mode, is_default)
+  VALUES (gen_random_uuid(), admin_id, '💿 Blind Test Années 2000', 'Pop, RnB et électro — les tubes des années 2000 qui ont marqué une génération.', 'blind_test', true)
   RETURNING id INTO pack_bt_2000s;
 
   INSERT INTO custom_questions (pack_id, owner_id, question, choice_a, choice_b, choice_c, choice_d, correct_index, youtube_url, audio_start_time) VALUES

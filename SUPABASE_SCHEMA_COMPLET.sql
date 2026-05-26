@@ -170,6 +170,14 @@ ALTER TABLE profiles
 -- Activer pour les profils existants
 UPDATE profiles SET newsletter_subscribed = true WHERE newsletter_subscribed = false;
 
+-- Colonne admin (accès back-office aux packs par défaut Muzquiz)
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false;
+
+-- Marque les packs "officiels Muzquiz" visibles par tous et éditables par les admins
+ALTER TABLE question_packs
+  ADD COLUMN IF NOT EXISTS is_default BOOLEAN NOT NULL DEFAULT false;
+
 
 -- ================================================================
 -- 4. FORUM COMMUNAUTAIRE
@@ -398,6 +406,13 @@ CREATE POLICY "question_packs: gestion par le propriétaire"
   USING (auth.uid() = owner_id)
   WITH CHECK (auth.uid() = owner_id);
 
+-- Les admins peuvent créer, modifier et supprimer tous les packs par défaut
+DROP POLICY IF EXISTS "question_packs: gestion admin packs par défaut" ON question_packs;
+CREATE POLICY "question_packs: gestion admin packs par défaut"
+  ON question_packs FOR ALL
+  USING  ((SELECT is_admin FROM profiles WHERE id = auth.uid()) = true)
+  WITH CHECK ((SELECT is_admin FROM profiles WHERE id = auth.uid()) = true);
+
 -- ── custom_questions ───────────────────────────────────────────
 DROP POLICY IF EXISTS "custom_questions: lecture publique"              ON custom_questions;
 DROP POLICY IF EXISTS "custom_questions: gestion par le propriétaire"   ON custom_questions;
@@ -420,6 +435,19 @@ CREATE POLICY "custom_questions: gestion par le propriétaire"
       WHERE question_packs.id = pack_id
         AND question_packs.owner_id = auth.uid()
     )
+  );
+
+-- Les admins peuvent créer, modifier et supprimer les questions des packs par défaut
+DROP POLICY IF EXISTS "custom_questions: gestion admin packs par défaut" ON custom_questions;
+CREATE POLICY "custom_questions: gestion admin packs par défaut"
+  ON custom_questions FOR ALL
+  USING (
+    (SELECT is_admin FROM profiles WHERE id = auth.uid()) = true
+    AND EXISTS (SELECT 1 FROM question_packs WHERE id = custom_questions.pack_id AND is_default = true)
+  )
+  WITH CHECK (
+    (SELECT is_admin FROM profiles WHERE id = auth.uid()) = true
+    AND EXISTS (SELECT 1 FROM question_packs WHERE id = pack_id AND is_default = true)
   );
 
 -- ── daily_quizzes ──────────────────────────────────────────────
@@ -767,6 +795,18 @@ CREATE POLICY "weekly_quiz_slots: gestion proprietaire" ON weekly_quiz_slots FOR
   USING (EXISTS (SELECT 1 FROM weekly_quizzes w WHERE w.id = weekly_quiz_id AND w.owner_id = auth.uid()));
 
 -- ================================================================
+-- 9. ADMINS MUZQUIZ
+-- ================================================================
+-- Activer le rôle admin pour lacaravenegame et antoine.gegedu27@gmail.com
+-- (idempotent — peut être rejoué sans effet de bord)
+UPDATE profiles
+SET is_admin = true
+WHERE id IN (
+  SELECT id FROM auth.users
+  WHERE email IN ('antoine.gegedu27@gmail.com', 'lacaravenegame@gmail.com')
+);
+
+-- ================================================================
 -- ✅ FIN DU SCHÉMA
 --
 --  CHECKLIST après exécution :
@@ -774,4 +814,5 @@ CREATE POLICY "weekly_quiz_slots: gestion proprietaire" ON weekly_quiz_slots FOR
 --  □ Authentication > Providers > Google OAuth → configuré
 --  □ Authentication > URL Configuration → domaine Vercel ajouté
 --  □ Vérifier les buckets "avatars" et "question-images" dans Storage
+--  □ Vérifier que is_admin = true pour les deux admins Muzquiz
 -- ================================================================

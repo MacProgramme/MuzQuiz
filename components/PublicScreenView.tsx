@@ -78,6 +78,8 @@ interface Props {
   resumeGame: () => void;
   endGame: () => void;
   hostInviteCode?: string | null;
+  /** Vrai pendant le compte à rebours entre les questions — bloque l'autoplay YouTube */
+  transitionActive?: boolean;
 }
 
 /* ---- Timer intégré pour grand écran ---- */
@@ -147,7 +149,7 @@ export function PublicScreenView({
   room, players, myPlayer, currentQuestion, buzz, qcmAnswers, qcmRevealed,
   showLeaderboard, timerKey, totalQuestions, hostPacks, selectPack,
   startGame, revealQCMAndNext, pauseGame, resumeGame, endGame,
-  hostInviteCode,
+  hostInviteCode, transitionActive = false,
 }: Props) {
   const displayCode = hostInviteCode ?? room.code;
   // En mode écran public, l'hôte ne joue pas → exclure du classement
@@ -422,8 +424,8 @@ export function PublicScreenView({
           </div>
         </div>
 
-        {/* Lecteur audio (blind test) */}
-        {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && (
+        {/* Lecteur audio (blind test) — monté uniquement après le compte à rebours */}
+        {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && !transitionActive && (
           <div className="px-12 pb-2 max-w-xl mx-auto w-full">
             <YouTubePlayer
               url={(currentQuestion as any).youtube_url}
@@ -556,8 +558,8 @@ export function PublicScreenView({
           </div>
         </div>
 
-        {/* Lecteur audio (buzz blind test) */}
-        {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && (
+        {/* Lecteur audio (buzz blind test) — monté uniquement après le compte à rebours */}
+        {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && !transitionActive && (
           <div className="px-12 pb-2 max-w-xl mx-auto w-full">
             <YouTubePlayer
               url={(currentQuestion as any).youtube_url}
