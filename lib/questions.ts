@@ -337,16 +337,16 @@ const BT_HITS_ACTUELS: QCMQuestion[] = [
 
 // ── Blind Test — Chansons Françaises ─────────────────────────────────────────
 const BT_CHANSONS_FRANCAISES: QCMQuestion[] = [
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Black M", "Booba", "Stromae", "Maître Gims"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=qpLQK9ggME4", audio_start_time: 0 },        // Alors on danse
-  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Zaz", "Indila", "Alizée", "Yelle"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=3phbVx1Dl08", audio_start_time: 25 },               // Dernière Danse
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Hoshi", "Pomme", "Angèle", "Roméo Elvis"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=fhNgzJHh-G8", audio_start_time: 0 },             // Balance Ton Quoi
-  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Yelle", "Housse de Racket", "Christine and the Queens", "La Femme"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=G7SBcDTKlwE", audio_start_time: 0 }, // Tilted
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["IAM", "Assassin", "MC Solaar", "Oxmo Puccino"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=jDEXOOhB03s", audio_start_time: 0 },        // Nouveau Western
-  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Vianney", "Julien Doré", "Gaëtan Roussel", "Romain Didier"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=0yBtf5sJ1Xw", audio_start_time: 30 }, // Paris-Seychelles
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Aya Nakamura", "Awa Imani", "Wejdene", "Yseult"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=XrpBwj4bvEo", audio_start_time: 0 },     // Coeur (Clara Luciani)
-  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Vald", "Nekfeu", "Disiz", "Keny Arkana"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=6O0ANbFvmgA", audio_start_time: 30 },              // Étoiles
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Grand Corps Malade", "Oxmo Puccino", "Gaël Faye", "Kery James"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=bO3lLPvFnPs", audio_start_time: 0 }, // Funambule
-  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Lomepal", "Orelsan", "Roméo Elvis", "Eddy de Pretto"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=fNFq4cBCVgE", audio_start_time: 0 }, // Basique
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Black M", "Booba", "Stromae", "Maître Gims"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=VHoT4N43jK8", audio_start_time: 0 },        // Alors on danse (clip officiel 2010)
+  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Zaz", "Indila", "Alizée", "Yelle"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=K5KAc5CoCuk", audio_start_time: 25 },               // Dernière Danse (clip officiel)
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Hoshi", "Pomme", "Angèle", "Roméo Elvis"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=Hi7Rx3En7-k", audio_start_time: 0 },             // Balance Ton Quoi (clip officiel)
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Yelle", "Housse de Racket", "Christine and the Queens", "La Femme"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=9RBzsjga73s", audio_start_time: 0 }, // Tilted (clip officiel)
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["IAM", "Assassin", "MC Solaar", "Oxmo Puccino"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=1R2etg__x1Y", audio_start_time: 0 },        // Nouveau Western (clip officiel)
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Vianney", "Julien Doré", "Gaëtan Roussel", "Romain Didier"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=eiAq7k7yuPM", audio_start_time: 30 }, // Paris-Seychelles (Victoires de la Musique 2014)
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Aya Nakamura", "Awa Imani", "Wejdene", "Yseult"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=SdUN-ogKY60", audio_start_time: 0 },     // Coeur — Clara Luciani (clip officiel)
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Vald", "Nekfeu", "Disiz", "Keny Arkana"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=6O0ANbFvmgA", audio_start_time: 30 },              // Étoiles (Nekfeu)
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Grand Corps Malade", "Oxmo Puccino", "Gaël Faye", "Kery James"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=pYrN9nxI0gM", audio_start_time: 0 }, // Funambule (clip officiel)
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Lomepal", "Orelsan", "Roméo Elvis", "Eddy de Pretto"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=2bjk26RwjyU", audio_start_time: 0 }, // Basique (clip officiel)
 ];
 
 // ── Blind Test — Rap & Hip-Hop ────────────────────────────────────────────────

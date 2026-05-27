@@ -993,7 +993,11 @@ export default function RoomPage() {
                 shouldPlay={isActive}
                 onPlayerReady={() => handleBTPlayerReady(idx)}
                 startTime={(q as any).audio_start_time ?? 0}
-                onVideoError={() => { if (isActive) setVideoBlocked(true); }}
+                onVideoError={() => {
+                  // Compter les vidéos bloquées comme "prêtes" pour ne pas bloquer le préchargement
+                  handleBTPlayerReady(idx);
+                  if (isActive) setVideoBlocked(true);
+                }}
               />
             </div>
           );
