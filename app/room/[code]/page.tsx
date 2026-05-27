@@ -959,7 +959,11 @@ export default function RoomPage() {
               url={(currentQ as any).youtube_url}
               autoPlay
               startTime={(currentQ as any).audio_start_time ?? 0}
-              onVideoError={() => setVideoBlocked(true)}
+              onVideoError={() => {
+                setVideoBlocked(true);
+                // Annuler le fallback automatique : l'hôte pilote manuellement via le bouton
+                if (audioFallbackRef.current) { clearTimeout(audioFallbackRef.current); audioFallbackRef.current = null; }
+              }}
               onPlay={myPlayer?.is_host ? async () => {
                 // L'hôte enregistre le timestamp de démarrage → tous les clients synchronisent leur timer
                 if (!room.question_started_at) {
@@ -970,17 +974,24 @@ export default function RoomPage() {
               } : undefined}
             />
             {/* Bouton "Passer la musique" pour l'hôte quand la vidéo est bloquée */}
-            {videoBlocked && myPlayer?.is_host && (
+            {videoBlocked && myPlayer?.is_host && !audioStarted && (
               <button
-                onClick={() => {
+                onClick={async () => {
+                  const now = Date.now();
+                  // 1. Réinitialiser le timer à duration complète (évite expire immédiat)
+                  setTimerKey(k => k + 1);
+                  // 2. Démarrer localement
                   setAudioStarted(true);
-                  setQuestionStartedAt(Date.now());
-                  if (audioFallbackRef.current) { clearTimeout(audioFallbackRef.current); audioFallbackRef.current = null; }
+                  setQuestionStartedAt(now);
+                  // 3. Synchroniser tous les clients via Supabase
+                  await supabase.from('rooms')
+                    .update({ question_started_at: now })
+                    .eq('id', room.id);
                 }}
                 className="mt-2 w-full py-2.5 rounded-xl font-black text-sm transition-all hover:opacity-90"
                 style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B', border: '1.5px solid rgba(245,158,11,0.4)' }}
               >
-                ⏭ Passer la musique — lancer le timer
+                ▶ Lancer le timer
               </button>
             )}
             {/* Indicateur d'attente pour les joueurs */}
@@ -994,7 +1005,7 @@ export default function RoomPage() {
             )}
             {!audioStarted && !myPlayer?.is_host && videoBlocked && (
               <div className="mt-2 text-center text-xs font-bold" style={{ color: 'rgba(245,158,11,0.7)' }}>
-                ⚠ Vidéo bloquée — l'hôte va passer à la suite
+                ⚠ Vidéo bloquée — attends que l'hôte lance le timer
               </div>
             )}
           </div>
