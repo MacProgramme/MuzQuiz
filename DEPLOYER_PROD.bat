@@ -18,7 +18,7 @@ git commit -m "update: deploiement prod %DATESTR% %TIMESTR%" 2>nul || echo Rien 
 
 echo.
 echo [2/4] Push de dev vers GitHub...
-git push --set-upstream origin dev
+git push origin dev
 
 echo.
 echo [3/4] Merge dev dans main...
@@ -34,4 +34,4 @@ echo.
 echo ========================================
 echo   DONE ! www.muzquiz.fr sera mis a jour
 echo   dans 1-2 minutes sur Vercel.
-echo ===========================
+echo ========================================
