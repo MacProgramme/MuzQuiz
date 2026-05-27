@@ -161,6 +161,7 @@ export function PublicScreenView({
   // Dropdown sélecteur de pack
   const [packDropdownOpen, setPackDropdownOpen] = useState(false);
   const [packSearch, setPackSearch] = useState('');
+  const [noPackError, setNoPackError] = useState(false);
 
   /* ===== SALLE D'ATTENTE ===== */
   if (room.status === 'waiting') {
@@ -281,11 +282,24 @@ export function PublicScreenView({
 
         {/* Bouton démarrer (hôte) */}
         {myPlayer.is_host && players.filter(p => !p.is_host).length >= 1 && (
-          <button onClick={startGame}
-            className="muz-btn-pink px-14 py-5 rounded-2xl font-black"
-            style={{ fontSize: '1.5rem' }}>
-            {(() => { const n = players.filter(p => !p.is_host).length; return `Lancer la partie (${n} joueur${n > 1 ? 's' : ''}) →`; })()}
-          </button>
+          <div className="flex flex-col items-center gap-3">
+            {noPackError && (
+              <div className="px-6 py-2.5 rounded-xl text-base font-bold text-center"
+                style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.3)' }}>
+                ⚠ Sélectionne un pack de questions avant de lancer !
+              </div>
+            )}
+            <button
+              onClick={() => {
+                if (!room.pack_id) { setNoPackError(true); setTimeout(() => setNoPackError(false), 3000); return; }
+                setNoPackError(false);
+                startGame();
+              }}
+              className="muz-btn-pink px-14 py-5 rounded-2xl font-black"
+              style={{ fontSize: '1.5rem' }}>
+              {(() => { const n = players.filter(p => !p.is_host).length; return `Lancer la partie (${n} joueur${n > 1 ? 's' : ''}) →`; })()}
+            </button>
+          </div>
         )}
         {myPlayer.is_host && players.filter(p => !p.is_host).length === 0 && (
           <p className="text-base" style={{ color: 'rgba(240,244,255,0.3)' }}>
