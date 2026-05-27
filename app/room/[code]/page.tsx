@@ -137,8 +137,6 @@ export default function RoomPage() {
   // Compte à rebours entre les questions (3-2-1)
   const [transitionCountdown, setTransitionCountdown] = useState<number | null>(null);
   const transitionIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Timeout de secours : si la musique ne démarre pas dans 8s, on débloque le timer
-  const audioFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Vrai quand YouTube bloque la vidéo (embedding désactivé par le label)
   const [videoBlocked, setVideoBlocked] = useState(false);
 
@@ -267,11 +265,10 @@ export default function RoomPage() {
         setTimerKey(k => k + 1);
         setAudioStarted(false);
         setVideoBlocked(false);
-        // Annuler tout fallback audio en cours de la question précédente
-        if (audioFallbackRef.current) { clearTimeout(audioFallbackRef.current); audioFallbackRef.current = null; }
 
-        // Compte à rebours 3-2-1 uniquement pour les blind tests (précharge l'audio)
-        // Pour les modes Quiz/Buzz sans audio, on affiche la question directement
+        // Compte à rebours 3-2-1 uniquement pour les blind tests
+        // Le player YouTube se monte PENDANT le countdown pour précharger la musique.
+        // Quand le countdown finit → shouldPlay=true → lecture synchronisée sur tous les clients.
         if (transitionIntervalRef.current) clearInterval(transitionIntervalRef.current);
         const roomMode = r.mode;
         if (isBlindTestMode(roomMode)) {
@@ -283,15 +280,14 @@ export default function RoomPage() {
               clearInterval(transitionIntervalRef.current!);
               transitionIntervalRef.current = null;
               setTransitionCountdown(null);
-              // Fallback : si la musique ne démarre pas dans 8s (vidéo indispo, etc.),
-              // on débloque le timer quand même pour ne pas bloquer la partie
-              if (audioFallbackRef.current) clearTimeout(audioFallbackRef.current);
-              audioFallbackRef.current = setTimeout(() => {
-                setAudioStarted(current => {
-                  if (!current) setQuestionStartedAt(Date.now());
-                  return true;
-                });
-              }, 8000);
+              // Le timer démarre dès la fin du countdown (même si vidéo bloquée)
+              const now = Date.now();
+              setAudioStarted(true);
+              setQuestionStartedAt(now);
+              // L'hôte écrit le timestamp pour synchroniser les autres clients
+              if (myPlayerRef.current?.is_host) {
+                supabase.from('rooms').update({ question_started_at: now }).eq('id', r.id);
+              }
             } else {
               setTransitionCountdown(count);
             }
@@ -303,11 +299,9 @@ export default function RoomPage() {
           setAudioStarted(true);
         }
       } else if (isBlindTestMode(r.mode) && r.question_started_at && !audioStarted) {
-        // La musique vient de démarrer chez l'hôte → synchroniser le timer
+        // Client rejoint en cours de question → synchroniser depuis Supabase
         setQuestionStartedAt(r.question_started_at);
         setAudioStarted(true);
-        // Annuler le fallback — la musique a bien démarré
-        if (audioFallbackRef.current) { clearTimeout(audioFallbackRef.current); audioFallbackRef.current = null; }
       }
       if (r.status === 'finished') router.push(`/room/${code}/results`);
     },
@@ -952,60 +946,21 @@ export default function RoomPage() {
           {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
 
-        {/* Lecteur audio pour les blind tests — monté après le countdown (autoPlay déclenche la lecture) */}
-        {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && transitionCountdown === null && (
+        {/* Lecteur audio pour les blind tests — monté DÈS le début du countdown pour précharger.
+            shouldPlay passe à true quand le countdown finit → lecture synchronisée sur tous les clients. */}
+        {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && (
           <div className="w-full max-w-lg">
             <YouTubePlayer
               url={(currentQ as any).youtube_url}
-              autoPlay
+              autoPlay={false}
+              shouldPlay={transitionCountdown === null}
               startTime={(currentQ as any).audio_start_time ?? 0}
-              onVideoError={() => {
-                setVideoBlocked(true);
-                // Annuler le fallback automatique : l'hôte pilote manuellement via le bouton
-                if (audioFallbackRef.current) { clearTimeout(audioFallbackRef.current); audioFallbackRef.current = null; }
-              }}
-              onPlay={myPlayer?.is_host ? async () => {
-                // L'hôte enregistre le timestamp de démarrage → tous les clients synchronisent leur timer
-                if (!room.question_started_at) {
-                  await supabase.from('rooms')
-                    .update({ question_started_at: Date.now() })
-                    .eq('id', room.id);
-                }
-              } : undefined}
+              onVideoError={() => setVideoBlocked(true)}
             />
-            {/* Bouton "Passer la musique" pour l'hôte quand la vidéo est bloquée */}
-            {videoBlocked && myPlayer?.is_host && !audioStarted && (
-              <button
-                onClick={async () => {
-                  const now = Date.now();
-                  // 1. Réinitialiser le timer à duration complète (évite expire immédiat)
-                  setTimerKey(k => k + 1);
-                  // 2. Démarrer localement
-                  setAudioStarted(true);
-                  setQuestionStartedAt(now);
-                  // 3. Synchroniser tous les clients via Supabase
-                  await supabase.from('rooms')
-                    .update({ question_started_at: now })
-                    .eq('id', room.id);
-                }}
-                className="mt-2 w-full py-2.5 rounded-xl font-black text-sm transition-all hover:opacity-90"
-                style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B', border: '1.5px solid rgba(245,158,11,0.4)' }}
-              >
-                ▶ Lancer le timer
-              </button>
-            )}
-            {/* Indicateur d'attente pour les joueurs */}
-            {!audioStarted && !myPlayer?.is_host && !videoBlocked && (
-              <div className="mt-2 flex items-center justify-center gap-2 text-xs font-bold"
-                style={{ color: 'rgba(240,244,255,0.4)' }}>
-                <div className="w-3 h-3 rounded-full border-2 animate-spin"
-                  style={{ borderColor: '#FF00AA', borderTopColor: 'transparent' }} />
-                En attente du démarrage de la musique…
-              </div>
-            )}
-            {!audioStarted && !myPlayer?.is_host && videoBlocked && (
+            {/* Vidéo bloquée : info simple, le timer part quand même */}
+            {videoBlocked && transitionCountdown === null && (
               <div className="mt-2 text-center text-xs font-bold" style={{ color: 'rgba(245,158,11,0.7)' }}>
-                ⚠ Vidéo bloquée — attends que l'hôte lance le timer
+                ⚠ Vidéo bloquée par YouTube — remplace-la par une version non-VEVO
               </div>
             )}
           </div>
