@@ -62,6 +62,8 @@ interface Props {
   onPlay?: () => void;
   /** Appelé quand YouTube bloque la vidéo (embedding désactivé, vidéo supprimée…) */
   onVideoError?: () => void;
+  /** Appelé quand le player YouTube est prêt (pour le préchargement) */
+  onPlayerReady?: () => void;
   /** Timestamp (secondes) où démarrer. 0 = début. */
   startTime?: number;
 }
@@ -69,7 +71,7 @@ interface Props {
 type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
-export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, startTime = 0 }: Props) {
+export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, onPlayerReady, startTime = 0 }: Props) {
   const [status, setStatus]             = useState<Status>('idle');
   const [videoVisible, setVideoVisible] = useState(false);
   // Incrémenté pour forcer la recréation du player (ex : retry après erreur)
@@ -128,6 +130,7 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
               pendingPlay.current = false;
               playerRef.current?.playVideo?.();
             }
+            onPlayerReady?.();
           },
           onStateChange: (e: any) => {
             if (!mountedRef.current) return;
@@ -159,17 +162,24 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
 
   // ── Déclenchement externe (shouldPlay) ──────────────────────────────────
   // Permet au parent de lancer la lecture sur un player déjà préchargé,
-  // sans recréer l'instance (important pour la synchro au countdown).
+  // sans recréer l'instance (important pour la synchro au préchargement).
   useEffect(() => {
-    if (!shouldPlay || !videoId) return;
-    if (playerRef.current?._errored) return; // vidéo bloquée → pas de retry ici
-    if (readyRef.current && playerRef.current) {
-      if (startTime > 0) playerRef.current.seekTo(startTime, true);
-      playerRef.current.playVideo();
-      setStatus('loading');
+    if (!videoId) return;
+    if (shouldPlay) {
+      if (playerRef.current?._errored) return;
+      if (readyRef.current && playerRef.current) {
+        if (startTime > 0) playerRef.current.seekTo(startTime, true);
+        playerRef.current.playVideo();
+        setStatus('loading');
+      } else {
+        pendingPlay.current = true;
+      }
     } else {
-      // Player pas encore prêt — sera joué dans onReady
-      pendingPlay.current = true;
+      // shouldPlay vient de passer à false → mettre en pause le player préchargé
+      pendingPlay.current = false;
+      if (readyRef.current && playerRef.current) {
+        playerRef.current.pauseVideo?.();
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldPlay]);
