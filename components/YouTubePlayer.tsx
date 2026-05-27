@@ -62,6 +62,8 @@ interface Props {
   onPlay?: () => void;
   /** Appelé quand YouTube bloque la vidéo (embedding désactivé, vidéo supprimée…) */
   onVideoError?: () => void;
+  /** Appelé une seule fois quand le player est prêt (préchargement terminé) */
+  onPlayerReady?: () => void;
   /** Timestamp (secondes) où démarrer. 0 = début. */
   startTime?: number;
 }
@@ -69,7 +71,7 @@ interface Props {
 type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
-export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, startTime = 0 }: Props) {
+export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, onPlayerReady, startTime = 0 }: Props) {
   const [status, setStatus]             = useState<Status>('idle');
   const [videoVisible, setVideoVisible] = useState(false);
   // Incrémenté pour forcer la recréation du player (ex : retry après erreur)
@@ -113,8 +115,8 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
           modestbranding: 1,
           iv_load_policy: 3,
           fs: 0,
-          // NE PAS mettre start ici — il déclenche implicitement la lecture
-          // Le seekTo dans onReady est suffisant et ne lance pas la lecture
+          // Pas de `start` ici — il déclenche implicitement la lecture.
+          // Le seekTo() dans onReady positionne la tête sans lancer la musique.
         },
         events: {
           onReady: () => {
@@ -127,8 +129,7 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
               pendingPlay.current = false;
               playerRef.current?.playVideo?.();
             } else {
-              // Pause explicite — YouTube peut démarrer seul même avec autoplay:0
-              // (mobile, permissions navigateur, paramètre start, etc.)
+              // Pause explicite — certains navigateurs / videos démarrent seuls
               playerRef.current?.pauseVideo?.();
             }
             onPlayerReady?.();
@@ -162,18 +163,24 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
   }, [videoId, autoPlay, retryCount]);
 
   // ── Déclenchement externe (shouldPlay) ──────────────────────────────────
-  // Permet au parent de lancer la lecture sur un player déjà préchargé,
-  // sans recréer l'instance (important pour la synchro au countdown).
+  // true  → lancer la lecture (player préchargé ou en attente)
+  // false → mettre en pause (question suivante, préchargement en cours…)
   useEffect(() => {
-    if (!shouldPlay || !videoId) return;
-    if (playerRef.current?._errored) return; // vidéo bloquée → pas de retry ici
-    if (readyRef.current && playerRef.current) {
-      if (startTime > 0) playerRef.current.seekTo(startTime, true);
-      playerRef.current.playVideo();
-      setStatus('loading');
+    if (!videoId) return;
+    if (shouldPlay) {
+      if (playerRef.current?._errored) return;
+      if (readyRef.current && playerRef.current) {
+        if (startTime > 0) playerRef.current.seekTo(startTime, true);
+        playerRef.current.playVideo();
+        setStatus('loading');
+      } else {
+        pendingPlay.current = true;
+      }
     } else {
-      // Player pas encore prêt — sera joué dans onReady
-      pendingPlay.current = true;
+      pendingPlay.current = false;
+      if (readyRef.current && playerRef.current) {
+        playerRef.current.pauseVideo?.();
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldPlay]);
@@ -346,4 +353,4 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
       )}
     </div>
   );
-}                                                                                                                                                                                                                                                                                                                                           
+}
