@@ -44,9 +44,18 @@ export default function SignupPage() {
       }
     });
     if (error) {
-      setErr(error.message === 'User already registered'
-        ? 'Cet email est déjà utilisé.'
-        : error.message);
+      const msg = error.message.toLowerCase();
+      let friendlyError = error.message;
+      if (msg.includes('user already registered') || msg.includes('already been registered')) {
+        friendlyError = 'Cet email est déjà utilisé.';
+      } else if (msg.includes('email rate limit') || msg.includes('rate limit')) {
+        friendlyError = 'Trop d\'inscriptions en cours. Réessaie dans quelques minutes, ou contacte le support.';
+      } else if (msg.includes('invalid email')) {
+        friendlyError = 'Adresse email invalide.';
+      } else if (msg.includes('password')) {
+        friendlyError = 'Mot de passe trop faible (min. 6 caractères).';
+      }
+      setErr(friendlyError);
       setLoading(false);
       return;
     }
