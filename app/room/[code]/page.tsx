@@ -139,6 +139,8 @@ export default function RoomPage() {
   const transitionIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Vrai quand YouTube bloque la vidéo (embedding désactivé par le label)
   const [videoBlocked, setVideoBlocked] = useState(false);
+  // Erreur si l'hôte essaie de lancer sans avoir sélectionné un pack
+  const [noPackError, setNoPackError] = useState(false);
 
   const {
     room, players, myPlayer, buzz, setBuzz,
@@ -744,13 +746,25 @@ export default function RoomPage() {
             )}
 
 
+            {noPackError && (
+              <div className="w-full px-4 py-2.5 rounded-xl text-sm font-bold text-center"
+                style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.3)' }}>
+                ⚠ Sélectionne un pack de questions avant de lancer !
+              </div>
+            )}
             <div className="flex gap-3 w-full">
               <button onClick={() => setShowSettings(true)}
                 className="w-14 h-14 rounded-xl text-xl font-bold transition-all hover:scale-105 flex-shrink-0"
                 style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#8B5CF6' }}>
                 ⚙
               </button>
-              <button onClick={startGame} className="muz-btn-pink flex-1 py-4 rounded-xl text-base font-black">
+              <button
+                onClick={() => {
+                  if (!room.pack_id) { setNoPackError(true); setTimeout(() => setNoPackError(false), 3000); return; }
+                  setNoPackError(false);
+                  startGame();
+                }}
+                className="muz-btn-pink flex-1 py-4 rounded-xl text-base font-black">
                 Lancer ({players.length} joueur{players.length > 1 ? 's' : ''}) →
               </button>
             </div>
