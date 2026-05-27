@@ -57,6 +57,8 @@ interface Props {
   url: string;
   /** Lance automatiquement la musique dès que le player est prêt */
   autoPlay?: boolean;
+  /** Quand passe à true, déclenche la lecture sur le player existant (préchargé) */
+  shouldPlay?: boolean;
   onPlay?: () => void;
   /** Appelé quand YouTube bloque la vidéo (embedding désactivé, vidéo supprimée…) */
   onVideoError?: () => void;
@@ -67,7 +69,7 @@ interface Props {
 type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
-export function YouTubePlayer({ url, autoPlay = false, onPlay, onVideoError, startTime = 0 }: Props) {
+export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, startTime = 0 }: Props) {
   const [status, setStatus]             = useState<Status>('idle');
   const [videoVisible, setVideoVisible] = useState(false);
   // Incrémenté pour forcer la recréation du player (ex : retry après erreur)
@@ -154,6 +156,23 @@ export function YouTubePlayer({ url, autoPlay = false, onPlay, onVideoError, sta
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, autoPlay, retryCount]);
+
+  // ── Déclenchement externe (shouldPlay) ──────────────────────────────────
+  // Permet au parent de lancer la lecture sur un player déjà préchargé,
+  // sans recréer l'instance (important pour la synchro au countdown).
+  useEffect(() => {
+    if (!shouldPlay || !videoId) return;
+    if (playerRef.current?._errored) return; // vidéo bloquée → pas de retry ici
+    if (readyRef.current && playerRef.current) {
+      if (startTime > 0) playerRef.current.seekTo(startTime, true);
+      playerRef.current.playVideo();
+      setStatus('loading');
+    } else {
+      // Player pas encore prêt — sera joué dans onReady
+      pendingPlay.current = true;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldPlay]);
 
   // ── Contrôles manuels ────────────────────────────────────────────────────
   const handlePlay = useCallback(() => {
