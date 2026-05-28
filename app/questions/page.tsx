@@ -139,6 +139,8 @@ export default function QuestionsPage() {
   const [qYoutubeUrl, setQYoutubeUrl] = useState<string>('');  // URL YouTube pour les packs blind test
   const [qStartTime, setQStartTime] = useState<number>(0);     // Timestamp de démarrage (secondes)
   const [qAiTarget, setQAiTarget] = useState<string>('');      // Ce que l'utilisateur veut trouver
+  // Vérification embed YouTube : 'idle' | 'checking' | 'ok' | 'blocked'
+  const [ytEmbedStatus, setYtEmbedStatus] = useState<'idle' | 'checking' | 'ok' | 'blocked'>('idle');
   const [qAiSuggesting, setQAiSuggesting] = useState(false);
   const [qAiSuggestMsg, setQAiSuggestMsg] = useState<string>('');
   const [qAiSuggestError, setQAiSuggestError] = useState<string>('');
@@ -247,6 +249,30 @@ export default function QuestionsPage() {
     setView('questions');
   };
 
+  // === VÉRIFICATION EMBED YOUTUBE ===
+  // Utilise l'API oEmbed publique de YouTube — aucune clé API requise.
+  // Retourne 200 si la vidéo est embeddable, 401/403 si bloquée.
+  useEffect(() => {
+    const videoId = extractYoutubeId(qYoutubeUrl);
+    if (!videoId) { setYtEmbedStatus('idle'); return; }
+    setYtEmbedStatus('checking');
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`,
+          { signal: controller.signal }
+        );
+        if (!controller.signal.aborted) {
+          setYtEmbedStatus(res.ok ? 'ok' : 'blocked');
+        }
+      } catch {
+        if (!controller.signal.aborted) setYtEmbedStatus('idle');
+      }
+    }, 600); // debounce 600ms pour ne pas spammer pendant la saisie
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [qYoutubeUrl]);
+
   // === UTILITAIRES TEMPS ===
   const formatTime = (secs: number): string => {
     const m = Math.floor(secs / 60);
@@ -351,7 +377,7 @@ export default function QuestionsPage() {
     } else {
       setEditingQ(null);
       setQText(''); setQChoices(['', '', '', '']); setQCorrect(0);
-      setQYoutubeUrl('');
+      setQYoutubeUrl(''); setYtEmbedStatus('idle');
       setQStartTime(0);
       setQAiTarget('');
       setQType('normal'); setQImageUrl(null);
@@ -427,7 +453,7 @@ export default function QuestionsPage() {
     }
     await loadQuestions(selectedPack.id);
     setAddMode(null);
-    setQType('normal'); setQImageUrl(null); setQYoutubeUrl(''); setQStartTime(0); setQAiTarget(''); setQAiSuggestMsg(''); setQAiSuggestError('');
+    setQType('normal'); setQImageUrl(null); setQYoutubeUrl(''); setQStartTime(0); setQAiTarget(''); setQAiSuggestMsg(''); setQAiSuggestError(''); setYtEmbedStatus('idle');
     setQSaving(false);
   };
 
@@ -1043,31 +1069,58 @@ export default function QuestionsPage() {
                       {qYoutubeUrl && (
                         <div className="mt-2">
                           {extractYoutubeId(qYoutubeUrl) ? (
-                            /* URL valide — miniature de prévisualisation */
-                            <div
-                              className="flex items-center gap-3 px-3 py-2 rounded-xl"
-                              style={{ background: 'rgba(0,229,209,0.07)', border: '1px solid rgba(0,229,209,0.35)' }}
-                            >
-                              <img
-                                src={`https://img.youtube.com/vi/${extractYoutubeId(qYoutubeUrl)}/mqdefault.jpg`}
-                                alt="preview"
-                                className="rounded-lg flex-shrink-0"
-                                style={{ width: 64, height: 36, objectFit: 'cover' }}
-                                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-bold" style={{ color: '#00E5D1' }}>✓ URL YouTube valide</p>
-                                <p className="text-xs truncate" style={{ color: 'rgba(240,244,255,0.4)' }}>
-                                  ID : {extractYoutubeId(qYoutubeUrl)}
-                                </p>
-                              </div>
-                              <button
-                                onClick={() => { setQYoutubeUrl(''); setQStartTime(0); setQAiSuggestMsg(''); }}
-                                className="text-xs font-black px-2 py-1 rounded-lg flex-shrink-0"
-                                style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}
+                            <div className="flex flex-col gap-2">
+                              {/* Miniature + bouton effacer */}
+                              <div
+                                className="flex items-center gap-3 px-3 py-2 rounded-xl"
+                                style={{
+                                  background: ytEmbedStatus === 'blocked' ? 'rgba(255,0,170,0.06)' : 'rgba(0,229,209,0.07)',
+                                  border: `1px solid ${ytEmbedStatus === 'blocked' ? 'rgba(255,0,170,0.35)' : 'rgba(0,229,209,0.35)'}`,
+                                }}
                               >
-                                ✕
-                              </button>
+                                <img
+                                  src={`https://img.youtube.com/vi/${extractYoutubeId(qYoutubeUrl)}/mqdefault.jpg`}
+                                  alt="preview"
+                                  className="rounded-lg flex-shrink-0"
+                                  style={{ width: 64, height: 36, objectFit: 'cover' }}
+                                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  {ytEmbedStatus === 'checking' && (
+                                    <p className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
+                                      ⏳ Vérification de l'embed…
+                                    </p>
+                                  )}
+                                  {ytEmbedStatus === 'ok' && (
+                                    <p className="text-xs font-bold" style={{ color: '#00E5D1' }}>
+                                      ✓ Vidéo compatible — le son fonctionnera en jeu
+                                    </p>
+                                  )}
+                                  {ytEmbedStatus === 'blocked' && (
+                                    <>
+                                      <p className="text-xs font-bold" style={{ color: '#FF00AA' }}>
+                                        ⚠ Vidéo bloquée par le label musical
+                                      </p>
+                                      <p className="text-xs mt-0.5" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                                        Cette vidéo ne jouera pas en partie. Cherche un live ou une reprise.
+                                      </p>
+                                    </>
+                                  )}
+                                  {ytEmbedStatus === 'idle' && (
+                                    <p className="text-xs font-bold" style={{ color: '#00E5D1' }}>✓ URL YouTube valide</p>
+                                  )}
+                                  <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(240,244,255,0.3)' }}>
+                                    ID : {extractYoutubeId(qYoutubeUrl)}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => { setQYoutubeUrl(''); setQStartTime(0); setQAiSuggestMsg(''); setYtEmbedStatus('idle'); }}
+                                  className="text-xs font-black px-2 py-1 rounded-lg flex-shrink-0"
+                                  style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA' }}
+                                >
+                                  ✕
+                                </button>
+                              </div>
                             </div>
                           ) : (
                             /* URL invalide */
