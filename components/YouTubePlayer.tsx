@@ -62,6 +62,8 @@ interface Props {
   onPlay?: () => void;
   /** Appelé quand YouTube bloque la vidéo (embedding désactivé, vidéo supprimée…) */
   onVideoError?: () => void;
+  /** Appelé quand le player est prêt (préchargement terminé) */
+  onPlayerReady?: () => void;
   /** Timestamp (secondes) où démarrer. 0 = début. */
   startTime?: number;
 }
@@ -69,7 +71,7 @@ interface Props {
 type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
-export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, startTime = 0 }: Props) {
+export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, onPlayerReady, startTime = 0 }: Props) {
   const [status, setStatus] = useState<Status>('idle');
   // Incrémenté pour forcer la recréation du player (ex : retry après erreur)
   const [retryCount, setRetryCount]     = useState(0);
@@ -113,7 +115,6 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
           modestbranding: 1,
           iv_load_policy: 3,
           fs: 0,
-          start: startTime > 0 ? startTime : 0,
         },
         events: {
           onReady: () => {
@@ -125,7 +126,11 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
             if (pendingPlay.current) {
               pendingPlay.current = false;
               playerRef.current?.playVideo?.();
+            } else {
+              // S'assurer que le player est bien en pause (pas d'autoplay implicite)
+              playerRef.current?.pauseVideo?.();
             }
+            onPlayerReady?.();
           },
           onStateChange: (e: any) => {
             if (!mountedRef.current) return;
@@ -159,15 +164,23 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
   // Permet au parent de lancer la lecture sur un player déjà préchargé,
   // sans recréer l'instance (important pour la synchro au countdown).
   useEffect(() => {
-    if (!shouldPlay || !videoId) return;
-    if (playerRef.current?._errored) return; // vidéo bloquée → pas de retry ici
-    if (readyRef.current && playerRef.current) {
-      if (startTime > 0) playerRef.current.seekTo(startTime, true);
-      playerRef.current.playVideo();
-      setStatus('loading');
+    if (!videoId) return;
+    if (shouldPlay) {
+      if (playerRef.current?._errored) return; // vidéo bloquée → pas de retry ici
+      if (readyRef.current && playerRef.current) {
+        if (startTime > 0) playerRef.current.seekTo(startTime, true);
+        playerRef.current.playVideo();
+        setStatus('loading');
+      } else {
+        // Player pas encore prêt — sera joué dans onReady
+        pendingPlay.current = true;
+      }
     } else {
-      // Player pas encore prêt — sera joué dans onReady
-      pendingPlay.current = true;
+      // shouldPlay=false → mettre en pause
+      pendingPlay.current = false;
+      if (readyRef.current && playerRef.current) {
+        playerRef.current.pauseVideo?.();
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldPlay]);
