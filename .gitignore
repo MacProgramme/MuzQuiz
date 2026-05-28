@@ -43,3 +43,4 @@ next-env.d.ts
 
 # docs secrets
 STRIPE_SETUP_PROD.md
+.env*
