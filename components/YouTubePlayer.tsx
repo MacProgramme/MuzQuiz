@@ -70,8 +70,7 @@ type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, startTime = 0 }: Props) {
-  const [status, setStatus]             = useState<Status>('idle');
-  const [videoVisible, setVideoVisible] = useState(false);
+  const [status, setStatus] = useState<Status>('idle');
   // Incrémenté pour forcer la recréation du player (ex : retry après erreur)
   const [retryCount, setRetryCount]     = useState(0);
   const playerRef    = useRef<any>(null);
@@ -93,7 +92,6 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
     pendingPlay.current = autoPlay;
     if (containerRef.current) containerRef.current.innerHTML = '';
     setStatus(autoPlay ? 'loading' : 'idle');
-    setVideoVisible(false);
 
     const slot = document.createElement('div');
     containerRef.current?.appendChild(slot);
@@ -197,7 +195,6 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
   const handleStop = useCallback(() => {
     playerRef.current?.stopVideo?.();
     setStatus('idle');
-    setVideoVisible(false);
   }, []);
 
   // ── URL invalide ─────────────────────────────────────────────────────────
@@ -213,18 +210,12 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
   return (
     <div className="flex flex-col gap-3 w-full">
 
-      {/* Container YouTube — toujours dans le DOM pour maintenir la lecture */}
+      {/* Container YouTube — toujours dans le DOM, toujours caché (audio uniquement) */}
       <div
         ref={containerRef}
         style={{
-          width: '100%',
-          height: videoVisible ? undefined : 0,
-          aspectRatio: videoVisible ? '16/9' : undefined,
-          overflow: 'hidden',
-          borderRadius: videoVisible ? '0.75rem' : 0,
-          visibility: videoVisible ? 'visible' : 'hidden',
-          transition: 'height 0.3s',
-          pointerEvents: videoVisible ? 'auto' : 'none',
+          position: 'fixed', top: '-9999px', left: '-9999px',
+          width: 1, height: 1, overflow: 'hidden', pointerEvents: 'none',
         }}
       />
 
@@ -328,18 +319,6 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
         </div>
       </div>
 
-      {/* Toggle vidéo */}
-      {status !== 'idle' && status !== 'error' && (
-        <button onClick={() => setVideoVisible(v => !v)}
-          className="self-start text-xs font-bold px-3 py-1 rounded-lg transition-all hover:opacity-80"
-          style={{
-            background: videoVisible ? 'rgba(255,0,170,0.1)' : 'rgba(255,255,255,0.06)',
-            color: videoVisible ? '#FF00AA' : 'rgba(240,244,255,0.4)',
-            border: `1px solid ${videoVisible ? 'rgba(255,0,170,0.3)' : 'rgba(255,255,255,0.1)'}`,
-          }}>
-          {videoVisible ? '🙈 Masquer la vidéo' : '👁 Afficher la vidéo'}
-        </button>
-      )}
     </div>
   );
 }
