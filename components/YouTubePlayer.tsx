@@ -319,7 +319,7 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
           {status === 'paused' && (
             <>
               <button onClick={handlePlay}
-                className="flex items-center justify-center font-black text-sm px-4 py-2 rounded-xl transition-all hover:opacity-90"
+                className="flex items-center justify-center font-bold text-sm px-4 py-2 rounded-xl transition-all hover:opacity-90"
                 style={{ background: '#FF00AA', color: 'white', minWidth: 72 }}>
                 ▶ Play
               </button>
@@ -330,8 +330,8 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
             </>
           )}
         </div>
-      </div>
 
+      </div>
     </div>
   );
-}
+}
