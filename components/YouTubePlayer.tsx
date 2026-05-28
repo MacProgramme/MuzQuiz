@@ -62,8 +62,6 @@ interface Props {
   onPlay?: () => void;
   /** Appelé quand YouTube bloque la vidéo (embedding désactivé, vidéo supprimée…) */
   onVideoError?: () => void;
-  /** Appelé une seule fois quand le player est prêt (préchargement terminé) */
-  onPlayerReady?: () => void;
   /** Timestamp (secondes) où démarrer. 0 = début. */
   startTime?: number;
 }
@@ -71,7 +69,7 @@ interface Props {
 type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
-export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, onPlayerReady, startTime = 0 }: Props) {
+export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, startTime = 0 }: Props) {
   const [status, setStatus]             = useState<Status>('idle');
   const [videoVisible, setVideoVisible] = useState(false);
   // Incrémenté pour forcer la recréation du player (ex : retry après erreur)
@@ -108,6 +106,8 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
         width: '100%',
         height: '100%',
         playerVars: {
+          // autoplay: 1 autorisé par le navigateur car lancé dans le contexte
+          // d'un clic utilisateur récent (bouton "Question suivante").
           autoplay: autoPlay ? 1 : 0,
           controls: 1,
           rel: 0,
@@ -115,8 +115,7 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
           modestbranding: 1,
           iv_load_policy: 3,
           fs: 0,
-          // Pas de `start` ici — il déclenche implicitement la lecture.
-          // Le seekTo() dans onReady positionne la tête sans lancer la musique.
+          start: startTime > 0 ? startTime : 0,
         },
         events: {
           onReady: () => {
@@ -128,11 +127,7 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
             if (pendingPlay.current) {
               pendingPlay.current = false;
               playerRef.current?.playVideo?.();
-            } else {
-              // Pause explicite — certains navigateurs / videos démarrent seuls
-              playerRef.current?.pauseVideo?.();
             }
-            onPlayerReady?.();
           },
           onStateChange: (e: any) => {
             if (!mountedRef.current) return;
@@ -163,24 +158,18 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
   }, [videoId, autoPlay, retryCount]);
 
   // ── Déclenchement externe (shouldPlay) ──────────────────────────────────
-  // true  → lancer la lecture (player préchargé ou en attente)
-  // false → mettre en pause (question suivante, préchargement en cours…)
+  // Permet au parent de lancer la lecture sur un player déjà préchargé,
+  // sans recréer l'instance (important pour la synchro au countdown).
   useEffect(() => {
-    if (!videoId) return;
-    if (shouldPlay) {
-      if (playerRef.current?._errored) return;
-      if (readyRef.current && playerRef.current) {
-        if (startTime > 0) playerRef.current.seekTo(startTime, true);
-        playerRef.current.playVideo();
-        setStatus('loading');
-      } else {
-        pendingPlay.current = true;
-      }
+    if (!shouldPlay || !videoId) return;
+    if (playerRef.current?._errored) return; // vidéo bloquée → pas de retry ici
+    if (readyRef.current && playerRef.current) {
+      if (startTime > 0) playerRef.current.seekTo(startTime, true);
+      playerRef.current.playVideo();
+      setStatus('loading');
     } else {
-      pendingPlay.current = false;
-      if (readyRef.current && playerRef.current) {
-        playerRef.current.pauseVideo?.();
-      }
+      // Player pas encore prêt — sera joué dans onReady
+      pendingPlay.current = true;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldPlay]);
@@ -353,4 +342,4 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
       )}
     </div>
   );
-}
+}

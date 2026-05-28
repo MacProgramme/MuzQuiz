@@ -134,12 +134,9 @@ export default function RoomPage() {
   const [questionStartedAt, setQuestionStartedAt] = useState<number>(Date.now());
   // Blind test : true quand l'audio a commencé à jouer (timer synchronisé)
   const [audioStarted, setAudioStarted] = useState(false);
-  // Blind test préchargement : null=pas démarré, true=préchargement en cours, false=prêt
-  const [btPreloading, setBtPreloading] = useState<boolean | null>(null);
-  const [btReadyCount, setBtReadyCount] = useState(0);
-  const btPreloadingRef = useRef<boolean | null>(null);
-  const btReadySetRef   = useRef<Set<number>>(new Set());
-  const btTotalCountRef = useRef(0);
+  // Compte à rebours entre les questions (3-2-1)
+  const [transitionCountdown, setTransitionCountdown] = useState<number | null>(null);
+  const transitionIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Vrai quand YouTube bloque la vidéo (embedding désactivé par le label)
   const [videoBlocked, setVideoBlocked] = useState(false);
   // Erreur si l'hôte essaie de lancer sans avoir sélectionné un pack
@@ -271,20 +268,35 @@ export default function RoomPage() {
         setAudioStarted(false);
         setVideoBlocked(false);
 
+        // Compte à rebours 3-2-1 uniquement pour les blind tests
+        // Le player YouTube se monte PENDANT le countdown pour précharger la musique.
+        // Quand le countdown finit → shouldPlay=true → lecture synchronisée sur tous les clients.
+        if (transitionIntervalRef.current) clearInterval(transitionIntervalRef.current);
         const roomMode = r.mode;
         if (isBlindTestMode(roomMode)) {
-          // Blind test : si tous les players sont déjà préchargés → lecture immédiate
-          // Sinon handleBTPlayerReady déclenchera l'audio quand le préchargement sera fini
-          if (btPreloadingRef.current === false) {
-            const now = Date.now();
-            setAudioStarted(true);
-            setQuestionStartedAt(now);
-            if (myPlayerRef.current?.is_host) {
-              supabase.from('rooms').update({ question_started_at: now }).eq('id', r.id);
+          setTransitionCountdown(3);
+          let count = 3;
+          transitionIntervalRef.current = setInterval(() => {
+            count--;
+            if (count <= 0) {
+              clearInterval(transitionIntervalRef.current!);
+              transitionIntervalRef.current = null;
+              setTransitionCountdown(null);
+              // Le timer démarre dès la fin du countdown (même si vidéo bloquée)
+              const now = Date.now();
+              setAudioStarted(true);
+              setQuestionStartedAt(now);
+              // L'hôte écrit le timestamp pour synchroniser les autres clients
+              if (myPlayerRef.current?.is_host) {
+                supabase.from('rooms').update({ question_started_at: now }).eq('id', r.id);
+              }
+            } else {
+              setTransitionCountdown(count);
             }
-          }
+          }, 1000);
         } else {
-          // Pas de son → on lance le timer immédiatement
+          // Pas de son → pas de countdown, on lance le timer immédiatement
+          setTransitionCountdown(null);
           setQuestionStartedAt(Date.now());
           setAudioStarted(true);
         }
@@ -341,64 +353,11 @@ export default function RoomPage() {
   useEffect(() => { roomRef.current = room; }, [room]);
   useEffect(() => { myPlayerRef.current = myPlayer; }, [myPlayer]);
 
-  // Sync btPreloadingRef avec le state React (pour accès dans les callbacks async)
-  useEffect(() => { btPreloadingRef.current = btPreloading; }, [btPreloading]);
-
-  // Réinitialiser le préchargement BT quand la salle passe en attente (replay)
+  // Nettoyer l'intervalle de transition au démontage du composant
   useEffect(() => {
-    if (room?.status === 'waiting') {
-      setBtPreloading(null);
-      setBtReadyCount(0);
-      btPreloadingRef.current = null;
-      btReadySetRef.current   = new Set();
-      btTotalCountRef.current = 0;
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room?.status]);
-
-  // Démarrer le préchargement BT dès que la partie commence
-  useEffect(() => {
-    if (room?.status !== 'playing' || !isBlindTestMode(room.mode)) return;
-    if (btPreloadingRef.current !== null) return; // déjà initialisé
-    const total = questions.filter(q => !!(q as any).youtube_url).length;
-    if (total === 0) return; // pas de musiques, rien à précharger
-    btTotalCountRef.current = total;
-    btReadySetRef.current   = new Set();
-    setBtReadyCount(0);
-    btPreloadingRef.current = true;
-    setBtPreloading(true);
-    // Fallback 30s : si certaines vidéos ne se chargent jamais, on démarre quand même
-    const fallback = setTimeout(() => {
-      if (btPreloadingRef.current !== true) return;
-      btPreloadingRef.current = false;
-      setBtPreloading(false);
-      const now = Date.now();
-      setAudioStarted(true);
-      setQuestionStartedAt(now);
-      if (myPlayerRef.current?.is_host && roomRef.current) {
-        supabase.from('rooms').update({ question_started_at: now }).eq('id', roomRef.current.id);
-      }
-    }, 30000);
-    return () => clearTimeout(fallback);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room?.status, room?.mode]);
-
-  // Appelé par chaque YouTubePlayer quand il est prêt (préchargé)
-  const handleBTPlayerReady = useCallback((idx: number) => {
-    if (btPreloadingRef.current !== true) return;
-    btReadySetRef.current.add(idx);
-    const readyCount = btReadySetRef.current.size;
-    setBtReadyCount(readyCount);
-    if (readyCount >= btTotalCountRef.current) {
-      btPreloadingRef.current = false;
-      setBtPreloading(false);
-      const now = Date.now();
-      setAudioStarted(true);
-      setQuestionStartedAt(now);
-      if (myPlayerRef.current?.is_host && roomRef.current) {
-        supabase.from('rooms').update({ question_started_at: now }).eq('id', roomRef.current.id);
-      }
-    }
+    return () => {
+      if (transitionIntervalRef.current) clearInterval(transitionIntervalRef.current);
+    };
   }, []);
 
   // Auto-fermeture si la salle d'attente est vide (seulement l'hôte) pendant 10s
@@ -501,6 +460,22 @@ export default function RoomPage() {
       // Partie en cours → contrôleur téléphone
       return (
         <>
+          {/* Compte à rebours entre les questions */}
+          {transitionCountdown !== null && (
+            <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-5 muz-fade-in"
+              style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
+              <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                Question {(room?.current_question ?? 0) + 1}
+              </p>
+              <div className="text-9xl font-black tabular-nums"
+                style={{ color: '#FF00AA', textShadow: '0 0 60px rgba(255,0,170,0.6)', lineHeight: 1 }}>
+                {transitionCountdown}
+              </div>
+              <p className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
+                Préparez-vous…
+              </p>
+            </div>
+          )}
         <PhoneControllerView
           room={room}
           myPlayer={liveMyPlayer}
@@ -520,6 +495,22 @@ export default function RoomPage() {
     }
     return (
       <>
+        {/* Compte à rebours entre les questions — écran hôte public */}
+        {transitionCountdown !== null && (
+          <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-5 muz-fade-in"
+            style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
+              Question {(room?.current_question ?? 0) + 1}
+            </p>
+            <div className="text-9xl font-black tabular-nums"
+              style={{ color: '#FF00AA', textShadow: '0 0 60px rgba(255,0,170,0.6)', lineHeight: 1 }}>
+              {transitionCountdown}
+            </div>
+            <p className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
+              Préparez-vous…
+            </p>
+          </div>
+        )}
       <PublicScreenView
         room={room}
         players={players}
@@ -539,7 +530,7 @@ export default function RoomPage() {
         resumeGame={resumeGame}
         endGame={endGame}
         hostInviteCode={hostInviteCode}
-        transitionActive={false}
+        transitionActive={transitionCountdown !== null}
       />
       </>
     );
@@ -837,22 +828,20 @@ export default function RoomPage() {
   // --- Interface de jeu ---
   return (
     <>
-      {/* Overlay préchargement blind test */}
-      {btPreloading === true && isBlindTestMode(room.mode) && (
-        <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-8 muz-fade-in"
+      {/* Compte à rebours entre les questions — écran joueur */}
+      {transitionCountdown !== null && (
+        <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-5 muz-fade-in"
           style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-          <MuzquizLogo width={80} showText={false} animate />
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-full border-4 animate-spin"
-              style={{ borderColor: '#FF00AA', borderTopColor: 'transparent' }} />
-            <p className="font-black text-2xl" style={{ color: '#F0F4FF' }}>
-              Chargement des musiques…
-            </p>
-            <p className="text-sm font-bold tabular-nums"
-              style={{ color: 'rgba(240,244,255,0.45)' }}>
-              {btReadyCount} / {btTotalCountRef.current} prêtes
-            </p>
+          <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
+            Question {(room?.current_question ?? 0) + 1}
+          </p>
+          <div className="text-9xl font-black tabular-nums"
+            style={{ color: '#FF00AA', textShadow: '0 0 60px rgba(255,0,170,0.6)', lineHeight: 1 }}>
+            {transitionCountdown}
           </div>
+          <p className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
+            Préparez-vous…
+          </p>
         </div>
       )}
     <div className="flex flex-col min-h-screen" style={{ background: '#0D1B3E' }}>
@@ -971,41 +960,23 @@ export default function RoomPage() {
           {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
 
-        {/* Lecteurs blind test — tous montés dès le début pour précharger.
-            Seul le player actif est visible ; les autres restent hors-écran (position fixed).
-            shouldPlay=true uniquement pour la question courante une fois le préchargement terminé. */}
-        {isBlindTestMode(room.mode) && questions.map((q, idx) => {
-          const url = (q as any).youtube_url;
-          if (!url) return null;
-          const isActive = idx === room.current_question && btPreloading === false;
-          return (
-            <div
-              key={`bt-player-${idx}`}
-              className={isActive ? 'w-full max-w-lg' : undefined}
-              style={isActive ? {} : {
-                position: 'fixed', top: '-9999px', left: '-9999px',
-                width: 1, height: 1, overflow: 'hidden', pointerEvents: 'none',
-              }}
-            >
-              <YouTubePlayer
-                url={url}
-                autoPlay={false}
-                shouldPlay={isActive}
-                onPlayerReady={() => handleBTPlayerReady(idx)}
-                startTime={(q as any).audio_start_time ?? 0}
-                onVideoError={() => {
-                  // Compter les vidéos bloquées comme "prêtes" pour ne pas bloquer le préchargement
-                  handleBTPlayerReady(idx);
-                  if (isActive) setVideoBlocked(true);
-                }}
-              />
-            </div>
-          );
-        })}
-        {/* Vidéo bloquée : info simple, le timer part quand même */}
-        {videoBlocked && btPreloading === false && isBlindTestMode(room.mode) && (
-          <div className="w-full max-w-lg mt-1 text-center text-xs font-bold" style={{ color: 'rgba(245,158,11,0.7)' }}>
-            ⚠ Vidéo bloquée par YouTube — remplace-la par une version non-VEVO
+        {/* Lecteur audio pour les blind tests — monté DÈS le début du countdown pour précharger.
+            shouldPlay passe à true quand le countdown finit → lecture synchronisée sur tous les clients. */}
+        {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && (
+          <div className="w-full max-w-lg">
+            <YouTubePlayer
+              url={(currentQ as any).youtube_url}
+              autoPlay={false}
+              shouldPlay={transitionCountdown === null}
+              startTime={(currentQ as any).audio_start_time ?? 0}
+              onVideoError={() => setVideoBlocked(true)}
+            />
+            {/* Vidéo bloquée : info simple, le timer part quand même */}
+            {videoBlocked && transitionCountdown === null && (
+              <div className="mt-2 text-center text-xs font-bold" style={{ color: 'rgba(245,158,11,0.7)' }}>
+                ⚠ Vidéo bloquée par YouTube — remplace-la par une version non-VEVO
+              </div>
+            )}
           </div>
         )}
 

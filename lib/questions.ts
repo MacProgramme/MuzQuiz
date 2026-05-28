@@ -335,18 +335,33 @@ const BT_HITS_ACTUELS: QCMQuestion[] = [
   { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Justin Bieber", "Ed Sheeran", "Shawn Mendes", "Niall Horan"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=tQ0yjYMhNs8", audio_start_time: 30 },           // Peaches
 ];
 
+// ── Blind Test — Chansons Françaises Classiques (Piaf, Brel, Gainsbourg…) ────
+// URLs : archives INA + chaînes officielles — évite les labels qui bloquent l'embed
+const BT_CLASSIQUES_FR: QCMQuestion[] = [
+  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Édith Piaf", "Barbara", "Dalida", "Juliette Gréco"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=Q3Kvu6Kgp88", audio_start_time: 0 },    // Non je ne regrette rien — INA live Olympia
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Yves Montand", "Jacques Brel", "Gilbert Bécaud", "Charles Aznavour"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=n0ehZeWGXW0", audio_start_time: 0 }, // Ne me quitte pas — INA live (confirmé)
+  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Serge Gainsbourg", "Georges Brassens", "Léo Ferré", "Boris Vian"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=IFmBwT4VkRs", audio_start_time: 0 }, // La Mauvaise Réputation — INA
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Mireille Mathieu", "Dalida", "Édith Piaf", "Juliette Gréco"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=FvNNu-EvOWI", audio_start_time: 0 },        // Salma ya Salama — Dalida
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Joe Dassin", "Sacha Distel", "Michel Fugain", "Alain Souchon"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=DIvMR0cYmUA", audio_start_time: 10 },       // Les Champs-Élysées — Joe Dassin
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Charles Aznavour", "Gilbert Bécaud", "Yves Montand", "Sacha Distel"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=seShnKqDdPg", audio_start_time: 30 }, // La Bohème — Aznavour
+  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Michel Sardou", "Claude François", "Johnny Hallyday", "Julien Clerc"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=MViQL5xLBNk", audio_start_time: 0 }, // Alexandrie Alexandra — Claude François
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Renaud", "Alain Souchon", "Julien Clerc", "Michel Sardou"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=9m1-qPR0vZY", audio_start_time: 0 },           // Mistral Gagnant — Renaud
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Gainsbourg", "Ferré", "Brel", "Ferrat"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=uJBBBfXDMbE", audio_start_time: 0 },                              // La Javanaise — Gainsbourg INA
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Yves Montand", "Maurice Chevalier", "Charles Trenet", "Henri Salvador"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=AIKaAdJqIL0", audio_start_time: 0 }, // La Mer — Charles Trenet
+];
+
 // ── Blind Test — Chansons Françaises ─────────────────────────────────────────
 const BT_CHANSONS_FRANCAISES: QCMQuestion[] = [
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Black M", "Booba", "Stromae", "Maître Gims"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=VHoT4N43jK8", audio_start_time: 0 },        // Alors on danse (clip officiel 2010)
-  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Zaz", "Indila", "Alizée", "Yelle"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=K5KAc5CoCuk", audio_start_time: 25 },               // Dernière Danse (clip officiel)
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Hoshi", "Pomme", "Angèle", "Roméo Elvis"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=Hi7Rx3En7-k", audio_start_time: 0 },             // Balance Ton Quoi (clip officiel)
-  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Yelle", "Housse de Racket", "Christine and the Queens", "La Femme"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=9RBzsjga73s", audio_start_time: 0 }, // Tilted (clip officiel)
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["IAM", "Assassin", "MC Solaar", "Oxmo Puccino"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=1R2etg__x1Y", audio_start_time: 0 },        // Nouveau Western (clip officiel)
-  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Vianney", "Julien Doré", "Gaëtan Roussel", "Romain Didier"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=eiAq7k7yuPM", audio_start_time: 30 }, // Paris-Seychelles (Victoires de la Musique 2014)
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Aya Nakamura", "Awa Imani", "Wejdene", "Yseult"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=SdUN-ogKY60", audio_start_time: 0 },     // Coeur — Clara Luciani (clip officiel)
-  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Vald", "Nekfeu", "Disiz", "Keny Arkana"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=6O0ANbFvmgA", audio_start_time: 30 },              // Étoiles (Nekfeu)
-  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Grand Corps Malade", "Oxmo Puccino", "Gaël Faye", "Kery James"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=pYrN9nxI0gM", audio_start_time: 0 }, // Funambule (clip officiel)
-  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Lomepal", "Orelsan", "Roméo Elvis", "Eddy de Pretto"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=2bjk26RwjyU", audio_start_time: 0 }, // Basique (clip officiel)
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Black M", "Booba", "Stromae", "Maître Gims"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=qpLQK9ggME4", audio_start_time: 0 },        // Alors on danse
+  { type: 'qcm', q: "Qui interprète cette chanson ?", choices: ["Zaz", "Indila", "Alizée", "Yelle"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=3phbVx1Dl08", audio_start_time: 25 },               // Dernière Danse
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Hoshi", "Pomme", "Angèle", "Roméo Elvis"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=fhNgzJHh-G8", audio_start_time: 0 },             // Balance Ton Quoi
+  { type: 'qcm', q: "Quel groupe interprète ce titre ?", choices: ["Yelle", "Housse de Racket", "Christine and the Queens", "La Femme"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=G7SBcDTKlwE", audio_start_time: 0 }, // Tilted
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["IAM", "Assassin", "MC Solaar", "Oxmo Puccino"], correct: 2, youtube_url: "https://www.youtube.com/watch?v=jDEXOOhB03s", audio_start_time: 0 },        // Nouveau Western
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Vianney", "Julien Doré", "Gaëtan Roussel", "Romain Didier"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=0yBtf5sJ1Xw", audio_start_time: 30 }, // Paris-Seychelles
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Aya Nakamura", "Awa Imani", "Wejdene", "Yseult"], correct: 3, youtube_url: "https://www.youtube.com/watch?v=XrpBwj4bvEo", audio_start_time: 0 },     // Coeur (Clara Luciani)
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Vald", "Nekfeu", "Disiz", "Keny Arkana"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=6O0ANbFvmgA", audio_start_time: 30 },              // Étoiles
+  { type: 'qcm', q: "Qui chante cette chanson ?", choices: ["Grand Corps Malade", "Oxmo Puccino", "Gaël Faye", "Kery James"], correct: 0, youtube_url: "https://www.youtube.com/watch?v=bO3lLPvFnPs", audio_start_time: 0 }, // Funambule
+  { type: 'qcm', q: "Qui interprète ce titre ?", choices: ["Lomepal", "Orelsan", "Roméo Elvis", "Eddy de Pretto"], correct: 1, youtube_url: "https://www.youtube.com/watch?v=fNFq4cBCVgE", audio_start_time: 0 }, // Basique
 ];
 
 // ── Blind Test — Rap & Hip-Hop ────────────────────────────────────────────────
@@ -385,12 +400,13 @@ export const BUILTIN_PACKS: BuiltinPack[] = [
   { id: 'builtin:quiz_sport',     name: '⚽ Sport & Champions',        mode: 'quiz',       emoji: '⚽', questions: QUIZ_SPORT_CHAMPIONS },
   { id: 'builtin:quiz_science',   name: '🔬 Science & Technologie',   mode: 'quiz',       emoji: '🔬', questions: QUIZ_SCIENCE_TECHNO },
   { id: 'builtin:quiz_histoire',  name: '🏛️ Histoire & Civilisations', mode: 'quiz',       emoji: '🏛️', questions: QUIZ_HISTOIRE_CIVILISATIONS },
-  // ── 5 packs Blind Test ──
-  { id: 'builtin:bt_classiques',  name: '🎸 Blind Test Classiques',   mode: 'blind_test', emoji: '🎸', questions: BT_CLASSIQUES },
-  { id: 'builtin:bt_actuels',     name: '🎵 Blind Test Hits Actuels', mode: 'blind_test', emoji: '🎵', questions: BT_HITS_ACTUELS },
-  { id: 'builtin:bt_fr',         name: 'Fr Blind Test Chansons FR',  mode: 'blind_test', emoji: '🇫🇷', questions: BT_CHANSONS_FRANCAISES },
-  { id: 'builtin:bt_rap',         name: '🎤 Blind Test Rap & Hip-Hop', mode: 'blind_test', emoji: '🎤', questions: BT_RAP_HIPHOP },
-  { id: 'builtin:bt_2000',        name: '💿 Blind Test Années 2000',  mode: 'blind_test', emoji: '💿', questions: BT_ANNEES2000 },
+  // ── 6 packs Blind Test ──
+  { id: 'builtin:bt_classiques',  name: '🎸 Blind Test Classiques',        mode: 'blind_test', emoji: '🎸', questions: BT_CLASSIQUES },
+  { id: 'builtin:bt_actuels',     name: '🎵 Blind Test Hits Actuels',      mode: 'blind_test', emoji: '🎵', questions: BT_HITS_ACTUELS },
+  { id: 'builtin:bt_classiques_fr', name: '🥐 Chansons Françaises Classiques', mode: 'blind_test', emoji: '🥐', questions: BT_CLASSIQUES_FR },
+  { id: 'builtin:bt_fr',          name: '🇫🇷 Blind Test Chansons FR',      mode: 'blind_test', emoji: '🇫🇷', questions: BT_CHANSONS_FRANCAISES },
+  { id: 'builtin:bt_rap',         name: '🎤 Blind Test Rap & Hip-Hop',     mode: 'blind_test', emoji: '🎤', questions: BT_RAP_HIPHOP },
+  { id: 'builtin:bt_2000',        name: '💿 Blind Test Années 2000',       mode: 'blind_test', emoji: '💿', questions: BT_ANNEES2000 },
 ];
 
 export function isBuiltinPack(packId: string | null | undefined): boolean {
