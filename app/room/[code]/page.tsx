@@ -24,7 +24,6 @@ import Link from 'next/link';
 
 // Supprime les emoji en tête de chaîne (ex: "🌐 Culture Générale" → "Culture Générale")
 function stripLeadingEmoji(str: string): string {
-  // Retire les caractères non-ASCII (emoji, drapeaux…) et espaces en début de chaîne
   return str.replace(/^[^\wÀ-ɏ\s]+\s*/g, '').trim();
 }
 
@@ -84,7 +83,6 @@ function RevealCountdown({ players, correctPlayerIds, pointsEarned = {} }: {
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-lg">
-      {/* Cercle countdown */}
       <div className="flex flex-col items-center gap-1">
         <svg width="72" height="72" viewBox="0 0 64 64">
           <circle cx="32" cy="32" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
@@ -134,9 +132,12 @@ export default function RoomPage() {
   const [questionStartedAt, setQuestionStartedAt] = useState<number>(Date.now());
   // Blind test : true quand l'audio a commencé à jouer (timer synchronisé)
   const [audioStarted, setAudioStarted] = useState(false);
-  // Compte à rebours entre les questions (3-2-1)
-  const [transitionCountdown, setTransitionCountdown] = useState<number | null>(null);
-  const transitionIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Préchargement blind test : null=pas encore lancé, true=en cours, false=terminé
+  const [btPreloading, setBtPreloading] = useState<boolean | null>(null);
+  const [btReadyCount, setBtReadyCount] = useState(0);
+  const btPreloadingRef = useRef<boolean | null>(null);
+  const btReadySetRef   = useRef<Set<number>>(new Set());
+  const btTotalCountRef = useRef(0);
   // Vrai quand YouTube bloque la vidéo (embedding désactivé par le label)
   const [videoBlocked, setVideoBlocked] = useState(false);
   // Erreur si l'hôte essaie de lancer sans avoir sélectionné un pack
@@ -183,12 +184,9 @@ export default function RoomPage() {
   }, [room?.id, room?.status]);
 
   // Charger les packs Muzquiz par défaut (is_default = true) pour la salle d'attente.
-  // Ces packs sont créés par les admins et visibles par tous les joueurs.
-  // Fallback dev : si aucun pack is_default, on charge ceux du joueur connecté.
   useEffect(() => {
     if (!room || room.status !== 'waiting') return;
     const loadHostPacks = async () => {
-      // 1. Charger les packs officiels Muzquiz (is_default = true)
       const { data: defaultPacks } = await supabase
         .from('question_packs')
         .select('id, name, mode')
@@ -197,7 +195,6 @@ export default function RoomPage() {
 
       let packsToShow = defaultPacks ?? [];
 
-      // 2. Fallback dev : si aucun pack par défaut en base, on prend ceux du joueur connecté
       if (packsToShow.length === 0) {
         const muzquizOwnerId = process.env.NEXT_PUBLIC_MUZQUIZ_OWNER_ID;
         const { data: { session } } = await supabase.auth.getSession();
@@ -224,19 +221,15 @@ export default function RoomPage() {
   }, [room?.status]);
 
   // Sélectionner un pack (hôte) — met à jour pack_id ET mode en DB
-  // Préserve le mécanisme buzz si la salle est en mode buzz
   const selectPack = async (packId: string | null, packMode?: string) => {
     if (!room) return;
     const updates: any = { pack_id: packId };
     if (packId && packMode) {
       if (isBuzzMechanic(room.mode)) {
-        // Préserver le buzz — mapper le mode du pack vers l'équivalent buzz
-        // blind_test pack → buzz_blind_test, quiz/qcm pack → buzz_quiz
         updates.mode = (packMode === 'blind_test' || packMode === 'buzz_blind_test')
           ? 'buzz_blind_test'
           : 'buzz_quiz';
       } else {
-        // Pas de buzz — mapper vers le mode non-buzz équivalent
         updates.mode = (packMode === 'blind_test' || packMode === 'buzz_blind_test')
           ? 'blind_test'
           : 'quiz';
@@ -256,10 +249,8 @@ export default function RoomPage() {
     onRoomUpdate: (r) => {
       setRoom(r);
       // Réinitialiser l'état de jeu UNIQUEMENT quand la question change
-      // (pas sur is_paused, score, ou autres champs de la salle)
       if (prevQuestionRef.current !== r.current_question) {
         prevQuestionRef.current = r.current_question;
-        // Réinitialiser l'état de jeu
         setBuzz(null);
         setQcmAnswers([]);
         setQcmRevealed(false);
@@ -268,35 +259,22 @@ export default function RoomPage() {
         setAudioStarted(false);
         setVideoBlocked(false);
 
-        // Compte à rebours 3-2-1 uniquement pour les blind tests
-        // Le player YouTube se monte PENDANT le countdown pour précharger la musique.
-        // Quand le countdown finit → shouldPlay=true → lecture synchronisée sur tous les clients.
-        if (transitionIntervalRef.current) clearInterval(transitionIntervalRef.current);
         const roomMode = r.mode;
         if (isBlindTestMode(roomMode)) {
-          setTransitionCountdown(3);
-          let count = 3;
-          transitionIntervalRef.current = setInterval(() => {
-            count--;
-            if (count <= 0) {
-              clearInterval(transitionIntervalRef.current!);
-              transitionIntervalRef.current = null;
-              setTransitionCountdown(null);
-              // Le timer démarre dès la fin du countdown (même si vidéo bloquée)
-              const now = Date.now();
-              setAudioStarted(true);
-              setQuestionStartedAt(now);
-              // L'hôte écrit le timestamp pour synchroniser les autres clients
-              if (myPlayerRef.current?.is_host) {
-                supabase.from('rooms').update({ question_started_at: now }).eq('id', r.id);
-              }
-            } else {
-              setTransitionCountdown(count);
+          // Tous les players sont déjà montés (clés stables bt-player-N).
+          // Si le préchargement est terminé → on peut lancer la musique tout de suite.
+          // Sinon handleBTPlayerReady s'en chargera quand le dernier player sera prêt.
+          if (btPreloadingRef.current === false) {
+            const now = Date.now();
+            setAudioStarted(true);
+            setQuestionStartedAt(now);
+            if (myPlayerRef.current?.is_host) {
+              supabase.from('rooms').update({ question_started_at: now }).eq('id', r.id);
             }
-          }, 1000);
+          }
+          // else: handleBTPlayerReady appellera setAudioStarted(true) quand prêt
         } else {
-          // Pas de son → pas de countdown, on lance le timer immédiatement
-          setTransitionCountdown(null);
+          // Pas de son → timer immédiat
           setQuestionStartedAt(Date.now());
           setAudioStarted(true);
         }
@@ -304,6 +282,8 @@ export default function RoomPage() {
         // Client rejoint en cours de question → synchroniser depuis Supabase
         setQuestionStartedAt(r.question_started_at);
         setAudioStarted(true);
+        btPreloadingRef.current = false;
+        setBtPreloading(false);
       }
       if (r.status === 'finished') router.push(`/room/${code}/results`);
     },
@@ -316,12 +296,11 @@ export default function RoomPage() {
     onNextQuestion: () => { setBuzz(null); setQcmAnswers([]); },
     onQCMReveal: (earned) => {
       setQcmRevealed(true);
-      // Synchroniser les points pour les clients non-hôtes
       setEarnedThisRound(earned);
     },
   });
 
-  // Afficher le classement 5s après la révélation (tous les clients, y compris l'hôte)
+  // Afficher le classement 5s après la révélation
   useEffect(() => {
     if (!qcmRevealed) return;
     const t = setTimeout(() => setShowLeaderboard(true), 5000);
@@ -331,11 +310,8 @@ export default function RoomPage() {
   // Auto-révéler QCM quand tous les joueurs présents ont répondu
   useEffect(() => {
     if (!room || isBuzzMechanic(room.mode) || !myPlayer?.is_host || qcmRevealed) return;
-    // En mode écran public, l'hôte ne joue pas — on l'exclut du décompte
     const allPlayers = room.public_screen ? players.filter(p => !p.is_host) : players;
-    // On exclut les joueurs marqués absents
     const activePlayers = allPlayers.filter(p => !p.is_absent);
-    // Révéler si : tous les joueurs présents ont répondu, OU si tout le monde est absent
     if (allPlayers.length > 0 && (activePlayers.length === 0 || qcmAnswers.length >= activePlayers.length)) {
       revealQCMAndNext();
     }
@@ -349,15 +325,72 @@ export default function RoomPage() {
     }
   }, [qcmAnswers, room, buzz, myPlayer, qcmRevealed]);
 
-  // Garder les refs à jour pour le cleanup
+  // Garder les refs à jour
   useEffect(() => { roomRef.current = room; }, [room]);
   useEffect(() => { myPlayerRef.current = myPlayer; }, [myPlayer]);
+  // Sync btPreloadingRef avec l'état React
+  useEffect(() => { btPreloadingRef.current = btPreloading; }, [btPreloading]);
 
-  // Nettoyer l'intervalle de transition au démontage du composant
+  // Réinitialiser le préchargement quand on revient en salle d'attente (entre deux parties)
   useEffect(() => {
-    return () => {
-      if (transitionIntervalRef.current) clearInterval(transitionIntervalRef.current);
-    };
+    if (room?.status === 'waiting') {
+      setBtPreloading(null);
+      setBtReadyCount(0);
+      btPreloadingRef.current = null;
+      btReadySetRef.current = new Set();
+      btTotalCountRef.current = 0;
+    }
+  }, [room?.status]);
+
+  // Lancer le préchargement dès que la partie démarre en mode blind test
+  useEffect(() => {
+    if (room?.status !== 'playing' || !isBlindTestMode(room.mode)) return;
+    if (btPreloadingRef.current !== null) return; // déjà lancé ou terminé
+    const total = questions.filter(q => !!(q as any).youtube_url).length;
+    if (total === 0) {
+      // Aucune vidéo → démarrer le timer immédiatement
+      const now = Date.now();
+      setAudioStarted(true);
+      setQuestionStartedAt(now);
+      return;
+    }
+    btTotalCountRef.current = total;
+    btReadySetRef.current = new Set();
+    setBtReadyCount(0);
+    btPreloadingRef.current = true;
+    setBtPreloading(true);
+    // Fallback 30s si certains players ne répondent jamais (vidéos bloquées, réseau lent)
+    const fallback = setTimeout(() => {
+      if (btPreloadingRef.current !== true) return;
+      btPreloadingRef.current = false;
+      setBtPreloading(false);
+      const now = Date.now();
+      setAudioStarted(true);
+      setQuestionStartedAt(now);
+      if (myPlayerRef.current?.is_host && roomRef.current) {
+        supabase.from('rooms').update({ question_started_at: now }).eq('id', roomRef.current.id);
+      }
+    }, 30000);
+    return () => clearTimeout(fallback);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room?.status, room?.mode]);
+
+  // Appelé quand un player YouTube est prêt (ou en erreur → compte quand même pour ne pas bloquer)
+  const handleBTPlayerReady = useCallback((idx: number) => {
+    if (btPreloadingRef.current !== true) return;
+    btReadySetRef.current.add(idx);
+    const readyCount = btReadySetRef.current.size;
+    setBtReadyCount(readyCount);
+    if (readyCount >= btTotalCountRef.current) {
+      btPreloadingRef.current = false;
+      setBtPreloading(false);
+      const now = Date.now();
+      setAudioStarted(true);
+      setQuestionStartedAt(now);
+      if (myPlayerRef.current?.is_host && roomRef.current) {
+        supabase.from('rooms').update({ question_started_at: now }).eq('id', roomRef.current.id);
+      }
+    }
   }, []);
 
   // Auto-fermeture si la salle d'attente est vide (seulement l'hôte) pendant 10s
@@ -372,13 +405,10 @@ export default function RoomPage() {
   }, [players, room?.status, myPlayer?.is_host]);
 
   // Auto-fermeture : si l'hôte quitte la page (navigation) → fermer la salle
-  // Mais PAS sur F5/refresh — on distingue grâce à sessionStorage
   useEffect(() => {
-    // Nettoyer le flag de rechargement au montage (on vient de recharger → salle toujours ouverte)
     sessionStorage.removeItem('muz_reloading');
 
     const handleBeforeUnload = () => {
-      // F5 ou fermeture d'onglet : marquer pour que le cleanup ne ferme pas la salle
       sessionStorage.setItem('muz_reloading', '1');
     };
 
@@ -389,17 +419,14 @@ export default function RoomPage() {
 
       const isReloading = sessionStorage.getItem('muz_reloading') === '1';
       if (!isReloading) {
-        // Vraie navigation côté client (Link, router.push) → fermer la salle
         const r = roomRef.current;
         const p = myPlayerRef.current;
         if (p?.is_host && r && r.status !== 'finished') {
           supabase.from('rooms').update({ status: 'finished' }).eq('id', r.id);
         }
       }
-      // Sur F5/fermeture : la salle reste ouverte, l'hôte peut revenir
-      // Les salles orphelines sont nettoyées depuis la page profil
     };
-  }, []); // uniquement au démontage
+  }, []);
 
   // --- Chargement ---
   if (loading) return (
@@ -421,7 +448,6 @@ export default function RoomPage() {
 
   if (!room || !myPlayer) return null;
 
-  // Score toujours à jour via realtime (players), is_absent via myPlayer (mis à jour immédiatement)
   const liveMyPlayer = {
     ...(players.find(p => p.id === myPlayer.id) ?? myPlayer),
     is_absent: myPlayer?.is_absent,
@@ -430,13 +456,10 @@ export default function RoomPage() {
   const currentQForPublic = questions[room.current_question] ?? null;
   const correctPlayerIdsForPublic = qcmAnswers.filter(a => a.is_correct).map(a => a.player_id);
 
-  // earnedThisRound est calculé une seule fois dans useRoom au moment de la révélation
-
   // --- MODE ÉCRAN PUBLIC ---
   if (room.public_screen) {
     const isHostUser = myPlayer.is_host || myPlayer.user_id === room.host_id;
     if (!isHostUser) {
-      // Non-hôte en attente → écran téléphone d'attente (pas l'écran public TV)
       if (room.status === 'waiting') {
         return (
           <div
@@ -459,23 +482,6 @@ export default function RoomPage() {
       }
       // Partie en cours → contrôleur téléphone
       return (
-        <>
-          {/* Compte à rebours entre les questions */}
-          {transitionCountdown !== null && (
-            <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-5 muz-fade-in"
-              style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-              <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
-                Question {(room?.current_question ?? 0) + 1}
-              </p>
-              <div className="text-9xl font-black tabular-nums"
-                style={{ color: '#FF00AA', textShadow: '0 0 60px rgba(255,0,170,0.6)', lineHeight: 1 }}>
-                {transitionCountdown}
-              </div>
-              <p className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
-                Préparez-vous…
-              </p>
-            </div>
-          )}
         <PhoneControllerView
           room={room}
           myPlayer={liveMyPlayer}
@@ -490,27 +496,9 @@ export default function RoomPage() {
           questionStartedAt={questionStartedAt}
           toggleAbsent={toggleAbsent}
         />
-      </>
       );
     }
     return (
-      <>
-        {/* Compte à rebours entre les questions — écran hôte public */}
-        {transitionCountdown !== null && (
-          <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-5 muz-fade-in"
-            style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-            <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
-              Question {(room?.current_question ?? 0) + 1}
-            </p>
-            <div className="text-9xl font-black tabular-nums"
-              style={{ color: '#FF00AA', textShadow: '0 0 60px rgba(255,0,170,0.6)', lineHeight: 1 }}>
-              {transitionCountdown}
-            </div>
-            <p className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
-              Préparez-vous…
-            </p>
-          </div>
-        )}
       <PublicScreenView
         room={room}
         players={players}
@@ -530,9 +518,8 @@ export default function RoomPage() {
         resumeGame={resumeGame}
         endGame={endGame}
         hostInviteCode={hostInviteCode}
-        transitionActive={transitionCountdown !== null}
+        transitionActive={false}
       />
-      </>
     );
   }
 
@@ -559,12 +546,10 @@ export default function RoomPage() {
             <span className="font-bold" style={{ color: '#8B5CF6' }}>{modeLabel}</span>
           </div>
 
-          {/* QR code — permanent si l'hôte est connecté, éphémère sinon */}
           <div className="flex flex-col items-center gap-4">
             {hostInviteCode ? (
               <>
                 <InviteQRCode inviteCode={hostInviteCode} size={160} variant="game" />
-                {/* Code permanent */}
                 <div className="flex items-center gap-2">
                   <div className="px-5 py-3 rounded-2xl"
                     style={{ background: 'rgba(255,0,170,0.06)', border: '1.5px solid rgba(255,0,170,0.25)' }}>
@@ -650,7 +635,7 @@ export default function RoomPage() {
         {myPlayer.is_host ? (
           <div className="flex flex-col items-center gap-3 w-full max-w-md">
 
-            {/* Sélection du pack de questions — dropdown avec recherche */}
+            {/* Sélection du pack de questions */}
             {(
               <div className="muz-card w-full p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -661,7 +646,6 @@ export default function RoomPage() {
                     Gérer →
                   </Link>
                 </div>
-                {/* Bouton déclencheur */}
                 <button
                   onClick={() => { setPackDropdownOpen(o => !o); setPackSearch(''); }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left"
@@ -680,11 +664,9 @@ export default function RoomPage() {
                     {packDropdownOpen ? '▲' : '▼'}
                   </span>
                 </button>
-                {/* Dropdown */}
                 {packDropdownOpen && (
                   <div className="mt-2 rounded-xl overflow-hidden"
                     style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(13,27,62,0.98)' }}>
-                    {/* Recherche */}
                     {hostPacks.length > 4 && (
                       <div className="p-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
                         <input
@@ -697,10 +679,7 @@ export default function RoomPage() {
                         />
                       </div>
                     )}
-                    {/* Options */}
                     <div className="max-h-64 overflow-y-auto">
-
-                      {/* ── Packs Muzquiz — filtrés par mode (quiz↔quiz, blind_test↔blind_test) ── */}
                       {(() => {
                         const roomIsBlind = isBlindTestMode(room.mode as any);
                         const filtered = hostPacks
@@ -738,13 +717,11 @@ export default function RoomPage() {
                           </>
                         );
                       })()}
-
                     </div>
                   </div>
                 )}
               </div>
             )}
-
 
             {noPackError && (
               <div className="w-full px-4 py-2.5 rounded-xl text-sm font-bold text-center"
@@ -828,34 +805,65 @@ export default function RoomPage() {
   // --- Interface de jeu ---
   return (
     <>
-      {/* Compte à rebours entre les questions — écran joueur */}
-      {transitionCountdown !== null && (
-        <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-5 muz-fade-in"
+      {/* Overlay de préchargement blind test */}
+      {btPreloading === true && isBlindTestMode(room.mode) && (
+        <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-8 muz-fade-in"
           style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
-          <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(240,244,255,0.4)' }}>
-            Question {(room?.current_question ?? 0) + 1}
-          </p>
-          <div className="text-9xl font-black tabular-nums"
-            style={{ color: '#FF00AA', textShadow: '0 0 60px rgba(255,0,170,0.6)', lineHeight: 1 }}>
-            {transitionCountdown}
+          <MuzquizLogo width={80} showText={false} animate />
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 rounded-full border-4 animate-spin"
+              style={{ borderColor: '#FF00AA', borderTopColor: 'transparent' }} />
+            <p className="font-black text-2xl" style={{ color: '#F0F4FF' }}>
+              Chargement des musiques…
+            </p>
+            <p className="text-sm font-bold tabular-nums" style={{ color: 'rgba(240,244,255,0.45)' }}>
+              {btReadyCount} / {btTotalCountRef.current} prêtes
+            </p>
           </div>
-          <p className="text-base font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
-            Préparez-vous…
-          </p>
         </div>
       )}
+
+      {/* Players YouTube — tous montés simultanément avec clés stables.
+          Inactifs : position fixed hors-écran (préservé en mémoire par le browser).
+          Actif : joue la musique. Changement de question → shouldPlay bascule. */}
+      {isBlindTestMode(room.mode) && questions.map((q, idx) => {
+        const url = (q as any).youtube_url;
+        if (!url) return null;
+        const isActive = idx === room.current_question && btPreloading === false;
+        return (
+          <div
+            key={`bt-player-${idx}`}
+            style={{
+              position: 'fixed', top: '-9999px', left: '-9999px',
+              width: 1, height: 1, overflow: 'hidden', pointerEvents: 'none',
+            }}
+          >
+            <YouTubePlayer
+              url={url}
+              autoPlay={false}
+              shouldPlay={isActive}
+              onPlayerReady={() => handleBTPlayerReady(idx)}
+              startTime={(q as any).audio_start_time ?? 0}
+              onVideoError={() => {
+                // Une vidéo bloquée compte quand même comme "prête" pour ne pas bloquer le préchargement
+                handleBTPlayerReady(idx);
+                if (isActive) setVideoBlocked(true);
+              }}
+            />
+          </div>
+        );
+      })}
+
     <div className="flex flex-col min-h-screen" style={{ background: '#0D1B3E' }}>
 
       {/* Confettis lors de la révélation */}
       <Confetti active={qcmRevealed} />
 
-      {/* Overlay PAUSE : fond flouté + modal centré */}
+      {/* Overlay PAUSE */}
       {room.is_paused && (
         <>
-          {/* Flou sur tout le contenu derrière */}
           <div className="fixed inset-0 z-30 pointer-events-none"
             style={{ backdropFilter: 'blur(6px)', background: 'rgba(13,27,62,0.55)' }} />
-          {/* Modal pause */}
           <div className="fixed inset-0 z-40 flex flex-col items-center justify-center">
             <div className="px-10 py-6 rounded-2xl text-center muz-pop"
               style={{ background: 'rgba(13,27,62,0.97)', border: '2px solid rgba(245,158,11,0.5)', boxShadow: '0 0 40px rgba(245,158,11,0.2)' }}>
@@ -877,9 +885,7 @@ export default function RoomPage() {
         </>
       )}
 
-      {/* (menu flottant supprimé — contrôles dans le header) */}
-
-      {/* Classement inter-question — top 3 + mon rang seulement */}
+      {/* Classement inter-question */}
       <InterLeaderboard
         players={players}
         correctPlayerIds={correctPlayerIds}
@@ -902,7 +908,6 @@ export default function RoomPage() {
             running={
               room.is_paused ? false
               : qcmRevealed  ? false
-              // Blind test : le timer ne part qu'une fois la musique lancée (audioStarted)
               : isBlindTestMode(room.mode) ? (audioStarted && (isBuzzMechanic(room.mode) ? !buzz : true))
               : isBuzzMechanic(room.mode) ? !buzz
               : true
@@ -916,7 +921,6 @@ export default function RoomPage() {
           </span>
         </div>
 
-        {/* Bouton quitter pour les invités */}
         {!myPlayer.is_host && (
           <div className="flex px-4 pb-2">
             <button
@@ -928,7 +932,6 @@ export default function RoomPage() {
           </div>
         )}
 
-        {/* Barre de contrôles hôte — même style que PublicScreenView */}
         {myPlayer.is_host && (
           <div className="flex items-center gap-2 px-4 pb-2">
             {room.is_paused ? (
@@ -960,23 +963,10 @@ export default function RoomPage() {
           {isBuzzMechanic(room.mode) ? 'Buzz Quiz' : 'Quiz Blind Test'} — Question {room.current_question + 1}
         </p>
 
-        {/* Lecteur audio pour les blind tests — monté DÈS le début du countdown pour précharger.
-            shouldPlay passe à true quand le countdown finit → lecture synchronisée sur tous les clients. */}
-        {(currentQ as any).youtube_url && isBlindTestMode(room.mode) && (
-          <div className="w-full max-w-lg">
-            <YouTubePlayer
-              url={(currentQ as any).youtube_url}
-              autoPlay={false}
-              shouldPlay={transitionCountdown === null}
-              startTime={(currentQ as any).audio_start_time ?? 0}
-              onVideoError={() => setVideoBlocked(true)}
-            />
-            {/* Vidéo bloquée : info simple, le timer part quand même */}
-            {videoBlocked && transitionCountdown === null && (
-              <div className="mt-2 text-center text-xs font-bold" style={{ color: 'rgba(245,158,11,0.7)' }}>
-                ⚠ Vidéo bloquée par YouTube — remplace-la par une version non-VEVO
-              </div>
-            )}
+        {/* Notice vidéo bloquée */}
+        {videoBlocked && btPreloading === false && isBlindTestMode(room.mode) && (
+          <div className="w-full max-w-lg text-center text-xs font-bold" style={{ color: 'rgba(245,158,11,0.7)' }}>
+            ⚠ Vidéo bloquée par YouTube — remplace-la par une version non-VEVO
           </div>
         )}
 
@@ -1001,7 +991,6 @@ export default function RoomPage() {
         {/* ===== MODE BUZZ QUIZ ===== */}
         {isBuzzMechanic(room.mode) && (
           <>
-            {/* Phase 1 : personne n'a buzzé */}
             {!buzz && !qcmRevealed && (
               <BuzzerButton
                 onBuzz={pressBuzzer}
@@ -1011,10 +1000,8 @@ export default function RoomPage() {
               />
             )}
 
-            {/* Phase 2 : quelqu'un a buzzé, en attente de réponse */}
             {buzz && !qcmRevealed && (
               <>
-                {/* Bannière buzz */}
                 <div className="px-5 py-2 rounded-full font-bold text-sm muz-pop"
                   style={{
                     background: buzzedByMe ? 'rgba(255,0,170,0.2)' : 'rgba(0,229,209,0.1)',
@@ -1024,7 +1011,6 @@ export default function RoomPage() {
                   {buzzedByMe ? 'À toi de répondre !' : `${buzzedPlayer?.nickname ?? '???'} a buzzé !`}
                 </div>
 
-                {/* Choix QCM — actifs pour le buzzé, grisés pour les autres */}
                 <QCMChoices
                   choices={(currentQ as any).choices}
                   selectedIndex={myQCMAnswer?.answer_index ?? null}
@@ -1044,7 +1030,6 @@ export default function RoomPage() {
               </>
             )}
 
-            {/* Phase 3 : révélation */}
             {qcmRevealed && (
               <>
                 <QCMChoices
