@@ -660,15 +660,17 @@ export default function Home() {
           }}>
           Forum
         </Link>
-        <Link href="/weekly-quiz"
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-3 rounded-2xl font-black text-xs sm:text-sm transition-all hover:scale-[1.03] hover:opacity-90"
-          style={{
-            background: 'linear-gradient(135deg, rgba(0,229,209,0.1) 0%, rgba(139,92,246,0.08) 100%)',
-            border: '1.5px solid rgba(0,229,209,0.25)',
-            color: '#00E5D1',
-          }}>
-          Quiz semaine
-        </Link>
+        {(userTier === 'essentiel' || userTier === 'pro' || userTier === 'expert') && (
+          <Link href="/weekly-quiz"
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-3 rounded-2xl font-black text-xs sm:text-sm transition-all hover:scale-[1.03] hover:opacity-90"
+            style={{
+              background: 'linear-gradient(135deg, rgba(0,229,209,0.1) 0%, rgba(139,92,246,0.08) 100%)',
+              border: '1.5px solid rgba(0,229,209,0.25)',
+              color: '#00E5D1',
+            }}>
+            Quiz semaine
+          </Link>
+        )}
       </div>
 
       {/* Footer */}

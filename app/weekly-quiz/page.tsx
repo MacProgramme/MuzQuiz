@@ -113,6 +113,8 @@ export default function WeeklyQuizPage() {
       const { data: prof } = await supabase.from('profiles').select('subscription_tier').eq('id', session.user.id).single();
       const userTier = normalizeTier(prof?.subscription_tier);
       setTier(userTier);
+      // Seuls Essentiel, Pro et Expert peuvent créer/gérer des quiz de la semaine
+      if (userTier === 'decouverte') { router.push('/pricing?from=weekly-quiz'); return; }
       await loadData(session.user.id, userTier);
     };
     init();

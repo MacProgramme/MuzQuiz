@@ -39,6 +39,15 @@ interface SharedPack {
   created_at: string;
 }
 
+interface BlogPost {
+  id: string;
+  title: string;
+  content: string;
+  image_url: string | null;
+  created_at: string;
+  author: { nickname: string; avatar_color: string };
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeAgo(date: string) {
@@ -67,8 +76,8 @@ const MODE_COLOR: Record<string, string> = {
 export default function ForumPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab') === 'packs' ? 'packs' : 'forum';
-  const [tab, setTab] = useState<'forum' | 'packs'>(initialTab);
+  const initialTab = searchParams.get('tab') === 'packs' ? 'packs' : searchParams.get('tab') === 'blog' ? 'blog' : 'forum';
+  const [tab, setTab] = useState<'forum' | 'packs' | 'blog'>(initialTab as 'forum' | 'packs' | 'blog');
 
   // Auth
   const [userId, setUserId] = useState<string | null>(null);
@@ -87,6 +96,16 @@ export default function ForumPage() {
   const [postSaving, setPostSaving] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [replySaving, setReplySaving] = useState(false);
+
+  // ── Blog state ─────────────────────────────────────────────────────────────
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [blogLoading, setBlogLoading] = useState(true);
+  const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
+  const [showNewBlog, setShowNewBlog] = useState(false);
+  const [blogTitle, setBlogTitle] = useState('');
+  const [blogContent, setBlogContent] = useState('');
+  const [blogImageUrl, setBlogImageUrl] = useState('');
+  const [blogSaving, setBlogSaving] = useState(false);
 
   // ── Packs state ────────────────────────────────────────────────────────────
   const [packs, setPacks] = useState<SharedPack[]>([]);
@@ -116,6 +135,7 @@ export default function ForumPage() {
     init();
     loadPosts();
     loadPacks();
+    loadBlog();
   }, []);
 
   // ── Forum actions ──────────────────────────────────────────────────────────
@@ -195,6 +215,50 @@ export default function ForumPage() {
   const deleteReply = async (replyId: string) => {
     await supabase.from('forum_replies').delete().eq('id', replyId);
     if (selectedPost) await openPost(selectedPost);
+  };
+
+  // ── Blog actions ───────────────────────────────────────────────────────────
+
+  const loadBlog = async () => {
+    setBlogLoading(true);
+    const { data } = await supabase
+      .from('blog_posts')
+      .select(`id, title, content, image_url, created_at, profiles(nickname, avatar_color)`)
+      .order('created_at', { ascending: false });
+    if (data) {
+      setBlogPosts(data.map((p: any) => ({
+        ...p,
+        author: {
+          nickname: p.profiles?.nickname ?? 'Anonyme',
+          avatar_color: p.profiles?.avatar_color ?? '#8B5CF6',
+        },
+      })));
+    }
+    setBlogLoading(false);
+  };
+
+  const createBlogPost = async () => {
+    if (!blogTitle.trim() || !blogContent.trim() || !userId) return;
+    setBlogSaving(true);
+    const { error } = await supabase.from('blog_posts').insert({
+      author_id: userId,
+      title: blogTitle.trim(),
+      content: blogContent.trim(),
+      image_url: blogImageUrl.trim() || null,
+    });
+    if (!error) {
+      setBlogTitle(''); setBlogContent(''); setBlogImageUrl('');
+      setShowNewBlog(false);
+      await loadBlog();
+    }
+    setBlogSaving(false);
+  };
+
+  const deleteBlogPost = async (postId: string) => {
+    if (!confirm('Supprimer cet article ?')) return;
+    await supabase.from('blog_posts').delete().eq('id', postId);
+    setSelectedBlog(null);
+    await loadBlog();
   };
 
   // ── Packs actions ──────────────────────────────────────────────────────────
@@ -289,6 +353,60 @@ export default function ForumPage() {
     p.shared_description.toLowerCase().includes(search.toLowerCase()) ||
     p.owner_nickname.toLowerCase().includes(search.toLowerCase())
   );
+
+  // ── Vue article blog ouvert ────────────────────────────────────────────────
+  if (selectedBlog) {
+    return (
+      <div className="min-h-screen muz-fade-in"
+        style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
+        <div className="flex items-center justify-between px-6 py-4"
+          style={{ borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
+          <button onClick={() => setSelectedBlog(null)}
+            className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+            style={{ background: 'rgba(0,229,209,0.08)', color: 'rgba(0,229,209,0.7)', border: '1px solid rgba(0,229,209,0.2)' }}>
+            ← Blog
+          </button>
+          <MuzquizLogo width={100} textSize="1.2rem" />
+          <div style={{ width: 80 }} />
+        </div>
+
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          {/* Image si présente */}
+          {selectedBlog.image_url && (
+            <div className="w-full rounded-2xl overflow-hidden mb-6" style={{ maxHeight: 320 }}>
+              <img src={selectedBlog.image_url} alt={selectedBlog.title}
+                className="w-full object-cover" style={{ maxHeight: 320 }} />
+            </div>
+          )}
+
+          <h1 className="text-2xl font-black leading-snug mb-3" style={{ color: '#F0F4FF' }}>
+            {selectedBlog.title}
+          </h1>
+
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-6 h-6 rounded-full flex-shrink-0"
+              style={{ background: selectedBlog.author.avatar_color }} />
+            <span className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.5)' }}>
+              {selectedBlog.author.nickname} · {timeAgo(selectedBlog.created_at)}
+            </span>
+            {userId && (
+              <button onClick={() => deleteBlogPost(selectedBlog.id)}
+                className="ml-auto text-xs px-2 py-1 rounded-lg"
+                style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.5)' }}>
+                ✕ Supprimer
+              </button>
+            )}
+          </div>
+
+          <div className="muz-card p-6">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(240,244,255,0.8)' }}>
+              {selectedBlog.content}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ── Vue sujet ouvert ───────────────────────────────────────────────────────
   if (selectedPost) {
@@ -436,7 +554,16 @@ export default function ForumPage() {
             color: tab === 'packs' ? '#8B5CF6' : 'rgba(240,244,255,0.35)',
             borderBottom: tab === 'packs' ? '2px solid #8B5CF6' : '2px solid transparent',
           }}>
-          🎴 Packs communauté
+          🎴 Packs
+        </button>
+        <button
+          onClick={() => setTab('blog')}
+          className="flex-1 py-3.5 font-black text-sm transition-all"
+          style={{
+            color: tab === 'blog' ? '#00E5D1' : 'rgba(240,244,255,0.35)',
+            borderBottom: tab === 'blog' ? '2px solid #00E5D1' : '2px solid transparent',
+          }}>
+          📝 Blog
         </button>
       </div>
 
@@ -660,6 +787,120 @@ export default function ForumPage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── ONGLET BLOG ── */}
+        {tab === 'blog' && (
+          <>
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+              <div>
+                <h1 className="text-2xl font-black" style={{ color: '#F0F4FF' }}>Blog</h1>
+                <p className="text-sm mt-0.5" style={{ color: 'rgba(240,244,255,0.4)' }}>
+                  Articles et actualités de la communauté
+                </p>
+              </div>
+              {!isAnon && userTier !== 'decouverte' && (
+                <button
+                  onClick={() => setShowNewBlog(true)}
+                  className="px-4 py-2.5 rounded-xl font-black text-sm flex-shrink-0 transition-all hover:opacity-80"
+                  style={{ background: 'rgba(0,229,209,0.1)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.3)' }}>
+                  + Écrire un article
+                </button>
+              )}
+            </div>
+
+            {showNewBlog && (
+              <div className="muz-card p-5 mb-6">
+                <h2 className="text-sm font-black uppercase tracking-widest mb-4"
+                  style={{ color: 'rgba(240,244,255,0.35)' }}>Nouvel article</h2>
+                <div className="flex flex-col gap-3">
+                  <input
+                    value={blogTitle}
+                    onChange={e => setBlogTitle(e.target.value)}
+                    placeholder="Titre de l'article"
+                    maxLength={120}
+                    className="w-full px-4 py-3 rounded-xl font-medium outline-none"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(0,229,209,0.3)', color: '#F0F4FF' }}
+                  />
+                  <input
+                    value={blogImageUrl}
+                    onChange={e => setBlogImageUrl(e.target.value)}
+                    placeholder="URL d'une image (optionnel)"
+                    className="w-full px-4 py-3 rounded-xl font-medium outline-none"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(0,229,209,0.2)', color: '#F0F4FF' }}
+                  />
+                  <textarea
+                    value={blogContent}
+                    onChange={e => setBlogContent(e.target.value)}
+                    placeholder="Contenu de l'article…"
+                    rows={8}
+                    className="w-full px-4 py-3 rounded-xl font-medium outline-none resize-none"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(0,229,209,0.3)', color: '#F0F4FF' }}
+                  />
+                  <div className="flex gap-3">
+                    <button onClick={() => setShowNewBlog(false)}
+                      className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+                      style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      Annuler
+                    </button>
+                    <button onClick={createBlogPost} disabled={blogSaving || !blogTitle.trim() || !blogContent.trim()}
+                      className="flex-1 py-2.5 rounded-xl font-black text-sm disabled:opacity-40 transition-all hover:opacity-80"
+                      style={{ background: 'rgba(0,229,209,0.15)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.4)' }}>
+                      {blogSaving ? '…' : 'Publier →'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {blogLoading ? (
+              <div className="flex justify-center py-16">
+                <div className="w-8 h-8 rounded-full border-4 border-t-transparent animate-spin"
+                  style={{ borderColor: '#00E5D1', borderTopColor: 'transparent' }} />
+              </div>
+            ) : blogPosts.length === 0 ? (
+              <div className="text-center py-16" style={{ color: 'rgba(240,244,255,0.3)' }}>
+                <p className="text-4xl mb-3">📝</p>
+                <p className="font-bold">Aucun article pour l'instant.</p>
+                {!isAnon && userTier !== 'decouverte' && (
+                  <p className="text-sm mt-1 opacity-70">Sois le premier à publier !</p>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {blogPosts.map(post => (
+                  <button key={post.id} onClick={() => setSelectedBlog(post)}
+                    className="muz-card muz-card-lift text-left w-full overflow-hidden">
+                    {post.image_url && (
+                      <div className="w-full overflow-hidden" style={{ height: 160 }}>
+                        <img src={post.image_url} alt={post.title}
+                          className="w-full object-cover h-full" />
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <p className="font-black text-base mb-1 leading-snug" style={{ color: '#F0F4FF' }}>
+                        {post.title}
+                      </p>
+                      <p className="text-xs truncate mb-3" style={{ color: 'rgba(240,244,255,0.45)' }}>
+                        {post.content}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full flex-shrink-0"
+                          style={{ background: post.author.avatar_color }} />
+                        <span className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                          {post.author.nickname}
+                        </span>
+                        <span className="text-xs" style={{ color: 'rgba(240,244,255,0.2)' }}>·</span>
+                        <span className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
+                          {timeAgo(post.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
               </div>
             )}
           </>

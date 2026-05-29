@@ -219,7 +219,21 @@ CREATE TRIGGER trg_forum_replies_count
   FOR EACH ROW EXECUTE FUNCTION update_forum_replies_count();
 
 -- ================================================================
--- 5. QUIZ DE LA SEMAINE
+-- 5. BLOG / ARTICLES
+-- ================================================================
+
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  author_id   UUID        REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  title       TEXT        NOT NULL,
+  content     TEXT        NOT NULL,
+  image_url   TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ================================================================
+-- 6. QUIZ DE LA SEMAINE
 -- ================================================================
 
 CREATE TABLE IF NOT EXISTS weekly_quizzes (
@@ -781,6 +795,25 @@ DROP POLICY IF EXISTS "forum_replies: suppression auteur" ON forum_replies;
 CREATE POLICY "forum_replies: lecture publique"    ON forum_replies FOR SELECT USING (true);
 CREATE POLICY "forum_replies: creation connecte"  ON forum_replies FOR INSERT WITH CHECK (auth.uid() = author_id AND auth.jwt()->>'is_anonymous' IS DISTINCT FROM 'true');
 CREATE POLICY "forum_replies: suppression auteur" ON forum_replies FOR DELETE USING (auth.uid() = author_id);
+
+-- ── Blog posts ────────────────────────────────────────────────
+ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "blog_posts: lecture publique"    ON blog_posts;
+DROP POLICY IF EXISTS "blog_posts: creation abonne"    ON blog_posts;
+DROP POLICY IF EXISTS "blog_posts: suppression auteur" ON blog_posts;
+DROP POLICY IF EXISTS "blog_posts: modification auteur" ON blog_posts;
+CREATE POLICY "blog_posts: lecture publique"     ON blog_posts FOR SELECT USING (true);
+CREATE POLICY "blog_posts: creation abonne"      ON blog_posts FOR INSERT WITH CHECK (
+  auth.uid() = author_id
+  AND auth.jwt()->>'is_anonymous' IS DISTINCT FROM 'true'
+  AND EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = auth.uid()
+    AND subscription_tier IN ('essentiel', 'pro', 'expert')
+  )
+);
+CREATE POLICY "blog_posts: modification auteur"  ON blog_posts FOR UPDATE USING (auth.uid() = author_id);
+CREATE POLICY "blog_posts: suppression auteur"   ON blog_posts FOR DELETE USING (auth.uid() = author_id);
 
 -- ── Quiz de la semaine ─────────────────────────────────────────
 DROP POLICY IF EXISTS "weekly_quizzes: lecture publique"    ON weekly_quizzes;
