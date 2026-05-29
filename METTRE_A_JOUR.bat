@@ -1,7 +1,8 @@
 @echo off
 echo.
 echo ========================================
-echo   MUZQUIZ - Mise a jour GitHub
+echo   MUZQUIZ - Mise a jour GitHub (dev)
+echo   muzquiz.fr NE SERA PAS mis a jour
 echo ========================================
 echo.
 
@@ -27,16 +28,15 @@ echo.
 echo [2/3] Commit...
 for /f "tokens=1-3 delims=/" %%a in ("%date%") do set DATESTR=%%c-%%b-%%a
 for /f "tokens=1-2 delims=:" %%a in ("%time%") do set TIMESTR=%%a%%b
-git commit -m "update: deploiement %DATESTR% %TIMESTR%"
+git commit -m "update: mise a jour dev %DATESTR% %TIMESTR%" 2>nul || echo Rien a commiter.
 
 echo.
-echo [3/3] Push vers GitHub...
-git push --set-upstream origin dev
+echo [3/3] Push vers GitHub (main - sauvegarde uniquement)...
+git push origin HEAD:main
 
 echo.
 echo ========================================
-echo   DONE ! Branche DEV mise a jour.
-echo   Un apercu Vercel sera genere (preview).
+echo   DONE ! Code sauvegarde sur GitHub.
 echo   muzquiz.fr N'EST PAS touche.
 echo   Pour deployer sur muzquiz.fr : DEPLOYER_PROD.bat
 echo ========================================
