@@ -1,7 +1,7 @@
 // app/forum/page.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { MuzquizLogo } from '@/components/MuzquizLogo';
@@ -73,7 +73,7 @@ const MODE_COLOR: Record<string, string> = {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export default function ForumPage() {
+function ForumPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') === 'packs' ? 'packs' : searchParams.get('tab') === 'blog' ? 'blog' : 'forum';
@@ -907,5 +907,13 @@ export default function ForumPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ForumPage() {
+  return (
+    <Suspense fallback={null}>
+      <ForumPageInner />
+    </Suspense>
   );
 }
