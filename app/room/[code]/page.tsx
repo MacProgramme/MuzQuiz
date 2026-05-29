@@ -1100,9 +1100,6 @@ export default function RoomPage() {
                 <div className="text-xs font-bold" style={{ color: 'rgba(240,244,255,0.4)' }}>
                   {answeredCount} / {players.length} joueur{players.length > 1 ? 's' : ''} ont répondu
                 </div>
-                {myQCMAnswer && audioStarted && (
-                  <RemainingTimer questionStartedAt={questionStartedAt} timerDuration={room.timer_duration} isPaused={room.is_paused} />
-                )}
               </>
             )}
 

@@ -35,8 +35,10 @@ git push --set-upstream origin dev
 
 echo.
 echo ========================================
-echo   DONE ! Vercel va se mettre a jour
-echo   automatiquement dans 1-2 minutes.
+echo   DONE ! Branche DEV mise a jour.
+echo   Un apercu Vercel sera genere (preview).
+echo   muzquiz.fr N'EST PAS touche.
+echo   Pour deployer sur muzquiz.fr : DEPLOYER_PROD.bat
 echo ========================================
 echo.
 pause
