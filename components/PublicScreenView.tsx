@@ -78,8 +78,13 @@ interface Props {
   resumeGame: () => void;
   endGame: () => void;
   hostInviteCode?: string | null;
-  /** Vrai pendant le compte à rebours entre les questions — bloque l'autoplay YouTube */
   transitionActive?: boolean;
+  /** Questions complètes pour le préchargement blind test */
+  questions?: any[];
+  /** null = pas démarré, true = en cours, false = terminé */
+  btPreloading?: boolean | null;
+  btReadyCount?: number;
+  onBTPlayerReady?: (idx: number) => void;
 }
 
 /* ---- Timer intégré pour grand écran ---- */
@@ -150,6 +155,7 @@ export function PublicScreenView({
   showLeaderboard, timerKey, totalQuestions, hostPacks, selectPack,
   startGame, revealQCMAndNext, pauseGame, resumeGame, endGame,
   hostInviteCode, transitionActive = false,
+  questions = [], btPreloading = null, btReadyCount = 0, onBTPlayerReady,
 }: Props) {
   const displayCode = hostInviteCode ?? room.code;
   // En mode écran public, l'hôte ne joue pas → exclure du classement
@@ -369,6 +375,54 @@ export function PublicScreenView({
 
   if (!currentQuestion) return null;
 
+  // ── Préchargement blind test : players offscreen montés une fois, visibles uniquement quand actifs ──
+  const btTotalCount = questions.filter((q: any) => !!q.youtube_url).length;
+  const BTPrelodPlayers = isBlindTestMode(room.mode) && questions.length > 0 ? (
+    <>
+      {/* Overlay chargement */}
+      {btPreloading === true && (
+        <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center gap-8"
+          style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
+          <MuzquizLogo width={100} showText={false} animate />
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-14 h-14 rounded-full border-4 animate-spin"
+              style={{ borderColor: '#FF00AA', borderTopColor: 'transparent' }} />
+            <p className="font-black" style={{ fontSize: '2rem', color: '#F0F4FF' }}>
+              Chargement des musiques…
+            </p>
+            <p className="text-lg font-bold tabular-nums" style={{ color: 'rgba(240,244,255,0.45)' }}>
+              {btReadyCount} / {btTotalCount} prêtes
+            </p>
+          </div>
+        </div>
+      )}
+      {/* Players offscreen pour toutes les questions */}
+      {questions.map((q: any, idx: number) => {
+        if (!q.youtube_url) return null;
+        const isActive = idx === room.current_question && btPreloading === false && !transitionActive;
+        return (
+          <div
+            key={`bt-pub-${idx}`}
+            className={isActive ? 'w-full max-w-xl mx-auto px-8 pb-2' : undefined}
+            style={isActive ? {} : {
+              position: 'fixed', top: '-9999px', left: '-9999px',
+              width: 1, height: 1, overflow: 'hidden', pointerEvents: 'none',
+            }}
+          >
+            <YouTubePlayer
+              url={q.youtube_url}
+              autoPlay={false}
+              shouldPlay={isActive}
+              onPlayerReady={() => onBTPlayerReady?.(idx)}
+              startTime={q.audio_start_time ?? 0}
+              onVideoError={() => onBTPlayerReady?.(idx)}
+            />
+          </div>
+        );
+      })}
+    </>
+  ) : null;
+
   /* ===== MODE QCM / QUIZ / BLIND TEST — EN JEU ===== */
   if (!isBuzzMechanic(room.mode)) {
     const answerCounts = currentQuestion.choices.map((_, i) =>
@@ -437,17 +491,6 @@ export function PublicScreenView({
             </button>
           </div>
         </div>
-
-        {/* Lecteur audio (blind test) — monté après le countdown */}
-        {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && !transitionActive && (
-          <div className="px-12 pb-2 max-w-xl mx-auto w-full">
-            <YouTubePlayer
-              url={(currentQuestion as any).youtube_url}
-              autoPlay
-              startTime={(currentQuestion as any).audio_start_time ?? 0}
-            />
-          </div>
-        )}
 
         {/* Image de question (QCM mode) */}
         {(currentQuestion as any).image_url && (currentQuestion as any).question_type !== 'normal' && (
@@ -520,6 +563,9 @@ export function PublicScreenView({
       <div className="min-h-screen flex flex-col"
         style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
 
+        {/* Players blind test (préchargés offscreen + visible si actif) */}
+        {BTPrelodPlayers}
+
         {/* Confettis */}
         <Confetti active={qcmRevealed} />
 
@@ -571,17 +617,6 @@ export function PublicScreenView({
             </button>
           </div>
         </div>
-
-        {/* Lecteur audio (buzz blind test) — monté après le countdown */}
-        {(currentQuestion as any).youtube_url && isBlindTestMode(room.mode) && !transitionActive && (
-          <div className="px-12 pb-2 max-w-xl mx-auto w-full">
-            <YouTubePlayer
-              url={(currentQuestion as any).youtube_url}
-              autoPlay
-              startTime={(currentQuestion as any).audio_start_time ?? 0}
-            />
-          </div>
-        )}
 
         {/* Image de question (Buzz mode) */}
         {(currentQuestion as any).image_url && (currentQuestion as any).question_type !== 'normal' && (

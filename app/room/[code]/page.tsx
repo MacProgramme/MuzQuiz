@@ -540,6 +540,10 @@ export default function RoomPage() {
         endGame={endGame}
         hostInviteCode={hostInviteCode}
         transitionActive={false}
+        questions={questions}
+        btPreloading={btPreloading}
+        btReadyCount={btReadyCount}
+        onBTPlayerReady={handleBTPlayerReady}
       />
       </>
     );
