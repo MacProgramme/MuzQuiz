@@ -141,7 +141,10 @@ function ProfilePageInner() {
 
   // Succès abonnement Stripe
   const subscriptionSuccess = searchParams.get('subscription') === 'success';
+  const stripeSessionId      = searchParams.get('session_id') ?? null;
+  const tierHint             = searchParams.get('tier') ?? null;
   const [showSuccessBanner, setShowSuccessBanner] = useState(subscriptionSuccess);
+  const [verifyingStripe, setVerifyingStripe] = useState(false);
 
   // Portail Stripe
   const [portalLoading, setPortalLoading] = useState(false);
@@ -198,6 +201,35 @@ function ProfilePageInner() {
           }
         } else {
           setProfile({ ...prof, subscription_tier: normalizeTier(prof.subscription_tier) });
+        }
+
+        // ── Fallback Stripe : si retour paiement + tier encore decouverte ──────
+        if (subscriptionSuccess && stripeSessionId && activeProf) {
+          const currentTier = normalizeTier(activeProf.subscription_tier);
+          if (currentTier === 'decouverte') {
+            // Le webhook n'a pas encore traité — vérifier directement via Stripe
+            setVerifyingStripe(true);
+            try {
+              const { data: { session: authSession } } = await supabase.auth.getSession();
+              const res = await fetch('/api/stripe-verify-session', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${authSession?.access_token}`,
+                },
+                body: JSON.stringify({ session_id: stripeSessionId, tier: tierHint }),
+              });
+              const data = await res.json();
+              if (res.ok && data.ok && data.tier) {
+                activeProf = { ...activeProf, subscription_tier: data.tier };
+                setProfile({ ...activeProf, subscription_tier: normalizeTier(data.tier) });
+              }
+            } catch (e) {
+              console.error('[profile] Erreur vérification Stripe:', e);
+            } finally {
+              setVerifyingStripe(false);
+            }
+          }
         }
 
         // invite_code — générer si absent
@@ -340,8 +372,18 @@ function ProfilePageInner() {
   return (
     <div className="min-h-screen muz-fade-in" style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 50%, #0D1B3E 100%)' }}>
 
+      {/* Vérification Stripe en cours */}
+      {verifyingStripe && (
+        <div className="flex items-center gap-3 px-5 py-3 text-sm font-bold"
+          style={{ background: 'rgba(139,92,246,0.12)', borderBottom: '1px solid rgba(139,92,246,0.3)', color: '#8B5CF6' }}>
+          <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin flex-shrink-0"
+            style={{ borderColor: '#8B5CF6', borderTopColor: 'transparent' }} />
+          <span>Activation de ton abonnement en cours…</span>
+        </div>
+      )}
+
       {/* Bannière succès abonnement */}
-      {showSuccessBanner && (
+      {showSuccessBanner && !verifyingStripe && (
         <div className="flex items-center justify-between px-5 py-3 text-sm font-bold"
           style={{ background: 'rgba(0,229,209,0.12)', borderBottom: '1px solid rgba(0,229,209,0.3)', color: '#00E5D1' }}>
           <span>🎉 Abonnement activé ! Bienvenue dans la famille Muzquiz.</span>

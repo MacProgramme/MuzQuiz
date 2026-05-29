@@ -38,6 +38,12 @@ export async function POST(req: NextRequest) {
   const priceId = PRICE_IDS[tier];
   if (!priceId) return NextResponse.json({ error: 'Plan invalide' }, { status: 400 });
 
+  // Validation des variables d'environnement Stripe
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.error('[checkout] STRIPE_SECRET_KEY manquant');
+    return NextResponse.json({ error: 'Stripe non configuré (clé manquante)' }, { status: 500 });
+  }
+
   // ── Récupérer le profil (customer Stripe + réduction éventuelle) ──────────
   const adminClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -103,7 +109,7 @@ export async function POST(req: NextRequest) {
     payment_method_types: ['card'],
     line_items:           [{ price: priceId, quantity: 1 }],
     mode:                 'subscription',
-    success_url:          `${appUrl}/profile?subscription=success&tier=${tier}`,
+    success_url:          `${appUrl}/profile?subscription=success&tier=${tier}&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url:           `${appUrl}/pricing`,
     locale:               'fr',
     billing_address_collection: 'auto',
