@@ -575,7 +575,7 @@ function ProfilePageInner() {
                 )}
 
                 {/* Lien communauté */}
-                <Link href="/community"
+                <Link href="/forum?tab=packs"
                   className="flex items-center justify-between px-4 py-3 rounded-xl muz-card-lift"
                   style={{ background: 'rgba(0,229,209,0.07)', border: '1px solid rgba(0,229,209,0.2)' }}>
                   <div className="flex items-center gap-2">
