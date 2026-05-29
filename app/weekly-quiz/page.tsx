@@ -287,14 +287,15 @@ export default function WeeklyQuizPage() {
                       disabled={!canAssignThisDay && !slot?.pack_id}
                       className="w-full px-3 py-2 rounded-xl text-sm font-bold outline-none"
                       style={{
-                        background: 'rgba(255,255,255,0.06)',
+                        background: '#112247',
                         border: `1px solid ${hasPackToday ? 'rgba(139,92,246,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                        color: hasPackToday ? '#F0F4FF' : 'rgba(240,244,255,0.35)',
+                        color: hasPackToday ? '#F0F4FF' : 'rgba(240,244,255,0.5)',
                         cursor: !canAssignThisDay && !slot?.pack_id ? 'not-allowed' : 'pointer',
+                        colorScheme: 'dark',
                       }}>
-                      <option value="">— Aucun pack —</option>
+                      <option value="" style={{ background: '#112247', color: 'rgba(240,244,255,0.5)' }}>— Aucun pack —</option>
                       {packs.map(p => (
-                        <option key={p.id} value={p.id}>
+                        <option key={p.id} value={p.id} style={{ background: '#112247', color: '#F0F4FF' }}>
                           {p.name} ({MODE_LABEL[p.mode] ?? p.mode} · {p.question_count}q)
                         </option>
                       ))}
