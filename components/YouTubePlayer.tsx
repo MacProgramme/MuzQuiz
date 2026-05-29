@@ -62,7 +62,12 @@ interface Props {
   onPlay?: () => void;
   /** Appelé quand YouTube bloque la vidéo (embedding désactivé, vidéo supprimée…) */
   onVideoError?: () => void;
-  /** Appelé quand le player est prêt (préchargement terminé) */
+  /**
+   * Appelé quand le player a RÉELLEMENT bufférisé la vidéo à startTime.
+   * En mode preload (autoPlay=false + onPlayerReady fourni), le player joue
+   * la vidéo en mute pour remplir le buffer, puis se met en pause.
+   * Ainsi, quand shouldPlay passe à true, la lecture démarre instantanément.
+   */
   onPlayerReady?: () => void;
   /** Timestamp (secondes) où démarrer. 0 = début. */
   startTime?: number;
@@ -73,25 +78,57 @@ type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 // ── Composant ─────────────────────────────────────────────────────────────────
 export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, onPlayerReady, startTime = 0 }: Props) {
   const [status, setStatus] = useState<Status>('idle');
-  // Incrémenté pour forcer la recréation du player (ex : retry après erreur)
   const [retryCount, setRetryCount]     = useState(0);
-  const playerRef    = useRef<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const readyRef     = useRef(false);
-  const pendingPlay  = useRef(false);
-  const mountedRef   = useRef(true);
+  const playerRef         = useRef<any>(null);
+  const containerRef      = useRef<HTMLDivElement>(null);
+  const readyRef          = useRef(false);
+  const pendingPlay       = useRef(false);
+  const mountedRef        = useRef(true);
+
+  // ── Preload mode refs ────────────────────────────────────────────────────────
+  // isPreloadModeRef : true quand on bufférise en mute avant de signaler prêt
+  const isPreloadModeRef  = useRef(false);
+  // seenBufferingRef : true dès qu'on a vu un état BUFFERING (3) après le seekTo,
+  //   ce qui garantit que le prochain état PLAYING (1) est bien au bon timestamp
+  const seenBufferingRef  = useRef(false);
+  // Fallback : si l'état PLAYING ne vient jamais (réseau lent), on signale prêt au bout de 8s
+  const preloadFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const videoId = extractYoutubeId(url);
 
-  // ── Créer le player quand l'URL ou retryCount change ─────────────────────
+  // ── Signaler le préchargement terminé ────────────────────────────────────────
+  const signalPreloadDone = useCallback(() => {
+    if (!isPreloadModeRef.current) return;
+    isPreloadModeRef.current = false;
+    if (preloadFallbackRef.current) {
+      clearTimeout(preloadFallbackRef.current);
+      preloadFallbackRef.current = null;
+    }
+    // Remettre en pause, couper le mute, puis signaler
+    try { playerRef.current?.pauseVideo?.(); } catch {}
+    try { playerRef.current?.unMute?.(); } catch {}
+    onPlayerReady?.();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Créer le player quand l'URL ou retryCount change ─────────────────────────
   useEffect(() => {
     mountedRef.current = true;
     if (!videoId) return;
 
+    // Annuler tout fallback preload en cours
+    if (preloadFallbackRef.current) { clearTimeout(preloadFallbackRef.current); preloadFallbackRef.current = null; }
+
     try { playerRef.current?.destroy?.(); } catch {}
-    playerRef.current = null;
-    readyRef.current  = false;
+    playerRef.current   = null;
+    readyRef.current    = false;
     pendingPlay.current = autoPlay;
+
+    // Mode preload : onPlayerReady fourni + pas d'autoPlay demandé
+    const isPreloadMode = !autoPlay && !!onPlayerReady;
+    isPreloadModeRef.current = isPreloadMode;
+    seenBufferingRef.current = false;
+
     if (containerRef.current) containerRef.current.innerHTML = '';
     setStatus(autoPlay ? 'loading' : 'idle');
 
@@ -106,9 +143,10 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
         width: '100%',
         height: '100%',
         playerVars: {
-          // autoplay: 1 autorisé par le navigateur car lancé dans le contexte
-          // d'un clic utilisateur récent (bouton "Question suivante").
-          autoplay: autoPlay ? 1 : 0,
+          // En mode preload : autoplay:1 + mute:1 pour déclencher la bufférisation
+          // réelle à startTime sans que l'utilisateur n'entende rien.
+          autoplay: (autoPlay || isPreloadMode) ? 1 : 0,
+          mute:     isPreloadMode ? 1 : 0,
           controls: 1,
           rel: 0,
           playsinline: 1,
@@ -120,28 +158,63 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
           onReady: () => {
             if (!mountedRef.current) return;
             readyRef.current = true;
+
             if (startTime > 0) {
               playerRef.current?.seekTo?.(startTime, true);
             }
-            if (pendingPlay.current) {
-              pendingPlay.current = false;
-              playerRef.current?.playVideo?.();
+
+            if (isPreloadModeRef.current) {
+              // Mode preload : la vidéo tourne déjà en mute (autoplay:1).
+              // On a demandé un seekTo → on attend l'état BUFFERING puis PLAYING
+              // dans onStateChange pour savoir que le buffer est vraiment prêt.
+              // Si startTime=0, on n'attend pas le BUFFERING (vidéo déjà en tête).
+              if (startTime === 0) seenBufferingRef.current = true;
+
+              // Fallback de sécurité : 8 secondes max
+              preloadFallbackRef.current = setTimeout(() => {
+                if (!mountedRef.current) return;
+                signalPreloadDone();
+              }, 8000);
             } else {
-              // S'assurer que le player est bien en pause (pas d'autoplay implicite)
-              playerRef.current?.pauseVideo?.();
+              // Mode normal (autoPlay ou non) : comportement classique
+              if (pendingPlay.current) {
+                pendingPlay.current = false;
+                // autoplay:1 a déjà lancé la lecture
+              } else {
+                playerRef.current?.pauseVideo?.();
+              }
+              onPlayerReady?.();
             }
-            onPlayerReady?.();
           },
+
           onStateChange: (e: any) => {
             if (!mountedRef.current) return;
             const s: number = e.data;
+
+            // ── Logique de preload ──────────────────────────────────────────
+            if (isPreloadModeRef.current) {
+              if (s === 3) {
+                // BUFFERING : la vidéo est en train de charger (après seekTo ou démarrage)
+                seenBufferingRef.current = true;
+              } else if (s === 1 && seenBufferingRef.current) {
+                // PLAYING après un buffering : le buffer est là, on peut mettre en pause
+                signalPreloadDone();
+              }
+              // On ne met pas à jour le status UI pendant le preload
+              return;
+            }
+
+            // ── Logique normale ─────────────────────────────────────────────
             if (s === 1) { setStatus('playing'); onPlay?.(); }
             else if (s === 2) setStatus('paused');
             else if (s === 0) setStatus('idle');
             else if (s === 3) setStatus('loading');
           },
+
           onError: () => {
             if (!mountedRef.current) return;
+            if (preloadFallbackRef.current) { clearTimeout(preloadFallbackRef.current); preloadFallbackRef.current = null; }
+            isPreloadModeRef.current = false;
             if (playerRef.current) playerRef.current._errored = true;
             setStatus('error');
             onVideoError?.();
@@ -152,31 +225,31 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
 
     return () => {
       mountedRef.current = false;
+      if (preloadFallbackRef.current) { clearTimeout(preloadFallbackRef.current); preloadFallbackRef.current = null; }
       try { playerRef.current?.destroy?.(); } catch {}
-      playerRef.current   = null;
-      readyRef.current    = false;
-      pendingPlay.current = false;
+      playerRef.current    = null;
+      readyRef.current     = false;
+      pendingPlay.current  = false;
+      isPreloadModeRef.current = false;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, autoPlay, retryCount]);
 
-  // ── Déclenchement externe (shouldPlay) ──────────────────────────────────
-  // Permet au parent de lancer la lecture sur un player déjà préchargé,
-  // sans recréer l'instance (important pour la synchro au countdown).
+  // ── Déclenchement externe (shouldPlay) ──────────────────────────────────────
   useEffect(() => {
     if (!videoId) return;
     if (shouldPlay) {
-      if (playerRef.current?._errored) return; // vidéo bloquée → pas de retry ici
+      if (playerRef.current?._errored) return;
       if (readyRef.current && playerRef.current) {
+        // Assurer que le player est démuté (il pouvait être en mute pendant le preload)
+        try { playerRef.current.unMute?.(); } catch {}
         if (startTime > 0) playerRef.current.seekTo(startTime, true);
         playerRef.current.playVideo();
         setStatus('loading');
       } else {
-        // Player pas encore prêt — sera joué dans onReady
         pendingPlay.current = true;
       }
     } else {
-      // shouldPlay=false → mettre en pause
       pendingPlay.current = false;
       if (readyRef.current && playerRef.current) {
         playerRef.current.pauseVideo?.();
@@ -185,17 +258,15 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldPlay]);
 
-  // ── Contrôles manuels ────────────────────────────────────────────────────
+  // ── Contrôles manuels ────────────────────────────────────────────────────────
   const handlePlay = useCallback(() => {
     if (!videoId) return;
-    // En cas d'erreur : recréer complètement le player (retry propre)
-    // En cas de pause/idle : relancer la lecture sur le player existant
     if (readyRef.current && playerRef.current && !playerRef.current._errored) {
+      try { playerRef.current.unMute?.(); } catch {}
       if (startTime > 0) playerRef.current.seekTo(startTime, true);
       playerRef.current.playVideo();
       setStatus('loading');
     } else {
-      // Recréer le player (erreur ou player non initialisé)
       setRetryCount(c => c + 1);
     }
   }, [videoId, startTime]);
@@ -210,7 +281,7 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
     setStatus('idle');
   }, []);
 
-  // ── URL invalide ─────────────────────────────────────────────────────────
+  // ── URL invalide ─────────────────────────────────────────────────────────────
   if (!videoId) {
     return (
       <div className="px-4 py-3 rounded-xl text-xs font-bold"
