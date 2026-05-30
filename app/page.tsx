@@ -483,10 +483,8 @@ export default function Home() {
                   ================================================================ */}
               <div className="grid grid-cols-2 gap-2">
                 {([
-                  { value: 'quiz'            as GameMode, label: 'Quiz',            sub: '4 choix simultané',   color: '#8B5CF6', mechanic: 'QCM',  minTier: 'decouverte' },
-                  { value: 'blind_test'      as GameMode, label: 'Blind Test',      sub: 'Musique, 4 choix',    color: '#00E5D1', mechanic: 'QCM',  minTier: 'pro'        },
-                  { value: 'buzz_quiz'       as GameMode, label: 'Buzz Quiz',       sub: 'Buzz puis répondre',  color: '#FF00AA', mechanic: 'BUZZ', minTier: 'decouverte' },
-                  { value: 'buzz_blind_test' as GameMode, label: 'Buzz Blind Test', sub: 'Musique + buzz',      color: '#F59E0B', mechanic: 'BUZZ', minTier: 'pro'        },
+                  { value: 'quiz'       as GameMode, label: 'Quiz',       sub: '4 choix simultané', color: '#8B5CF6', mechanic: 'QCM', minTier: 'decouverte' },
+                  { value: 'blind_test' as GameMode, label: 'Blind Test', sub: 'Musique, 4 choix',  color: '#00E5D1', mechanic: 'QCM', minTier: 'pro'        },
                 ] as const).map(m => {
                   const tierOrder: SubscriptionTier[] = ['decouverte', 'essentiel', 'pro', 'expert'];
                   const locked = isLoggedIn && tierOrder.indexOf(userTier) < tierOrder.indexOf(m.minTier as SubscriptionTier);
