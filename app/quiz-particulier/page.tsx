@@ -22,32 +22,26 @@ export const metadata: Metadata = {
 
 const AVANTAGES = [
   {
-    emoji: '🥂',
     title: 'Soirées entre amis',
     desc: 'Fini les soirées qui manquent de piment. Un quiz MuzQuiz, c\'est une heure de fous rires garantis, de clashs amicaux et de révélations surprenantes. Qui dans votre groupe connaît vraiment bien les années 90 ? C\'est le moment de le savoir.',
   },
   {
-    emoji: '🎂',
     title: 'Anniversaires adultes',
     desc: 'Pour un anniversaire adulte réussi, il faut quelque chose que tout le monde peut faire ensemble. Un quiz personnalisé sur la vie du fêté, ses souvenirs, ses passions — ça crée des moments uniques dont tout le monde se souviendra longtemps.',
   },
   {
-    emoji: '🖼️',
     title: 'Quiz image interactif',
     desc: 'Reconnaître un logo, une célébrité, une affiche de film, un monument célèbre ou un objet de votre enfance — le quiz image, c\'est universel. Tout le monde joue, tout le monde a une chance, et les débats qui suivent sont souvent les meilleurs moments de la soirée.',
   },
   {
-    emoji: '🎵',
     title: 'Blind tests musicaux',
     desc: 'Deux notes et tout le monde se lève. Le blind test musical est le format qui embrase n\'importe quelle ambiance. Choisissez votre époque, votre genre, vos artistes favoris — et regardez vos amis s\'affronter sur les premières secondes de chaque morceau.',
   },
   {
-    emoji: '🤖',
     title: 'Création assistée par IA',
     desc: 'Pas d\'inspiration ? L\'IA de MuzQuiz génère un quiz complet à partir d\'un simple thème. Vous tapez "années 2000 Pop Française", vous obtenez des questions prêtes à jouer. Votre soirée est prête en quelques minutes, même en dernière minute.',
   },
   {
-    emoji: '👫',
     title: 'Adapté à tous vos groupes',
     desc: 'Que vous soyez quatre autour d\'une table ou une vingtaine pour une fête d\'anniversaire, MuzQuiz s\'adapte à votre situation. Convient aussi bien aux soirées intimes qu\'aux événements plus importants — sans changer quoi que ce soit à votre façon d\'organiser.',
   },
@@ -117,7 +111,7 @@ export default function QuizParticulierPage() {
           className="inline-block mb-5 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest"
           style={{ background: 'rgba(0,229,209,0.1)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.25)' }}
         >
-          🎉 Pour les particuliers
+          Pour les particuliers
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-black mb-6 leading-tight" style={{ color: '#F0F4FF' }}>
@@ -165,7 +159,6 @@ export default function QuizParticulierPage() {
               className="p-6 rounded-2xl flex flex-col gap-3"
               style={{ background: 'rgba(0,229,209,0.04)', border: '1px solid rgba(0,229,209,0.12)' }}
             >
-              <div className="text-3xl">{a.emoji}</div>
               <h3 className="font-black text-base" style={{ color: '#F0F4FF' }}>{a.title}</h3>
               <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{a.desc}</p>
             </div>
@@ -301,7 +294,6 @@ export default function QuizParticulierPage() {
             border: '1.5px solid rgba(0,229,209,0.25)',
           }}
         >
-          <div className="text-4xl mb-4">🎉</div>
           <h2 className="text-2xl sm:text-3xl font-black mb-4" style={{ color: '#F0F4FF' }}>
             Votre prochaine soirée inoubliable<br />commence ici
           </h2>

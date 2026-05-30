@@ -15,12 +15,12 @@ export const metadata: Metadata = {
 };
 
 const USECASES = [
-  { emoji: '🏢', title: 'Team Building', desc: 'Brisez la glace entre collègues. Un quiz d\'équipe qui crée de la cohésion et des souvenirs partagés.' },
-  { emoji: '💍', title: 'Mariages', desc: 'Un blind test spécial couple, des quiz sur les mariés... Vos invités n\'oublieront pas la soirée.' },
-  { emoji: '🎓', title: 'Séminaires', desc: 'Dynamisez vos formations et conférences avec des quiz interactifs. L\'apprentissage par le jeu.' },
-  { emoji: '🎂', title: 'Fêtes & Anniversaires', desc: 'Des questions sur l\'anniversaire, la décennie de naissance, les souvenirs communs.' },
-  { emoji: '🏫', title: 'Associations & Clubs', desc: 'Engagez vos membres avec des soirées quiz thématiques régulières.' },
-  { emoji: '🎪', title: 'Événements publics', desc: 'Festivals, foires, salons... Attirez et retenez l\'attention de votre public.' },
+  { title: 'Team Building', desc: 'Brisez la glace entre collègues. Un quiz d\'équipe qui crée de la cohésion et des souvenirs partagés.' },
+  { title: 'Mariages', desc: 'Un blind test spécial couple, des quiz sur les mariés... Vos invités n\'oublieront pas la soirée.' },
+  { title: 'Séminaires', desc: 'Dynamisez vos formations et conférences avec des quiz interactifs. L\'apprentissage par le jeu.' },
+  { title: 'Fêtes & Anniversaires', desc: 'Des questions sur l\'anniversaire, la décennie de naissance, les souvenirs communs.' },
+  { title: 'Associations & Clubs', desc: 'Engagez vos membres avec des soirées quiz thématiques régulières.' },
+  { title: 'Événements publics', desc: 'Festivals, foires, salons... Attirez et retenez l\'attention de votre public.' },
 ];
 
 export default function PourLesEvenementsPage() {
@@ -42,7 +42,7 @@ export default function PourLesEvenementsPage() {
       <section className="max-w-4xl mx-auto px-6 py-16 text-center">
         <div className="inline-block mb-4 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest"
           style={{ background: 'rgba(0,229,209,0.1)', color: '#00E5D1', border: '1px solid rgba(0,229,209,0.25)' }}>
-          🎉 Pour les événements
+          Pour les événements
         </div>
         <h1 className="text-4xl sm:text-5xl font-black mb-6 leading-tight" style={{ color: '#F0F4FF' }}>
           Le quiz qui s'adapte<br />
@@ -73,7 +73,6 @@ export default function PourLesEvenementsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {USECASES.map(u => (
             <div key={u.title} className="p-5 rounded-2xl" style={{ background: 'rgba(0,229,209,0.04)', border: '1px solid rgba(0,229,209,0.12)' }}>
-              <div className="text-3xl mb-3">{u.emoji}</div>
               <h3 className="font-black text-base mb-2" style={{ color: '#F0F4FF' }}>{u.title}</h3>
               <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{u.desc}</p>
             </div>
