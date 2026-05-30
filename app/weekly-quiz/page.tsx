@@ -38,10 +38,11 @@ export default function WeeklyQuizPage() {
   const [tier, setTier] = useState<SubscriptionTier>('decouverte');
   const [loading, setLoading] = useState(true);
 
-  const [myQuiz, setMyQuiz]   = useState<WeeklyQuiz | null>(null);
-  const [packs, setPacks]      = useState<Pack[]>([]);
-  const [quizName, setQuizName] = useState('Mon Quiz de la semaine');
-  const [saving, setSaving]    = useState(false);
+  const [myQuiz, setMyQuiz]     = useState<WeeklyQuiz | null>(null);
+  const [packs, setPacks]        = useState<Pack[]>([]);
+  const [quizName, setQuizName]  = useState('Mon Quiz de la semaine');
+  const [saving, setSaving]      = useState(false);
+  const [hostNickname, setHostNickname] = useState('');
 
   // Invitation
   const [inviteCopied, setInviteCopied] = useState<number | null>(null);
@@ -110,7 +111,8 @@ export default function WeeklyQuizPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user || session.user.is_anonymous) { router.push('/login?redirect=/weekly-quiz'); return; }
       setUserId(session.user.id);
-      const { data: prof } = await supabase.from('profiles').select('subscription_tier').eq('id', session.user.id).single();
+      const { data: prof } = await supabase.from('profiles').select('subscription_tier, nickname').eq('id', session.user.id).single();
+      if (prof?.nickname) setHostNickname(prof.nickname);
       const userTier = normalizeTier(prof?.subscription_tier);
       setTier(userTier);
       // Seuls Essentiel, Pro et Expert peuvent créer/gérer des quiz de la semaine
@@ -420,22 +422,45 @@ export default function WeeklyQuizPage() {
               </button>
               <button
                 onClick={async () => {
-                  // Pour l'instant : copie le lien et affiche les emails à contacter
-                  // L'envoi réel d'emails nécessite une API email (Resend, SendGrid…)
-                  const emails = inviteEmails.split(/[,\n]/).map(e => e.trim()).filter(Boolean);
+                  const emails = inviteEmails.split(/[,\n;]/).map(e => e.trim()).filter(Boolean);
                   if (emails.length === 0) { setInviteMsg('Entre au moins une adresse email.'); return; }
-                  const link = getInviteLink(inviteDay!);
-                  navigator.clipboard.writeText(link ?? '');
-                  setInviteMsg(`✓ Lien copié ! Envoie-le à : ${emails.join(', ')}`);
+                  setInviteSending(true);
+                  setInviteMsg('');
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    const slot = myQuiz?.slots.find(s => s.day_of_week === inviteDay);
+                    const res = await fetch('/api/send-invite', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${session?.access_token}`,
+                      },
+                      body: JSON.stringify({
+                        emails,
+                        day: DAYS[inviteDay!],
+                        packName: slot?.pack?.name ?? 'Quiz de la semaine',
+                        inviteLink: getInviteLink(inviteDay!) ?? '',
+                        hostNickname,
+                      }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      setInviteMsg(`✓ ${data.sent} invitation${data.sent > 1 ? 's' : ''} envoyée${data.sent > 1 ? 's' : ''} !`);
+                      setInviteEmails('');
+                    } else {
+                      setInviteMsg(`✗ ${data.error ?? 'Erreur lors de l\'envoi'}`);
+                    }
+                  } catch {
+                    setInviteMsg('✗ Erreur réseau.');
+                  } finally {
+                    setInviteSending(false);
+                  }
                 }}
-                disabled={inviteSending}
+                disabled={inviteSending || !inviteEmails.trim()}
                 className="flex-1 muz-btn-pink py-2.5 rounded-xl font-black text-sm disabled:opacity-50">
-                {inviteSending ? '…' : 'Copier le lien →'}
+                {inviteSending ? '…' : `Envoyer les invitations →`}
               </button>
             </div>
-            <p className="text-xs text-center mt-3" style={{ color: 'rgba(240,244,255,0.25)' }}>
-              L'envoi automatique d'emails sera disponible prochainement
-            </p>
           </div>
         </div>
       )}
