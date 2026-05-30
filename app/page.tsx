@@ -635,7 +635,7 @@ export default function Home() {
           {[
             { href: '/pour-les-bars',        label: 'Bars & Restaurants' },
             { href: '/pour-les-animateurs',  label: 'Animateurs'          },
-            { href: '/pour-les-evenements',  label: 'Particuliers'         },
+            { href: '/pour-les-evenements',  label: 'Soirées & Événements' },
             { href: '/pour-les-streamers',   label: 'Streamers'           },
           ].map(item => (
             <Link key={item.href} href={item.href}
