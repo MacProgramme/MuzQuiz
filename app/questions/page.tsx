@@ -52,7 +52,8 @@ interface ParsedQuestion {
   choice_c: string;
   choice_d: string;
   correct_index: 0 | 1 | 2 | 3;
-  audio_url?: string;   // colonne optionnelle pour les packs blind test
+  audio_url?: string;    // colonne optionnelle pour les packs blind test
+  youtube_hint?: string; // suggestion YouTube générée par l'IA pour les blind tests
   _selected: boolean;
 }
 
@@ -553,10 +554,13 @@ export default function QuestionsPage() {
     const toImport = aiPreview.filter(q => q._selected);
     if (toImport.length === 0) return;
     setAiImporting(true);
+    const isBlind = isBlindTestMode(selectedPack.mode);
     const payload = toImport.map(q => ({
       pack_id: selectedPack.id, owner_id: userId,
       question: q.question, choice_a: q.choice_a, choice_b: q.choice_b,
       choice_c: q.choice_c, choice_d: q.choice_d, correct_index: q.correct_index,
+      // Blind test : laisser youtube_url vide, l'utilisateur l'ajoute manuellement
+      ...(isBlind ? { youtube_url: null, audio_start_time: 0 } : {}),
     }));
     await supabase.from('custom_questions').insert(payload);
     await loadQuestions(selectedPack.id);
@@ -919,8 +923,8 @@ export default function QuestionsPage() {
                     </button>
                   )}
 
-                  {/* IA — Essentiel+ et uniquement pour les packs non-blind-test */}
-                  {limits.maxAiPerMonth > 0 && selectedPack && !isBlindTestMode(selectedPack.mode) && (
+                  {/* IA — Essentiel+ pour tous les types de packs */}
+                  {limits.maxAiPerMonth > 0 && selectedPack && (
                     <button onClick={() => { setAddMode('ai'); setAiPreview([]); setAiError(''); }}
                       disabled={aiRemaining <= 0}
                       className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl transition-all hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed"
@@ -1418,8 +1422,15 @@ export default function QuestionsPage() {
                         <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>Thème ou sujet</p>
                         <input value={aiTheme} onChange={e => setAiTheme(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && generateAI()}
-                          placeholder="ex: Cinéma des années 90, Géographie européenne, Marvel…"
+                          placeholder={selectedPack && isBlindTestMode(selectedPack.mode)
+                            ? 'ex: Chansons françaises années 80, Hits rap 2010, Pop internationale…'
+                            : 'ex: Cinéma des années 90, Géographie européenne, Marvel…'}
                           style={inputStyle()} />
+                        {selectedPack && isBlindTestMode(selectedPack.mode) && (
+                          <p className="text-xs mt-1.5" style={{ color: 'rgba(139,92,246,0.7)' }}>
+                            L'IA génère les questions + choix. Un lien YouTube cliquable s'affiche dans la preview pour trouver chaque chanson facilement.
+                          </p>
+                        )}
                       </div>
                       <div>
                         <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(240,244,255,0.35)' }}>
@@ -1485,6 +1496,16 @@ export default function QuestionsPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-bold" style={{ color: '#F0F4FF', whiteSpace: 'normal' }}>{q.question}</p>
+                            {q.youtube_hint && (
+                              <a
+                                href={`https://www.youtube.com/results?search_query=${encodeURIComponent(q.youtube_hint)}`}
+                                target="_blank" rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 mt-1 text-xs font-bold px-2 py-0.5 rounded-full"
+                                style={{ background: 'rgba(255,0,0,0.12)', color: '#FF4444', border: '1px solid rgba(255,0,0,0.2)' }}>
+                                ▶ {q.youtube_hint}
+                              </a>
+                            )}
                             <div className="grid grid-cols-2 gap-1 mt-1.5">
                               {[q.choice_a, q.choice_b, q.choice_c, q.choice_d].map((c, ci) => (
                                 <span key={ci} className="text-xs px-1.5 py-0.5 rounded truncate"

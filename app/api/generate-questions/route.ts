@@ -16,7 +16,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'ANTHROPIC_API_KEY manquante dans les variables d\'environnement' }, { status: 500 });
   }
 
-  const prompt = `Tu es un expert en quiz. Génère exactement ${count} questions de quiz en français sur le thème : "${theme}".
+  const isBlindTest = mode === 'blind_test' || mode === 'buzz_blind_test';
+
+  // ── Prompt blind test ────────────────────────────────────────────────────────
+  const blindTestPrompt = `Tu es un expert en musique et quiz. Génère exactement ${count} questions de blind test en français sur le thème : "${theme}".
+
+Chaque question correspond à UNE chanson réelle et connue. Le joueur doit identifier soit l'artiste, soit le titre selon ce qui est le plus pertinent.
+
+Réponds UNIQUEMENT avec un tableau JSON valide, sans texte avant ni après, sans backticks.
+Chaque élément doit avoir exactement cette structure :
+{"question":"texte de la question","choice_a":"choix A","choice_b":"choix B","choice_c":"choix C","choice_d":"choix D","correct_index":0,"youtube_hint":"Artiste - Titre exact de la chanson pour YouTube"}
+
+Règles :
+- correct_index : 0=A, 1=B, 2=C, 3=D
+- La question demande soit "Quel artiste ?" soit "Quel titre ?" soit "De quelle année ?" — varier les formats
+- Les 3 mauvaises réponses doivent être plausibles (même genre musical, même époque)
+- youtube_hint : le texte exact à taper sur YouTube pour trouver la chanson (ex: "Daft Punk - Get Lucky", "Stromae - Alors on danse")
+- Uniquement des chansons réelles et connues
+- Varier les artistes, pas plus de 2 chansons du même artiste
+
+Exemple :
+[{"question":"Quel artiste a sorti ce titre ?","choice_a":"Stromae","choice_b":"Maître Gims","choice_c":"Jul","choice_d":"Nekfeu","correct_index":0,"youtube_hint":"Stromae - Alors on danse"}]`;
+
+  // ── Prompt QCM standard ─────────────────────────────────────────────────────
+  const qcmPrompt = `Tu es un expert en quiz. Génère exactement ${count} questions de quiz en français sur le thème : "${theme}".
 
 Réponds UNIQUEMENT avec un tableau JSON valide, sans texte avant ni après, sans backticks, sans commentaires.
 Chaque élément du tableau doit avoir exactement cette structure :
@@ -30,11 +53,12 @@ Règles :
 - Une seule bonne réponse, 3 mauvaises plausibles
 - Questions courtes (max 120 caractères)
 - Réponses courtes (max 60 caractères)
-- INTERDIT : la bonne réponse ne doit JAMAIS apparaître textuellement dans la question. Par exemple : ne pas demander "Dans quel film apparaît Forrest Gump ?" si la réponse est "Forrest Gump". Reformule pour éviter tout mot de la réponse dans la question.
-${mode === 'buzz' ? '- Style blind test : artiste, chanson, film, année…' : ''}
+- INTERDIT : la bonne réponse ne doit JAMAIS apparaître textuellement dans la question.
 
 Exemple de sortie attendue :
 [{"question":"Quelle est la capitale de la France ?","choice_a":"Paris","choice_b":"Lyon","choice_c":"Marseille","choice_d":"Nice","correct_index":0}]`;
+
+  const prompt = isBlindTest ? blindTestPrompt : qcmPrompt;
 
   try {
     const message = await client.messages.create({
