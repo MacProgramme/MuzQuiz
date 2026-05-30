@@ -16,32 +16,22 @@ export const metadata: Metadata = {
 
 const FEATURES = [
   {
-    emoji: '📺',
     title: 'Overlay stream-friendly',
     desc: 'Affichez le classement et les questions sur votre stream via l\'écran public. Simple à capturer dans OBS ou Streamlabs.',
   },
   {
-    emoji: '👥',
-    title: 'Des centaines de viewers',
-    desc: 'Pas de limite de participants. Que vous ayez 10 ou 500 viewers connectés, MUZQUIZ tient la charge.',
+    title: 'Jusqu\'à 250 viewers',
+    desc: 'Accueillez jusqu\'à 250 participants simultanés dans une même partie. Idéal pour les streams de taille moyenne.',
   },
   {
-    emoji: '🎵',
     title: 'Blind Test avec votre musique',
     desc: 'Intégrez vos propres extraits YouTube pour des blind tests thématiques adaptés à votre audience.',
   },
   {
-    emoji: '⚡',
-    title: 'Mode Buzzer pour le drama',
-    desc: 'Le premier viewer à appuyer gagne le point. Parfait pour créer des moments de tension et de réaction en direct.',
-  },
-  {
-    emoji: '🎯',
     title: 'Questions sur mesure',
     desc: 'Créez des questions sur vos inside jokes, vos emotes, votre communauté. Vos viewers adoreront.',
   },
   {
-    emoji: '📱',
     title: 'Zéro friction pour les viewers',
     desc: 'Vos viewers rejoignent en tapant un simple code. Pas d\'application à télécharger, pas de compte requis.',
   },
@@ -66,14 +56,14 @@ export default function PourLesStreamersPage() {
       <section className="max-w-4xl mx-auto px-6 py-16 text-center">
         <div className="inline-block mb-4 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest"
           style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.25)' }}>
-          🎮 Pour les streamers
+          Pour les streamers
         </div>
         <h1 className="text-4xl sm:text-5xl font-black mb-6 leading-tight" style={{ color: '#F0F4FF' }}>
           Faites jouer votre chat<br />
           <span style={{ color: '#F59E0B' }}>en temps réel</span>
         </h1>
         <p className="text-lg mb-10 max-w-2xl mx-auto leading-relaxed" style={{ color: 'rgba(240,244,255,0.6)' }}>
-          Quiz, blind test, buzzers virtuels — vos viewers participent depuis leur téléphone pendant votre stream. Créez des moments de jeu interactifs inoubliables avec votre communauté.
+          Quiz et blind tests — vos viewers participent depuis leur téléphone pendant votre stream. Créez des moments de jeu interactifs inoubliables avec votre communauté.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/signup"
@@ -97,7 +87,6 @@ export default function PourLesStreamersPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {FEATURES.map(f => (
             <div key={f.title} className="p-5 rounded-2xl" style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)' }}>
-              <div className="text-3xl mb-3">{f.emoji}</div>
               <h3 className="font-black text-base mb-2" style={{ color: '#F0F4FF' }}>{f.title}</h3>
               <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{f.desc}</p>
             </div>
@@ -144,12 +133,12 @@ export default function PourLesStreamersPage() {
       <footer className="text-center pb-8" style={{ color: 'rgba(240,244,255,0.2)', fontSize: '12px' }}>
         <div className="flex justify-center gap-6 mb-3 flex-wrap">
           <Link href="/" style={{ color: 'rgba(240,244,255,0.3)' }}>Accueil</Link>
-          <Link href="/pour-les-bars" style={{ color: 'rgba(240,244,255,0.3)' }}>Bars & Restaurants</Link>
+          <Link href="/pour-les-bars" style={{ color: 'rgba(240,244,255,0.3)' }}>Bars &amp; Restaurants</Link>
           <Link href="/pour-les-animateurs" style={{ color: 'rgba(240,244,255,0.3)' }}>Animateurs</Link>
           <Link href="/pour-les-evenements" style={{ color: 'rgba(240,244,255,0.3)' }}>Événements</Link>
           <Link href="/pricing" style={{ color: 'rgba(240,244,255,0.3)' }}>Tarifs</Link>
         </div>
-        MUZQUIZ © 2025 — Quiz & Blind Test en temps réel
+        MUZQUIZ © 2025 — Quiz &amp; Blind Test en temps réel
       </footer>
     </main>
   );

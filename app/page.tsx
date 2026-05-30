@@ -674,6 +674,8 @@ export default function Home() {
       </Link>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-bold"
         style={{ color: 'rgba(240,244,255,0.2)' }}>
+        <Link href="/histoire" className="hover:opacity-70 transition-opacity">Notre histoire</Link>
+        <span style={{ color: 'rgba(240,244,255,0.1)' }}>·</span>
         <Link href="/mentions-legales" className="hover:opacity-70 transition-opacity">Mentions légales</Link>
         <span style={{ color: 'rgba(240,244,255,0.1)' }}>·</span>
         <Link href="/cgu" className="hover:opacity-70 transition-opacity">CGU</Link>
