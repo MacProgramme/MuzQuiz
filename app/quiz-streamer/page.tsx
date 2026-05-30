@@ -22,32 +22,32 @@ export const metadata: Metadata = {
 
 const AVANTAGES = [
   {
-    emoji: '✏️',
+
     title: 'Quiz personnalisés',
     desc: 'Créez des quiz autour de vos inside jokes, votre univers, vos emotes, votre historique de stream. Vos viewers répondent à des questions que seuls ceux qui vous suivent vraiment peuvent réussir — c\'est exactement ce qui crée de l\'engagement.',
   },
   {
-    emoji: '🖼️',
+
     title: 'Quiz images interactifs',
     desc: 'Reconnaître un personnage de jeu vidéo, un logo de studio, une capture d\'écran floue, une célébrité de la scène gaming ou un mème culte — le quiz image sur Twitch crée des réactions immédiates dans le chat. Chaque image est une bombe à retardement.',
   },
   {
-    emoji: '🎵',
+
     title: 'Blind tests musicaux',
     desc: 'OST de jeux vidéo, génériques cultes, musiques de votre playlist de stream — transformez votre bibliothèque musicale en blind test interactif. Vos viewers adorent prouver qu\'ils reconnaissent vos morceaux préférés en deux notes.',
   },
   {
-    emoji: '🏆',
+
     title: 'Classement en direct',
     desc: 'Le leaderboard s\'affiche en temps réel pendant votre stream. Chaque question fait bouger le classement et relance la compétition. Vos viewers se battent pour leur position — et votre chat s\'enflamme à chaque changement de tête.',
   },
   {
-    emoji: '🎛️',
+
     title: 'Contrôle total de l\'animation',
     desc: 'Vous avancez à votre rythme, pas à celui d\'un timer automatique. Pause quand vous commentez une réponse, question suivante quand vous sentez que la salle est prête. MuzQuiz s\'adapte à votre style de stream, pas l\'inverse.',
   },
   {
-    emoji: '📱',
+
     title: 'Connexion rapide par smartphone',
     desc: 'Vos viewers scannent un QR code ou tapent un code sur muzquiz.fr depuis leur téléphone, tablette ou PC. Zéro téléchargement, zéro compte à créer. En dix secondes, ils sont dans la partie. La friction zéro, c\'est plus de participants.',
   },
@@ -117,7 +117,7 @@ export default function QuizStreamerPage() {
           className="inline-block mb-5 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest"
           style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.25)' }}
         >
-          🎮 Pour les streamers
+          Pour les streamers
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-black mb-6 leading-tight" style={{ color: '#F0F4FF' }}>
@@ -165,7 +165,6 @@ export default function QuizStreamerPage() {
               className="p-6 rounded-2xl flex flex-col gap-3"
               style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)' }}
             >
-              <div className="text-3xl">{a.emoji}</div>
               <h3 className="font-black text-base" style={{ color: '#F0F4FF' }}>{a.title}</h3>
               <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{a.desc}</p>
             </div>
@@ -187,7 +186,7 @@ export default function QuizStreamerPage() {
 
           <div className="flex flex-col gap-6 text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.6)' }}>
             <div>
-              <h3 className="font-black text-base mb-2" style={{ color: '#F59E0B' }}>🎮 Reconnaître un jeu vidéo</h3>
+              <h3 className="font-black text-base mb-2" style={{ color: '#F59E0B' }}>Reconnaître un jeu vidéo</h3>
               <p>
                 Un screenshot tronqué, un HUD partiel, une texture iconique — vos viewers gaming adorent prouver leur culture vidéoludique. Le quiz image sur les jeux crée immédiatement de la compétition entre vos viewers casualels et les hardcores. Et quand personne ne trouve, le débat dans le chat vaut souvent l&apos;animation elle-même.
               </p>
@@ -313,7 +312,6 @@ export default function QuizStreamerPage() {
             border: '1.5px solid rgba(245,158,11,0.28)',
           }}
         >
-          <div className="text-4xl mb-4">🎮</div>
           <h2 className="text-2xl sm:text-3xl font-black mb-4" style={{ color: '#F0F4FF' }}>
             Prêt à faire participer votre<br />communauté en direct ?
           </h2>

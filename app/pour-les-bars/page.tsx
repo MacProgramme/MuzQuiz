@@ -16,32 +16,32 @@ export const metadata: Metadata = {
 
 const FEATURES = [
   {
-    emoji: '📱',
+
     title: 'Zéro matériel',
     desc: 'Vos clients jouent directement depuis leur smartphone. Pas besoin de télécommandes, tablettes ou boîtiers physiques.',
   },
   {
-    emoji: '🎵',
+
     title: 'Blind Test musical',
     desc: 'Des packs musicaux thématiques prêts à l\'emploi : Années 80, Pop, Rock Français, Rap... ou créez les vôtres.',
   },
   {
-    emoji: '🏆',
+
     title: 'Classements en direct',
     desc: 'Un écran de classement projeté sur votre TV ou vidéoprojecteur. L\'ambiance monte d\'un cran à chaque question.',
   },
   {
-    emoji: '⚡',
+
     title: 'Lancez en 2 minutes',
     desc: 'Créez une partie, partagez le code, c\'est parti. Pas de configuration technique, pas d\'installation.',
   },
   {
-    emoji: '🎯',
+
     title: 'Mode Buzzer',
     desc: 'Le premier qui appuie remporte le point. Idéal pour créer de la compétition et de l\'excitation dans la salle.',
   },
   {
-    emoji: '🔄',
+
     title: 'Illimité',
     desc: 'Pas de limite de participants ni de parties. Organisez chaque semaine sans surcoût.',
   },
@@ -108,7 +108,6 @@ export default function PourLesBarsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {FEATURES.map(f => (
             <div key={f.title} className="p-5 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="text-3xl mb-3">{f.emoji}</div>
               <h3 className="font-black text-base mb-2" style={{ color: '#F0F4FF' }}>{f.title}</h3>
               <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{f.desc}</p>
             </div>

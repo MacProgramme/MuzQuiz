@@ -16,32 +16,32 @@ export const metadata: Metadata = {
 
 const FEATURES = [
   {
-    emoji: '📦',
+
     title: 'Vos packs personnalisés',
     desc: 'Créez autant de packs de questions que vous voulez. Culture générale, thèmes spécifiques, questions sur mesure pour chaque client.',
   },
   {
-    emoji: '🎵',
+
     title: 'Blind Test professionnel',
     desc: 'Intégrez vos propres extraits YouTube. Configurez le moment de lecture, la durée, et laissez la magie opérer.',
   },
   {
-    emoji: '🎮',
+
     title: '4 modes de jeu',
     desc: 'Quiz QCM, Buzz (premier à sonner), Blind Test, Buzz Blind Test. Variez les plaisirs selon l\'ambiance de votre audience.',
   },
   {
-    emoji: '📊',
+
     title: 'Classements en temps réel',
     desc: 'Affichez le classement sur n\'importe quel écran. Spectaculaire pour créer de la tension avant l\'annonce du vainqueur.',
   },
   {
-    emoji: '⚙️',
+
     title: 'Contrôle total',
     desc: 'Avancez à votre rythme, pausez, revenez en arrière. Vous êtes maître du jeu depuis votre téléphone.',
   },
   {
-    emoji: '♾️',
+
     title: 'Sans limite de participants',
     desc: 'Des petits groupes de 5 aux grandes salles de 200 personnes. MUZQUIZ s\'adapte à toutes vos configurations.',
   },
@@ -66,7 +66,7 @@ export default function PourLesAnimateursPage() {
       <section className="max-w-4xl mx-auto px-6 py-16 text-center">
         <div className="inline-block mb-4 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest"
           style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.25)' }}>
-          🎤 Pour les animateurs
+          Pour les animateurs
         </div>
         <h1 className="text-4xl sm:text-5xl font-black mb-6 leading-tight" style={{ color: '#F0F4FF' }}>
           L'outil qu'il vous manquait<br />
@@ -97,7 +97,6 @@ export default function PourLesAnimateursPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {FEATURES.map(f => (
             <div key={f.title} className="p-5 rounded-2xl" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
-              <div className="text-3xl mb-3">{f.emoji}</div>
               <h3 className="font-black text-base mb-2" style={{ color: '#F0F4FF' }}>{f.title}</h3>
               <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{f.desc}</p>
             </div>

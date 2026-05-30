@@ -10,6 +10,11 @@ import { QuestionImage } from '@/components/QuestionImage';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 
 const COLORS = ['#FF00AA', '#00E5D1', '#8B5CF6', '#F59E0B'];
+
+function stripLeadingEmoji(str: string): string {
+  // Retire les emojis en début de chaîne (segments non-ASCII suivis d'un espace)
+  return str.replace(/^[^\w\sÀ-ɏ]+\s*/g, '').trim();
+}
 const LABELS = ['A', 'B', 'C', 'D'];
 
 /* ── Confettis ── */
@@ -226,7 +231,7 @@ export function PublicScreenView({
                   style={{ background: 'rgba(255,255,255,0.05)', border: '1.5px solid rgba(139,92,246,0.3)', color: '#F0F4FF' }}>
                   <span className="flex-1 text-sm font-bold truncate"
                     style={{ color: room.pack_id ? '#FF00AA' : '#8B5CF6' }}>
-                    {room.pack_id ? (hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné') : 'Questions MUZQUIZ (défaut)'}
+                    {room.pack_id ? stripLeadingEmoji(hostPacks.find(p => p.id === room.pack_id)?.name ?? 'Pack sélectionné') : 'Questions MUZQUIZ (défaut)'}
                   </span>
                   <span style={{ color: 'rgba(240,244,255,0.4)', fontSize: '0.9rem' }}>
                     {packDropdownOpen ? '▲' : '▼'}
@@ -269,7 +274,7 @@ export function PublicScreenView({
                             className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:bg-white/5">
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-bold truncate" style={{ color: room.pack_id === pack.id ? '#FF00AA' : '#F0F4FF' }}>
-                                {pack.name}
+                                {stripLeadingEmoji(pack.name)}
                               </p>
                               <p className="text-xs" style={{ color: 'rgba(240,244,255,0.35)' }}>
                                 {pack.question_count} questions
