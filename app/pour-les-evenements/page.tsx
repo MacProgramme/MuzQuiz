@@ -146,7 +146,7 @@ export default function PourLesEvenementsPage() {
           MuzQuiz est une plateforme française de quiz et de blind tests sur smartphone qui s'adapte à tous vos contextes.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {USECASES.map(u => (
+          {USECASES.slice(0, 6).map(u => (
             <div key={u.title} className="p-5 rounded-2xl flex flex-col gap-2"
               style={{ background: 'rgba(0,229,209,0.04)', border: '1px solid rgba(0,229,209,0.12)' }}>
               <h3 className="font-black text-base" style={{ color: '#F0F4FF' }}>{u.title}</h3>
@@ -154,6 +154,18 @@ export default function PourLesEvenementsPage() {
             </div>
           ))}
         </div>
+        {/* Dernière carte centrée si impaire */}
+        {USECASES.length % 3 !== 0 && (
+          <div className="flex justify-center mt-4">
+            {USECASES.slice(-(USECASES.length % 3)).map(u => (
+              <div key={u.title} className="p-5 rounded-2xl flex flex-col gap-2 w-full sm:w-1/2 lg:w-1/3"
+                style={{ background: 'rgba(0,229,209,0.04)', border: '1px solid rgba(0,229,209,0.12)' }}>
+                <h3 className="font-black text-base" style={{ color: '#F0F4FF' }}>{u.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{u.desc}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Features */}

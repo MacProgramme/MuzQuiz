@@ -83,6 +83,7 @@ function ForumPageInner() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAnon, setIsAnon] = useState(true);
   const [userTier, setUserTier] = useState<string>('decouverte');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // ── Forum state ────────────────────────────────────────────────────────────
   const [posts, setPosts] = useState<ForumPost[]>([]);
@@ -118,9 +119,11 @@ function ForumPageInner() {
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      const ADMIN_EMAILS = ['antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr', 'lacaravanegame@gmail.com'];
       if (session?.user && !session.user.is_anonymous) {
         setUserId(session.user.id);
         setIsAnon(false);
+        if (ADMIN_EMAILS.includes(session.user.email ?? '')) setIsAdmin(true);
         const { data: prof } = await supabase
           .from('profiles')
           .select('subscription_tier')
@@ -802,7 +805,7 @@ function ForumPageInner() {
                   Articles et actualités de la communauté
                 </p>
               </div>
-              {!isAnon && userTier !== 'decouverte' && (
+              {isAdmin && (
                 <button
                   onClick={() => setShowNewBlog(true)}
                   className="px-4 py-2.5 rounded-xl font-black text-sm flex-shrink-0 transition-all hover:opacity-80"
@@ -865,7 +868,7 @@ function ForumPageInner() {
               <div className="text-center py-16" style={{ color: 'rgba(240,244,255,0.3)' }}>
                 <p className="text-4xl mb-3">📝</p>
                 <p className="font-bold">Aucun article pour l'instant.</p>
-                {!isAnon && userTier !== 'decouverte' && (
+                {isAdmin && (
                   <p className="text-sm mt-1 opacity-70">Sois le premier à publier !</p>
                 )}
               </div>

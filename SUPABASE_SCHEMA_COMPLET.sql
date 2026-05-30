@@ -800,16 +800,18 @@ CREATE POLICY "forum_replies: suppression auteur" ON forum_replies FOR DELETE US
 ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "blog_posts: lecture publique"    ON blog_posts;
 DROP POLICY IF EXISTS "blog_posts: creation abonne"    ON blog_posts;
+DROP POLICY IF EXISTS "blog_posts: creation admin"     ON blog_posts;
 DROP POLICY IF EXISTS "blog_posts: suppression auteur" ON blog_posts;
 DROP POLICY IF EXISTS "blog_posts: modification auteur" ON blog_posts;
 CREATE POLICY "blog_posts: lecture publique"     ON blog_posts FOR SELECT USING (true);
-CREATE POLICY "blog_posts: creation abonne"      ON blog_posts FOR INSERT WITH CHECK (
+-- Seuls les admins peuvent publier des articles de blog
+CREATE POLICY "blog_posts: creation admin"       ON blog_posts FOR INSERT WITH CHECK (
   auth.uid() = author_id
   AND auth.jwt()->>'is_anonymous' IS DISTINCT FROM 'true'
   AND EXISTS (
-    SELECT 1 FROM profiles
+    SELECT 1 FROM auth.users
     WHERE id = auth.uid()
-    AND subscription_tier IN ('essentiel', 'pro', 'expert')
+    AND email IN ('antoine.gegedu27@gmail.com', 'dimitte-14@hotmail.fr', 'lacaravanegame@gmail.com')
   )
 );
 CREATE POLICY "blog_posts: modification auteur"  ON blog_posts FOR UPDATE USING (auth.uid() = author_id);

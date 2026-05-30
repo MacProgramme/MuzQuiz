@@ -85,13 +85,25 @@ export default function PourLesStreamersPage() {
           Fait pour le live
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {FEATURES.map(f => (
+          {FEATURES.slice(0, 3).map(f => (
             <div key={f.title} className="p-5 rounded-2xl" style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)' }}>
               <h3 className="font-black text-base mb-2" style={{ color: '#F0F4FF' }}>{f.title}</h3>
               <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{f.desc}</p>
             </div>
           ))}
         </div>
+        {/* Cartes restantes centrées */}
+        {FEATURES.length > 3 && (
+          <div className="flex flex-wrap justify-center gap-4 mt-4">
+            {FEATURES.slice(3).map(f => (
+              <div key={f.title} className="p-5 rounded-2xl w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-1rem)]"
+                style={{ background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)' }}>
+                <h3 className="font-black text-base mb-2" style={{ color: '#F0F4FF' }}>{f.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Comment intégrer */}
