@@ -310,8 +310,8 @@ export default function Home() {
       )}
 
       {/* Barre de navigation */}
-      <div className="flex items-center justify-between px-5 py-4"
-        style={{ borderBottom: '1px solid rgba(139,92,246,0.1)' }}>
+      <div className="sticky top-0 z-40 flex items-center justify-between px-5 py-4"
+        style={{ borderBottom: '1px solid rgba(139,92,246,0.1)', background: 'rgba(13,27,62,0.95)', backdropFilter: 'blur(12px)' }}>
         <MuzquizLogo width={40} textSize="1.1rem" horizontal />
         <Link href={isLoggedIn ? '/profile' : '/login'}
           className="text-sm font-bold px-4 py-2 rounded-xl transition-all hover:opacity-90"
