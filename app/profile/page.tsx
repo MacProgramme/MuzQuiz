@@ -622,18 +622,15 @@ function ProfilePageInner() {
                   </Link>
                 )}
 
-                {/* Lien quiz de la semaine — Essentiel+ */}
-                {(profile.subscription_tier === 'essentiel' || profile.subscription_tier === 'pro' || profile.subscription_tier === 'expert') && (
-                  <Link href="/weekly-quiz"
-                    className="flex items-center justify-between px-4 py-3 rounded-xl muz-card-lift"
-                    style={{ background: 'rgba(0,229,209,0.07)', border: '1px solid rgba(0,229,209,0.2)' }}>
-                    <div className="flex items-center gap-2">
-                      <span style={{ fontSize: '1.1rem' }}>🗓</span>
-                      <span className="font-bold text-sm" style={{ color: '#00E5D1' }}>Quiz de la semaine</span>
-                    </div>
-                    <span style={{ color: 'rgba(0,229,209,0.5)' }}>›</span>
-                  </Link>
-                )}
+                {/* Lien quiz de la semaine — tous les tiers */}
+                <Link href="/weekly-quiz"
+                  className="flex items-center justify-between px-4 py-3 rounded-xl muz-card-lift"
+                  style={{ background: 'rgba(0,229,209,0.07)', border: '1px solid rgba(0,229,209,0.2)' }}>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm" style={{ color: '#00E5D1' }}>Quiz de la semaine</span>
+                  </div>
+                  <span style={{ color: 'rgba(0,229,209,0.5)' }}>›</span>
+                </Link>
 
                 {/* Lien communauté */}
                 <Link href="/forum?tab=packs"

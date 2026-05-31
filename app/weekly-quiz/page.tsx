@@ -115,8 +115,7 @@ export default function WeeklyQuizPage() {
       if (prof?.nickname) setHostNickname(prof.nickname);
       const userTier = normalizeTier(prof?.subscription_tier);
       setTier(userTier);
-      // Seuls Essentiel, Pro et Expert peuvent créer/gérer des quiz de la semaine
-      if (userTier === 'decouverte') { router.push('/pricing?from=weekly-quiz'); return; }
+      // Tous les tiers ont accès (Découverte = 1 quiz/semaine, Essentiel = 3, Pro/Expert = 7)
       await loadData(session.user.id, userTier);
     };
     init();

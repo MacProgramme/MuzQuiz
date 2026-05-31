@@ -92,7 +92,7 @@ export function QCMChoices({
           >
             {choices[correctIndex]}
           </span>
-          <MustacheIcon color="#00E5D1" size={52} />
+          <MustacheIcon color="#00E5D1" size={32} />
         </div>
 
       </div>

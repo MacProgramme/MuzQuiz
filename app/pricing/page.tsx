@@ -19,7 +19,7 @@ const PLANS = [
     accentBorder: 'rgba(139,92,246,0.25)',
     badge: null,
     features: [
-      { text: 'Modes Quiz & Blind Test', ok: true },
+      { text: 'Mode Quiz (QCM)', ok: true },
       { text: 'Questions Muzquiz prédéfinies', ok: true },
       { text: 'Parties illimitées', ok: true },
       { text: 'Packs de questions personnalisés', ok: true },
@@ -27,7 +27,7 @@ const PLANS = [
       { text: "Jusqu'à 10 joueurs par salle", ok: true },
       { text: 'Import CSV / Excel', ok: false },
       { text: 'Génération IA de questions', ok: false },
-      { text: 'Blind Test', ok: false },
+      { text: 'Blind Test audio', ok: false },
     ],
     cta: 'Commencer gratuitement →',
     ctaStyle: 'violet',
@@ -44,15 +44,15 @@ const PLANS = [
     accentBorder: 'rgba(0,229,209,0.25)',
     badge: null,
     features: [
-      { text: 'Modes Quiz & Blind Test', ok: true },
+      { text: 'Mode Quiz (QCM) + Quiz Image', ok: true },
       { text: 'Questions Muzquiz prédéfinies', ok: true },
       { text: 'Parties illimitées', ok: true },
       { text: 'Packs de questions personnalisés', ok: true },
       { text: 'Création manuelle de questions', ok: true },
-      { text: "Jusqu'à 30 joueurs par salle", ok: true },
+      { text: "Jusqu'à 20 joueurs par salle", ok: true },
       { text: 'Import CSV / Excel', ok: true },
-      { text: 'IA : 20 questions × 10 fois/mois', ok: true },
-      { text: 'Blind Test', ok: false },
+      { text: 'IA : 10 questions × 10 fois/mois', ok: true },
+      { text: 'Blind Test audio', ok: false },
     ],
     cta: 'Passer Essentiel →',
     ctaStyle: 'cyan',
@@ -69,7 +69,7 @@ const PLANS = [
     accentBorder: 'rgba(255,0,170,0.3)',
     badge: 'Populaire',
     features: [
-      { text: 'Modes Quiz & Blind Test', ok: true },
+      { text: 'Quiz, Quiz Image & Blind Test audio', ok: true },
       { text: 'Questions Muzquiz prédéfinies', ok: true },
       { text: 'Parties illimitées', ok: true },
       { text: 'Packs de questions personnalisés', ok: true },
@@ -77,7 +77,7 @@ const PLANS = [
       { text: "Jusqu'à 100 joueurs par salle", ok: true },
       { text: 'Import CSV / Excel', ok: true },
       { text: 'IA : 20 questions × 40 fois/mois', ok: true },
-      { text: 'Blind Test inclus', ok: true },
+      { text: 'Blind Test audio inclus', ok: true },
     ],
     cta: 'Passer Pro →',
     ctaStyle: 'pink',
@@ -94,7 +94,7 @@ const PLANS = [
     accentBorder: 'rgba(245,158,11,0.3)',
     badge: null,
     features: [
-      { text: 'Modes Quiz & Blind Test', ok: true },
+      { text: 'Quiz, Quiz Image & Blind Test audio', ok: true },
       { text: 'Questions Muzquiz prédéfinies', ok: true },
       { text: 'Parties illimitées', ok: true },
       { text: 'Packs de questions personnalisés', ok: true },
@@ -430,20 +430,20 @@ export default function PricingPage() {
           ) : (
             /* Formulaire de saisie */
             <>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col gap-2">
                 <input
                   type="text"
                   value={promoCode}
                   onChange={e => setPromoCode(e.target.value.toUpperCase())}
                   onKeyDown={e => e.key === 'Enter' && handlePromo()}
                   placeholder="ex: MUZQUIZ2025"
-                  className="min-w-0 flex-1 px-4 py-3 rounded-xl font-mono font-black text-sm text-center tracking-widest outline-none"
+                  className="w-full px-4 py-3 rounded-xl font-mono font-black text-sm text-center tracking-widest outline-none"
                   style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)', color: '#F0F4FF' }}
                 />
                 <button
                   onClick={handlePromo}
                   disabled={promoLoading || !promoCode.trim()}
-                  className="px-5 py-3 rounded-xl font-black text-sm transition-all hover:scale-[1.03] disabled:opacity-40"
+                  className="w-full py-3 rounded-xl font-black text-sm transition-all hover:opacity-90 disabled:opacity-40"
                   style={{ background: '#FF00AA', color: 'white' }}>
                   {promoLoading ? '…' : 'Activer'}
                 </button>
