@@ -57,7 +57,7 @@ export default function HistoirePage() {
           {/* Section 1 — Les origines */}
           <section>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA' }}>💡</div>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA' }}></div>
               <h2 className="text-xl sm:text-2xl font-black" style={{ color: '#F0F4FF' }}>
                 Une idée née d&apos;un constat simple
               </h2>
@@ -87,7 +87,7 @@ export default function HistoirePage() {
           {/* Section 2 — La passion */}
           <section>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}>🎮</div>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}></div>
               <h2 className="text-xl sm:text-2xl font-black" style={{ color: '#F0F4FF' }}>
                 Un créateur de quiz imaginé par un passionné de jeux
               </h2>
@@ -141,7 +141,7 @@ export default function HistoirePage() {
           {/* Section 4 — Les fonctionnalités */}
           <section>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA' }}>🚀</div>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(255,0,170,0.15)', color: '#FF00AA' }}></div>
               <h2 className="text-xl sm:text-2xl font-black" style={{ color: '#F0F4FF' }}>
                 Bien plus qu&apos;un simple quiz interactif
               </h2>
@@ -179,7 +179,7 @@ export default function HistoirePage() {
           {/* Section 5 — Pour tous */}
           <section>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}>👥</div>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}></div>
               <h2 className="text-xl sm:text-2xl font-black" style={{ color: '#F0F4FF' }}>
                 Une plateforme conçue pour tous les joueurs
               </h2>
@@ -236,7 +236,7 @@ export default function HistoirePage() {
             border: '1.5px solid rgba(255,0,170,0.25)',
           }}
         >
-          <div className="text-4xl mb-4">👨‍🎤</div>
+          
           <h2 className="text-2xl sm:text-3xl font-black mb-4" style={{ color: '#F0F4FF' }}>
             Prêt à découvrir l&apos;univers MuzQuiz ?
           </h2>

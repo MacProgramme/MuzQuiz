@@ -16,34 +16,32 @@ export const metadata: Metadata = {
 
 const FEATURES = [
   {
-
     title: 'Vos packs personnalisés',
     desc: 'Créez autant de packs de questions que vous voulez. Culture générale, thèmes spécifiques, questions sur mesure pour chaque client.',
   },
   {
-
-    title: 'Blind Test professionnel',
-    desc: 'Intégrez vos propres extraits YouTube. Configurez le moment de lecture, la durée, et laissez la magie opérer.',
+    title: 'Blind Tests musicaux sur mesure',
+    desc: 'Préparez vos propres sessions musicales, configurez vos extraits et animez vos parties avec un rythme adapté à votre public.',
   },
   {
-
-    title: '4 modes de jeu',
-    desc: 'Quiz QCM, Buzz (premier à sonner), Blind Test, Buzz Blind Test. Variez les plaisirs selon l\'ambiance de votre audience.',
+    title: 'Quiz, Quiz image et Blind Tests',
+    desc: 'Créez des quiz classiques, ajoutez des questions visuelles ou lancez des blind tests musicaux selon l\'ambiance de votre audience.',
   },
   {
-
     title: 'Classements en temps réel',
     desc: 'Affichez le classement sur n\'importe quel écran. Spectaculaire pour créer de la tension avant l\'annonce du vainqueur.',
   },
   {
-
     title: 'Contrôle total',
     desc: 'Avancez à votre rythme, pausez, revenez en arrière. Vous êtes maître du jeu depuis votre téléphone.',
   },
   {
-
-    title: 'Sans limite de participants',
-    desc: 'Des petits groupes de 5 aux grandes salles de 200 personnes. MUZQUIZ s\'adapte à toutes vos configurations.',
+    title: 'Jusqu\'à 250 participants',
+    desc: 'Animez aussi bien des petits groupes que de grands événements. Le nombre de participants dépend de votre formule, avec des parties pouvant accueillir jusqu\'à 250 participants.',
+  },
+  {
+    title: 'Quiz image interactifs',
+    desc: 'Ajoutez des images à vos questions pour créer des animations plus immersives : logos, films, objets, personnages ou défis visuels.',
   },
 ];
 
@@ -113,15 +111,17 @@ export default function PourLesAnimateursPage() {
               <tr style={{ background: 'rgba(139,92,246,0.15)' }}>
                 <th className="text-left px-5 py-3 font-black" style={{ color: 'rgba(240,244,255,0.5)' }}>Fonctionnalité</th>
                 <th className="px-5 py-3 font-black text-center" style={{ color: '#8B5CF6' }}>MUZQUIZ</th>
-                <th className="px-5 py-3 font-black text-center" style={{ color: 'rgba(240,244,255,0.3)' }}>Autres</th>
+                <th className="px-5 py-3 font-black text-center" style={{ color: 'rgba(240,244,255,0.3)' }}>Solutions classiques</th>
               </tr>
             </thead>
             <tbody>
               {[
                 ['Blind Test YouTube intégré', true, false],
-                ['Mode Buzzer temps réel', true, false],
+                ['Quiz image interactifs', true, false],
+                ['Assistant IA', true, false],
                 ['Packs personnalisés illimités', true, false],
                 ['Gratuit pour démarrer', true, false],
+                ['Compatible smartphone', true, true],
                 ['Sans installation', true, true],
                 ['Classement projeté', true, true],
               ].map(([label, muz, other], i) => (
