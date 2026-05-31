@@ -782,9 +782,11 @@ export default function RoomPage() {
               </button>
             </div>
             <button
-              onClick={async () => {
-                await endGame();
+              onClick={() => {
+                // Naviguer d'abord pour éviter que le listener realtime 'finished'
+                // ne redirige vers /results avant le push vers '/'
                 router.push('/');
+                endGame();
               }}
               className="w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80 flex items-center justify-center gap-1.5"
               style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
