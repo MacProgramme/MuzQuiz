@@ -95,6 +95,7 @@ function ForumPageInner() {
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
   const [postSaving, setPostSaving] = useState(false);
+  const [postError, setPostError] = useState('');
   const [replyContent, setReplyContent] = useState('');
   const [replySaving, setReplySaving] = useState(false);
 
@@ -184,13 +185,24 @@ function ForumPageInner() {
   const createPost = async () => {
     if (!newTitle.trim() || !newContent.trim() || !userId) return;
     setPostSaving(true);
+    setPostError('');
+    // Récupérer le token de session pour s'assurer d'être authentifié
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user || session.user.is_anonymous) {
+      setPostError('Tu dois être connecté avec un vrai compte pour publier.');
+      setPostSaving(false);
+      return;
+    }
     const { error } = await supabase
       .from('forum_posts')
-      .insert({ author_id: userId, title: newTitle.trim(), content: newContent.trim() });
+      .insert({ author_id: session.user.id, title: newTitle.trim(), content: newContent.trim() });
     if (!error) {
       setNewTitle(''); setNewContent('');
       setShowNewPost(false);
       await loadPosts();
+    } else {
+      console.error('[forum] createPost error:', error);
+      setPostError(`Erreur : ${error.message}`);
     }
     setPostSaving(false);
   };
@@ -612,8 +624,13 @@ function ForumPageInner() {
                     className="w-full px-4 py-3 rounded-xl font-medium outline-none resize-none"
                     style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,0,170,0.3)', color: '#F0F4FF' }}
                   />
+                  {postError && (
+                    <p className="text-xs font-bold px-3 py-2 rounded-lg" style={{ background: 'rgba(255,0,170,0.08)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.2)' }}>
+                      {postError}
+                    </p>
+                  )}
                   <div className="flex gap-3">
-                    <button onClick={() => setShowNewPost(false)}
+                    <button onClick={() => { setShowNewPost(false); setPostError(''); }}
                       className="flex-1 py-2.5 rounded-xl font-bold text-sm"
                       style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
                       Annuler

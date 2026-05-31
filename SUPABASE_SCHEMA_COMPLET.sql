@@ -786,14 +786,22 @@ DROP POLICY IF EXISTS "forum_posts: lecture publique"   ON forum_posts;
 DROP POLICY IF EXISTS "forum_posts: creation connecte" ON forum_posts;
 DROP POLICY IF EXISTS "forum_posts: suppression auteur" ON forum_posts;
 CREATE POLICY "forum_posts: lecture publique"    ON forum_posts FOR SELECT USING (true);
-CREATE POLICY "forum_posts: creation connecte"  ON forum_posts FOR INSERT WITH CHECK (auth.uid() = author_id AND auth.jwt()->>'is_anonymous' IS DISTINCT FROM 'true');
+CREATE POLICY "forum_posts: creation connecte"  ON forum_posts FOR INSERT WITH CHECK (
+  auth.uid() = author_id
+  AND auth.uid() IS NOT NULL
+  AND (auth.jwt()->>'is_anonymous' IS NULL OR auth.jwt()->>'is_anonymous' = 'false')
+);
 CREATE POLICY "forum_posts: suppression auteur" ON forum_posts FOR DELETE USING (auth.uid() = author_id);
 
 DROP POLICY IF EXISTS "forum_replies: lecture publique"    ON forum_replies;
 DROP POLICY IF EXISTS "forum_replies: creation connecte"  ON forum_replies;
 DROP POLICY IF EXISTS "forum_replies: suppression auteur" ON forum_replies;
 CREATE POLICY "forum_replies: lecture publique"    ON forum_replies FOR SELECT USING (true);
-CREATE POLICY "forum_replies: creation connecte"  ON forum_replies FOR INSERT WITH CHECK (auth.uid() = author_id AND auth.jwt()->>'is_anonymous' IS DISTINCT FROM 'true');
+CREATE POLICY "forum_replies: creation connecte"  ON forum_replies FOR INSERT WITH CHECK (
+  auth.uid() = author_id
+  AND auth.uid() IS NOT NULL
+  AND (auth.jwt()->>'is_anonymous' IS NULL OR auth.jwt()->>'is_anonymous' = 'false')
+);
 CREATE POLICY "forum_replies: suppression auteur" ON forum_replies FOR DELETE USING (auth.uid() = author_id);
 
 -- ── Blog posts ────────────────────────────────────────────────
