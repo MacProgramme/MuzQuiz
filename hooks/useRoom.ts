@@ -296,6 +296,24 @@ export function useRoom(code: string, nickname: string) {
 
     isSubmittingRef.current = true;
     const isCorrect = answerIndex === currentQ.correct;
+
+    // ── Mise à jour optimiste immédiate ────────────────────────────────────────
+    // On ajoute la réponse localement dès le clic pour que l'UI reflète le choix
+    // sans attendre le retour réseau (évite le "double clic" de l'hôte)
+    const optimisticAnswer = {
+      id: `optimistic-${myPlayer.id}`,
+      room_id: room.id,
+      player_id: myPlayer.id,
+      question_index: room.current_question,
+      answer_index: answerIndex,
+      is_correct: isCorrect,
+      answered_at: new Date().toISOString(),
+    };
+    setQcmAnswers(prev => {
+      if (prev.some(a => a.player_id === myPlayer.id)) return prev;
+      return [...prev, optimisticAnswer as any];
+    });
+
     const { data } = await supabase
       .from('qcm_answers')
       .insert({
@@ -310,11 +328,12 @@ export function useRoom(code: string, nickname: string) {
       .single();
     isSubmittingRef.current = false;
 
-    // Ajout avec dédup par ID — évite le doublon si l'event realtime est arrivé avant la réponse INSERT
-    if (data) setQcmAnswers(prev => {
-      if (prev.some(x => x.id === data.id)) return prev;
-      return [...prev, data];
-    });
+    // Remplacer l'entrée optimiste par la vraie (avec le vrai ID de la DB)
+    if (data) setQcmAnswers(prev =>
+      prev.some(x => x.id === data.id)
+        ? prev  // realtime a déjà mis à jour
+        : prev.map(x => x.id === `optimistic-${myPlayer.id}` ? data : x)
+    );
   }, [room, myPlayer, qcmAnswers, buzz]);
 
   const revealQCMAndNext = useCallback(async () => {
