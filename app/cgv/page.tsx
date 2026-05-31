@@ -4,18 +4,35 @@ import { MuzquizLogo } from '@/components/MuzquizLogo';
 
 export const metadata = { title: 'Conditions Générales de Vente — MUZQUIZ' };
 
-const plans = [
-  { name: "Moustachu Découverte", price: "Gratuit", description: "Accès aux modes Quiz et Buzz Quiz, jusqu'à 10 joueurs, questions par défaut" },
-  { name: "Moustachu Essentiel", price: "9,99 € / mois", description: "Quiz du Jour, jusqu'à 20 joueurs, 3 packs personnalisés" },
-  { name: "Moustachu Pro", price: "19,99 € / mois", description: "Tous les modes (Blind Test inclus), jusqu'à 50 joueurs, packs illimités, écran public" },
-  { name: "Moustachu Expert", price: "29,99 € / mois", description: "Toutes les fonctionnalités Pro, jusqu'à 100 joueurs, support prioritaire" },
+const sections = [
+  { title: '1. Identification du vendeur', content: `Dimitri Bouville – La Caravane Game\nMicro-entrepreneur – SIRET : 80424567800029\n29 rue du Traité de Rome, 14370 Moult-Chicheboville, France\nlacaravanegame@gmail.com\n\nTVA non applicable, article 293 B du Code général des impôts.` },
+  { title: '2. Objet', content: `Les présentes CGV définissent les conditions de souscription, de paiement, de renouvellement et de résiliation des abonnements proposés sur la plateforme MUZ QUIZ. Toute commande implique l'acceptation sans réserve des présentes CGV.` },
+  { title: '3. Description des offres', content: `Moustachu Découverte — 0 €\nJusqu'à 10 joueurs, Quiz, Buzz Quiz, création manuelle illimitée de questions et quiz.\n\nMoustachu Essentiel — 9,99 € / mois\nJusqu'à 20 joueurs, Quiz, Buzz Quiz, Quiz Image, saisie manuelle et import Excel illimités, génération IA limitée à 10 questions et 10 quiz par mois.\n\nMoustachu Pro — 19,99 € / mois\nJusqu'à 100 joueurs, Quiz, Buzz Quiz, Quiz Image, Blind Test Audio, saisie manuelle et import Excel illimités, génération IA limitée à 20 questions et 40 quiz par mois.\n\nMoustachu Expert — 29,99 € / mois\nJusqu'à 250 joueurs, Quiz, Buzz Quiz, Quiz Image, Blind Test Audio, saisie manuelle et import Excel illimités, génération IA limitée à 20 questions et 80 quiz par mois.` },
+  { title: '4. Évolution des offres', content: `Les fonctionnalités, limitations et caractéristiques des offres peuvent évoluer afin d'améliorer le service. Les modifications n'affecteront pas les périodes déjà facturées.` },
+  { title: '5. Prix', content: `Les prix sont exprimés en euros. La TVA n'est pas applicable conformément à l'article 293 B du Code général des impôts. Les prix affichés sur le site sont ceux applicables au moment de la commande. Le vendeur peut modifier ses tarifs à tout moment ; toute modification prendra effet lors du prochain renouvellement de l'abonnement.` },
+  { title: '6. Souscription', content: `La souscription d'un abonnement s'effectue directement depuis le site MUZ QUIZ. L'utilisateur doit disposer d'un compte valide, fournir des informations exactes, accepter les présentes CGV et effectuer le paiement demandé. La validation du paiement vaut conclusion du contrat.` },
+  { title: '7. Paiement', content: `Les paiements sont réalisés de manière sécurisée via Stripe Payments Europe Ltd. MUZ QUIZ ne collecte ni ne conserve les numéros complets de cartes bancaires. Les données bancaires sont traitées directement par Stripe conformément à sa propre politique de confidentialité. En cas d'échec de paiement, certaines fonctionnalités peuvent être suspendues jusqu'à régularisation.` },
+  { title: '8. Renouvellement automatique', content: `Les abonnements payants sont souscrits pour une durée mensuelle et renouvelés automatiquement à chaque échéance sauf résiliation par l'utilisateur avant la date de renouvellement. Le renouvellement entraîne le prélèvement automatique du montant correspondant à l'offre souscrite.` },
+  { title: '9. Résiliation', content: `L'utilisateur peut résilier son abonnement à tout moment depuis son espace personnel ou en adressant une demande à lacaravanegame@gmail.com. La résiliation prend effet à la fin de la période déjà payée. L'utilisateur conserve l'accès aux fonctionnalités jusqu'à cette date.` },
+  { title: '10. Absence de remboursement', content: `Sauf disposition légale contraire, aucun remboursement total ou partiel ne sera accordé : après activation du service, pour une période d'abonnement déjà commencée, en cas de non-utilisation du service ou en cas d'oubli de résiliation.` },
+  { title: '11. Droit de rétractation', content: `Conformément aux articles L221-18 et suivants du Code de la consommation, le consommateur dispose en principe d'un délai de quatorze jours pour exercer son droit de rétractation. Toutefois, conformément à l'article L221-28, ce droit peut être perdu lorsque l'utilisateur demande expressément l'exécution immédiate du service et reconnaît perdre son droit de rétractation une fois l'exécution commencée.` },
+  { title: '12. Suspension du service', content: `Le vendeur peut suspendre temporairement tout ou partie du service notamment pour maintenance, raisons de sécurité, incident technique, fraude ou non-paiement. Cette suspension ne donne droit à aucune indemnisation sauf disposition légale impérative contraire.` },
+  { title: '13. Obligations de l\'utilisateur', content: `L'utilisateur s'engage à respecter les CGU, fournir des informations exactes, ne pas utiliser le service à des fins illicites, ne pas contourner les limitations techniques et ne pas perturber le fonctionnement du service. Toute violation peut entraîner la suspension ou la suppression du compte.` },
+  { title: '14. Services utilisant l\'intelligence artificielle', content: `Certaines fonctionnalités permettent la génération de contenus assistée par intelligence artificielle. Les contenus générés peuvent contenir des erreurs, des approximations ou des incohérences. L'utilisateur demeure seul responsable de la vérification et de l'utilisation des contenus générés. Aucune garantie d'exactitude n'est accordée concernant ces résultats.` },
+  { title: '15. Disponibilité du service', content: `Le vendeur met en œuvre les moyens raisonnables nécessaires pour assurer la disponibilité du service. Cependant, aucune garantie de disponibilité permanente n'est fournie.` },
+  { title: '16. Responsabilité', content: `Le vendeur est soumis à une obligation de moyens. Dans tous les cas autorisés par la loi, l'indemnisation maximale pouvant être due à l'utilisateur est limitée au montant total effectivement payé au cours des douze derniers mois précédant le litige.` },
+  { title: '17. Force majeure', content: `Le vendeur ne pourra être tenu responsable lorsqu'un manquement résulte d'un événement échappant raisonnablement à son contrôle : catastrophe naturelle, panne générale d'Internet, cyberattaque, conflit social, décision administrative, défaillance majeure d'un prestataire.` },
+  { title: '18. Données personnelles', content: `Les données personnelles collectées dans le cadre de la souscription et de l'utilisation des abonnements sont traitées conformément à la Politique de confidentialité accessible sur le site.` },
+  { title: '19. Médiation de la consommation', content: `Conformément aux articles L.612-1 et suivants du Code de la consommation, tout consommateur a le droit de recourir gratuitement à un médiateur de la consommation. Les coordonnées du médiateur seront communiquées sur simple demande à lacaravanegame@gmail.com.` },
+  { title: '20. Plateforme européenne de règlement des litiges', content: `La Commission européenne met à disposition une plateforme de règlement en ligne des litiges : https://ec.europa.eu/consumers/odr` },
+  { title: '21. Droit applicable et juridiction', content: `Les présentes CGV sont soumises au droit français. En cas de litige, les parties rechercheront d'abord une solution amiable. À défaut, les juridictions françaises compétentes seront seules habilitées à connaître du litige, sous réserve des dispositions protectrices applicables aux consommateurs.` },
+  { title: '22. Contact', content: `Dimitri Bouville – La Caravane Game\nlacaravanegame@gmail.com` },
 ];
 
-export default function CGV() {
+export default function CgvPage() {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #0D1B3E 0%, #112247 100%)' }}>
       <div className="max-w-2xl mx-auto px-6 py-12">
-
         <div className="flex items-center justify-between mb-10">
           <Link href="/" className="text-sm font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
             style={{ background: 'rgba(255,0,170,0.08)', color: 'rgba(255,0,170,0.7)', border: '1px solid rgba(255,0,170,0.2)' }}>
@@ -23,154 +40,22 @@ export default function CGV() {
           </Link>
           <MuzquizLogo width={80} textSize="1.2rem" />
         </div>
-
         <h1 className="text-3xl font-black mb-2" style={{ color: '#F0F4FF' }}>Conditions Générales de Vente</h1>
-        <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.35)' }}>Dernière mise à jour : mai 2025</p>
-
-        <div className="flex flex-col gap-8" style={{ color: 'rgba(240,244,255,0.75)', lineHeight: '1.7' }}>
-
-          <section>
-            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>1. Vendeur</h2>
-            <div className="p-4 rounded-xl text-sm" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <p><strong style={{ color: '#F0F4FF' }}>Nom :</strong> [NOM DE SOCIÉTÉ]</p>
-              <p className="mt-1"><strong style={{ color: '#F0F4FF' }}>Statut :</strong> Auto-entrepreneur</p>
-              <p className="mt-1"><strong style={{ color: '#F0F4FF' }}>SIRET :</strong> [NUMÉRO SIRET]</p>
-              <p className="mt-1"><strong style={{ color: '#F0F4FF' }}>E-mail :</strong> antoine.gegedu27@gmail.com</p>
-              <p className="mt-1 text-xs" style={{ color: 'rgba(240,244,255,0.4)' }}>TVA non applicable — art. 293 B du CGI</p>
+        <p className="text-sm mb-10" style={{ color: 'rgba(240,244,255,0.35)' }}>Dernière mise à jour : mai 2026</p>
+        <div className="flex flex-col gap-8">
+          {sections.map((s, i) => (
+            <div key={i}>
+              <h2 className="text-base font-black mb-3" style={{ color: '#8B5CF6' }}>{s.title}</h2>
+              <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'rgba(240,244,255,0.65)' }}>{s.content}</p>
             </div>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>2. Produits et tarifs</h2>
-            <p className="mb-4">MUZQUIZ propose les abonnements mensuels suivants :</p>
-            <div className="flex flex-col gap-3">
-              {plans.map((plan) => (
-                <div key={plan.name} className="p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-black text-sm" style={{ color: '#F0F4FF' }}>{plan.name}</span>
-                    <span className="font-black text-sm" style={{ color: '#FF00AA' }}>{plan.price}</span>
-                  </div>
-                  <p className="text-xs" style={{ color: 'rgba(240,244,255,0.4)' }}>{plan.description}</p>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-sm" style={{ color: 'rgba(240,244,255,0.5)' }}>
-              Les prix sont indiqués en euros, toutes taxes comprises. TVA non applicable selon l&apos;article 293 B du CGI.
-              L&apos;éditeur se réserve le droit de modifier ses tarifs à tout moment. Les abonnements en cours ne sont
-              pas affectés par une modification tarifaire jusqu&apos;au renouvellement suivant.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>3. Commande et paiement</h2>
-            <p>
-              La souscription à un abonnement payant s&apos;effectue directement depuis la plateforme. Le paiement est
-              réalisé via un prestataire de paiement sécurisé. En finalisant votre commande, vous acceptez les présentes CGV.
-            </p>
-            <p className="mt-3">
-              L&apos;abonnement est à renouvellement mensuel automatique. Le montant est prélevé chaque mois à la date
-              anniversaire de la souscription.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>4. Droit de rétractation</h2>
-            <p>
-              Conformément à l&apos;article L221-18 du Code de la consommation, vous disposez d&apos;un délai de{' '}
-              <strong style={{ color: '#F0F4FF' }}>14 jours</strong> à compter de la souscription pour exercer votre
-              droit de rétractation, sans avoir à justifier de motifs ni à payer de pénalités.
-            </p>
-            <p className="mt-3">
-              Cependant, en cochant la case prévue à cet effet lors de la souscription, vous reconnaissez expressément
-              renoncer à votre droit de rétractation pour les services dont l&apos;exécution a commencé avant
-              l&apos;expiration du délai de 14 jours, conformément à l&apos;article L221-28 du Code de la consommation.
-            </p>
-            <p className="mt-3">
-              Pour exercer ce droit (si applicable), envoyez une demande à{' '}
-              <a href="mailto:antoine.gegedu27@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>
-                antoine.gegedu27@gmail.com
-              </a>{' '}
-              en précisant votre adresse e-mail de compte et la date de souscription.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>5. Résiliation et annulation</h2>
-            <p>
-              Vous pouvez résilier votre abonnement à tout moment depuis votre espace personnel ou en contactant
-              l&apos;éditeur par e-mail. La résiliation prend effet à la fin de la période de facturation en cours.
-              Aucun remboursement au prorata n&apos;est effectué pour la période restante.
-            </p>
-            <p className="mt-3">
-              En cas de non-paiement, l&apos;éditeur se réserve le droit de suspendre l&apos;accès aux fonctionnalités
-              payantes sans préavis.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>6. Exécution du service</h2>
-            <p>
-              L&apos;accès aux fonctionnalités de l&apos;abonnement souscrit est activé immédiatement après confirmation
-              du paiement. Le service est fourni par voie électronique, de manière continue pendant la durée de
-              l&apos;abonnement.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>7. Responsabilité du vendeur</h2>
-            <p>
-              L&apos;éditeur s&apos;engage à fournir le service avec soin et compétence. Sa responsabilité ne pourra
-              être engagée qu&apos;en cas de faute prouvée. En tout état de cause, la responsabilité de l&apos;éditeur
-              est limitée au montant des sommes versées par l&apos;acheteur au cours des 12 derniers mois.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>8. Données personnelles</h2>
-            <p>
-              Les données collectées lors de la commande sont traitées conformément à notre{' '}
-              <Link href="/confidentialite" className="underline" style={{ color: '#8B5CF6' }}>
-                Politique de confidentialité
-              </Link>.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>9. Médiation et litiges</h2>
-            <p>
-              En cas de litige, nous vous invitons à contacter notre service en priorité à{' '}
-              <a href="mailto:antoine.gegedu27@gmail.com" className="underline" style={{ color: '#8B5CF6' }}>
-                antoine.gegedu27@gmail.com
-              </a>.
-            </p>
-            <p className="mt-3">
-              Conformément aux articles L.616-1 et R.616-1 du Code de la consommation, vous pouvez recourir gratuitement
-              à un service de médiation. La Commission européenne met également à disposition une plateforme de règlement
-              en ligne des litiges accessible à :{' '}
-              <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer"
-                className="underline" style={{ color: '#8B5CF6' }}>
-                ec.europa.eu/consumers/odr
-              </a>.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-black mb-3" style={{ color: '#FF00AA' }}>10. Droit applicable</h2>
-            <p>
-              Les présentes CGV sont soumises au droit français. Tout litige sera soumis aux juridictions compétentes
-              du ressort du siège de l&apos;éditeur.
-            </p>
-          </section>
-
+          ))}
         </div>
-
-        <div className="mt-14 pt-6 flex flex-wrap gap-4 text-xs font-bold"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.3)' }}>
-          <Link href="/mentions-legales" className="hover:opacity-80">Mentions légales</Link>
-          <Link href="/cgu" className="hover:opacity-80">CGU</Link>
-          <Link href="/confidentialite" className="hover:opacity-80">Confidentialité</Link>
+        <div className="mt-12 pt-6 flex flex-wrap gap-4 text-xs" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: 'rgba(240,244,255,0.3)' }}>
+          <Link href="/mentions-legales" className="hover:opacity-70">Mentions légales</Link>
+          <Link href="/confidentialite" className="hover:opacity-70">Confidentialité</Link>
+          <Link href="/cookies" className="hover:opacity-70">Cookies</Link>
+          <Link href="/cgu" className="hover:opacity-70">CGU</Link>
         </div>
-
       </div>
     </div>
   );
