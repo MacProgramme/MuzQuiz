@@ -548,7 +548,7 @@ function ForumPageInner() {
             color: tab === 'forum' ? '#FF00AA' : 'rgba(240,244,255,0.35)',
             borderBottom: tab === 'forum' ? '2px solid #FF00AA' : '2px solid transparent',
           }}>
-          💬 Forum
+          Forum
         </button>
         <button
           onClick={() => setTab('packs')}
@@ -557,7 +557,7 @@ function ForumPageInner() {
             color: tab === 'packs' ? '#8B5CF6' : 'rgba(240,244,255,0.35)',
             borderBottom: tab === 'packs' ? '2px solid #8B5CF6' : '2px solid transparent',
           }}>
-          🎴 Packs
+          Packs
         </button>
         <button
           onClick={() => setTab('blog')}
@@ -566,7 +566,7 @@ function ForumPageInner() {
             color: tab === 'blog' ? '#00E5D1' : 'rgba(240,244,255,0.35)',
             borderBottom: tab === 'blog' ? '2px solid #00E5D1' : '2px solid transparent',
           }}>
-          📝 Blog
+          Blog
         </button>
       </div>
 
@@ -634,7 +634,7 @@ function ForumPageInner() {
               </div>
             ) : posts.length === 0 ? (
               <div className="text-center py-16" style={{ color: 'rgba(240,244,255,0.3)' }}>
-                <p className="text-4xl mb-3">💬</p>
+                <p className="text-4xl mb-3" style={{ opacity: 0.3 }}>—</p>
                 <p className="font-bold">Aucun sujet pour l'instant.</p>
                 <p className="text-sm mt-1 opacity-70">Sois le premier à lancer une discussion !</p>
               </div>
@@ -665,7 +665,7 @@ function ForumPageInner() {
                           </span>
                           <span className="text-xs" style={{ color: 'rgba(240,244,255,0.25)' }}>·</span>
                           <span className="text-xs font-bold" style={{ color: '#8B5CF6' }}>
-                            💬 {post.replies_count}
+                            {post.replies_count} rép.
                           </span>
                         </div>
                       </div>
@@ -722,7 +722,7 @@ function ForumPageInner() {
               </div>
             ) : filteredPacks.length === 0 ? (
               <div className="text-center py-16" style={{ color: 'rgba(240,244,255,0.3)' }}>
-                <p className="text-4xl mb-3">📭</p>
+                <p className="text-4xl mb-3" style={{ opacity: 0.3 }}>—</p>
                 <p className="font-bold">
                   {search ? 'Aucun pack ne correspond à ta recherche.' : 'Aucun pack partagé pour l\'instant.'}
                 </p>
@@ -866,7 +866,7 @@ function ForumPageInner() {
               </div>
             ) : blogPosts.length === 0 ? (
               <div className="text-center py-16" style={{ color: 'rgba(240,244,255,0.3)' }}>
-                <p className="text-4xl mb-3">📝</p>
+                <p className="text-4xl mb-3" style={{ opacity: 0.3 }}>—</p>
                 <p className="font-bold">Aucun article pour l'instant.</p>
                 {isAdmin && (
                   <p className="text-sm mt-1 opacity-70">Sois le premier à publier !</p>

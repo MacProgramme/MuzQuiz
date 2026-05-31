@@ -273,20 +273,34 @@ export function DailyQuiz({ userId, nickname, avatarColor }: Props) {
       setAlready(data.alreadyCompleted);
       if (data.myScore !== null) setMyTodayScore(data.myScore);
 
-      // Vainqueur du mois dernier
-      const { data: winner } = await supabase.from('monthly_winners')
-        .select('*').eq('month', lastMonthStr()).single();
-      if (winner) setLastWinner(winner as MonthlyWinner);
-      else {
-        const lm = lastMonthStr();
-        const { data: lb } = await (supabase as any).rpc('get_monthly_leaderboard', { target_month: lm });
-        if (lb && lb.length > 0) {
-          const top = lb[0] as LeaderboardEntry;
-          const { data: inserted } = await supabase.from('monthly_winners')
-            .insert({ month: lm, user_id: top.user_id, nickname: top.nickname, avatar_color: top.avatar_color, total_score: Number(top.total_score) })
-            .select('*').single();
-          if (inserted) setLastWinner(inserted as MonthlyWinner);
+      // Vainqueur du mois dernier — affiché uniquement à partir du 1er du mois en cours
+      const todayDay = new Date().getDate();
+      if (todayDay >= 1) {
+        // On est dans le nouveau mois → afficher le vainqueur du mois précédent
+        const { data: winner } = await supabase.from('monthly_winners')
+          .select('*').eq('month', lastMonthStr()).single();
+        if (winner) setLastWinner(winner as MonthlyWinner);
+        else {
+          // Pas encore calculé → calculer et stocker
+          const lm = lastMonthStr();
+          const { data: lb } = await (supabase as any).rpc('get_monthly_leaderboard', { target_month: lm });
+          if (lb && lb.length > 0) {
+            const top = lb[0] as LeaderboardEntry;
+            const { data: inserted } = await supabase.from('monthly_winners')
+              .insert({ month: lm, user_id: top.user_id, nickname: top.nickname, avatar_color: top.avatar_color, total_score: Number(top.total_score) })
+              .select('*').single();
+            if (inserted) setLastWinner(inserted as MonthlyWinner);
+          }
         }
+        // Ne pas afficher si on est encore dans le même mois que le vainqueur
+        // (ex : le 31 mai on ne montre pas encore le vainqueur de mai)
+        setLastWinner(prev => {
+          if (!prev) return prev;
+          const winnerMonth = prev.month; // ex: "2026-05"
+          const currentMonth = new Date().toISOString().slice(0, 7); // ex: "2026-05"
+          // Si le mois du vainqueur = mois actuel → on n'est pas encore passés au mois suivant
+          return winnerMonth === currentMonth ? null : prev;
+        });
       }
       setState('intro');
     } catch (e: any) {
