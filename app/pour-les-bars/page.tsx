@@ -16,45 +16,28 @@ export const metadata: Metadata = {
 
 const FEATURES = [
   {
-
     title: 'Zéro matériel',
     desc: 'Vos clients jouent directement depuis leur smartphone. Pas besoin de télécommandes, tablettes ou boîtiers physiques.',
   },
   {
-
     title: 'Blind Test musical',
     desc: 'Des packs musicaux thématiques prêts à l\'emploi : Années 80, Pop, Rock Français, Rap... ou créez les vôtres.',
   },
   {
-
     title: 'Classements en direct',
     desc: 'Un écran de classement projeté sur votre TV ou vidéoprojecteur. L\'ambiance monte d\'un cran à chaque question.',
   },
   {
-
     title: 'Lancez en 2 minutes',
     desc: 'Créez une partie, partagez le code, c\'est parti. Pas de configuration technique, pas d\'installation.',
   },
   {
-
-    title: 'Mode Buzzer',
-    desc: 'Le premier qui appuie remporte le point. Idéal pour créer de la compétition et de l\'excitation dans la salle.',
+    title: 'Quiz Image',
+    desc: 'Logos, célébrités, films, monuments — ajoutez une dimension visuelle à vos soirées. Tout le monde joue, tout le monde a une chance.',
   },
   {
-
-    title: 'Illimité',
-    desc: 'Pas de limite de participants ni de parties. Organisez chaque semaine sans surcoût.',
-  },
-];
-
-const TESTIMONIALS = [
-  {
-    text: 'Nos soirées quiz du jeudi ont doublé notre fréquentation. Les clients reviennent chaque semaine !',
-    author: 'Bar Le Moustachu, Lyon',
-  },
-  {
-    text: 'Simple à installer, les clients adorent jouer depuis leur téléphone. On n\'a même pas besoin d\'écran séparé.',
-    author: 'Restaurant La Brasserie, Paris',
+    title: 'Jusqu\'à 250 participants',
+    desc: 'Accueillez jusqu\'à 250 joueurs simultanément dans une même partie selon votre abonnement.',
   },
 ];
 
@@ -77,14 +60,14 @@ export default function PourLesBarsPage() {
       <section className="max-w-4xl mx-auto px-6 py-16 text-center">
         <div className="inline-block mb-4 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest"
           style={{ background: 'rgba(255,0,170,0.12)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.25)' }}>
-          🍺 Pour les bars & restaurants
+          Pour les bars &amp; restaurants
         </div>
         <h1 className="text-4xl sm:text-5xl font-black mb-6 leading-tight" style={{ color: '#F0F4FF' }}>
           Des soirées quiz qui font<br />
           <span style={{ color: '#FF00AA' }}>revenir vos clients</span>
         </h1>
         <p className="text-lg mb-10 max-w-2xl mx-auto leading-relaxed" style={{ color: 'rgba(240,244,255,0.6)' }}>
-          MUZQUIZ transforme votre établissement en scène de jeu. Quiz, blind test musical, buzzers virtuels — vos clients jouent depuis leur téléphone, vous animez depuis le vôtre.
+          MUZQUIZ transforme votre établissement en scène de jeu. Quiz et blind test musical — vos clients jouent depuis leur téléphone, vous animez depuis le vôtre.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/signup"
@@ -151,16 +134,15 @@ export default function PourLesBarsPage() {
         </div>
       </section>
 
-      {/* Footer minimal */}
       <footer className="text-center pb-8" style={{ color: 'rgba(240,244,255,0.2)', fontSize: '12px' }}>
-        <div className="flex justify-center gap-6 mb-3">
+        <div className="flex justify-center gap-6 mb-3 flex-wrap">
           <Link href="/" style={{ color: 'rgba(240,244,255,0.3)' }}>Accueil</Link>
           <Link href="/pour-les-animateurs" style={{ color: 'rgba(240,244,255,0.3)' }}>Animateurs</Link>
           <Link href="/pour-les-evenements" style={{ color: 'rgba(240,244,255,0.3)' }}>Événements</Link>
           <Link href="/pour-les-streamers" style={{ color: 'rgba(240,244,255,0.3)' }}>Streamers</Link>
           <Link href="/pricing" style={{ color: 'rgba(240,244,255,0.3)' }}>Tarifs</Link>
         </div>
-        MUZQUIZ © 2025 — Quiz & Blind Test en temps réel
+        MUZQUIZ © 2025 — Quiz &amp; Blind Test en temps réel
       </footer>
 
     </main>
