@@ -93,13 +93,24 @@ export default function PourLesAnimateursPage() {
           Conçu pour les professionnels de l'animation
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {FEATURES.map(f => (
+          {FEATURES.slice(0, 6).map(f => (
             <div key={f.title} className="p-5 rounded-2xl" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
               <h3 className="font-black text-base mb-2" style={{ color: '#F0F4FF' }}>{f.title}</h3>
               <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{f.desc}</p>
             </div>
           ))}
         </div>
+        {FEATURES.length > 6 && (
+          <div className="flex justify-center mt-4">
+            {FEATURES.slice(6).map(f => (
+              <div key={f.title} className="p-5 rounded-2xl w-full sm:w-1/2 lg:w-1/3"
+                style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
+                <h3 className="font-black text-base mb-2" style={{ color: '#F0F4FF' }}>{f.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(240,244,255,0.5)' }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Comparaison */}
