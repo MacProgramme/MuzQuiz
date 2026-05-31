@@ -39,7 +39,7 @@ export default function HistoirePage() {
           className="inline-block mb-5 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest"
           style={{ background: 'rgba(255,0,170,0.1)', color: '#FF00AA', border: '1px solid rgba(255,0,170,0.25)' }}
         >
-          🧡 Notre histoire
+          Notre histoire
         </div>
         <h1 className="text-3xl sm:text-4xl font-black mb-6 leading-tight" style={{ color: '#F0F4FF' }}>
           L&apos;histoire de MuzQuiz :<br />
@@ -111,7 +111,7 @@ export default function HistoirePage() {
           {/* Section 3 — Le nom */}
           <section>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(0,229,209,0.15)', color: '#00E5D1' }}>🌍</div>
+              <div className="w-8 h-8 rounded-full flex-shrink-0" style={{ background: 'rgba(0,229,209,0.15)', border: '2px solid rgba(0,229,209,0.3)' }} />
               <h2 className="text-xl sm:text-2xl font-black" style={{ color: '#F0F4FF' }}>
                 Pourquoi le nom MuzQuiz ?
               </h2>
@@ -203,7 +203,7 @@ export default function HistoirePage() {
           {/* Section 6 — Avenir */}
           <section>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0" style={{ background: 'rgba(0,229,209,0.15)', color: '#00E5D1' }}>🔭</div>
+              <div className="w-8 h-8 rounded-full flex-shrink-0" style={{ background: 'rgba(0,229,209,0.15)', border: '2px solid rgba(0,229,209,0.3)' }} />
               <h2 className="text-xl sm:text-2xl font-black" style={{ color: '#F0F4FF' }}>
                 Une aventure qui ne fait que commencer
               </h2>
