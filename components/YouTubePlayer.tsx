@@ -76,9 +76,20 @@ interface Props {
 type Status = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
+// ── Volume persistant (localStorage) ─────────────────────────────────────────
+const VOL_KEY = 'muz_bt_volume';
+function getStoredVolume(): number {
+  try { const v = parseInt(localStorage.getItem(VOL_KEY) ?? '80', 10); return isNaN(v) ? 80 : Math.max(0, Math.min(100, v)); }
+  catch { return 80; }
+}
+function saveVolume(v: number) {
+  try { localStorage.setItem(VOL_KEY, String(v)); } catch {}
+}
+
 export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPlay, onVideoError, onPlayerReady, startTime = 0 }: Props) {
   const [status, setStatus] = useState<Status>('idle');
   const [retryCount, setRetryCount]     = useState(0);
+  const [volume, setVolume]             = useState<number>(80); // initialisé après mount
   const playerRef         = useRef<any>(null);
   const containerRef      = useRef<HTMLDivElement>(null);
   const readyRef          = useRef(false);
@@ -96,6 +107,18 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
 
   const videoId = extractYoutubeId(url);
 
+  // ── Volume : lire localStorage au mount ──────────────────────────────────────
+  useEffect(() => {
+    setVolume(getStoredVolume());
+  }, []);
+
+  // ── Appliquer le volume au player quand il change ─────────────────────────────
+  useEffect(() => {
+    if (playerRef.current && readyRef.current && !isPreloadModeRef.current) {
+      try { playerRef.current.setVolume?.(volume); } catch {}
+    }
+  }, [volume]);
+
   // ── Signaler le préchargement terminé ────────────────────────────────────────
   const signalPreloadDone = useCallback(() => {
     if (!isPreloadModeRef.current) return;
@@ -104,9 +127,10 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
       clearTimeout(preloadFallbackRef.current);
       preloadFallbackRef.current = null;
     }
-    // Remettre en pause, couper le mute, puis signaler
+    // Remettre en pause, couper le mute, appliquer volume, puis signaler
     try { playerRef.current?.pauseVideo?.(); } catch {}
     try { playerRef.current?.unMute?.(); } catch {}
+    try { playerRef.current?.setVolume?.(getStoredVolume()); } catch {}
     onPlayerReady?.();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -241,8 +265,9 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
     if (shouldPlay) {
       if (playerRef.current?._errored) return;
       if (readyRef.current && playerRef.current) {
-        // Assurer que le player est démuté (il pouvait être en mute pendant le preload)
+        // Assurer que le player est démuté et au bon volume
         try { playerRef.current.unMute?.(); } catch {}
+        try { playerRef.current.setVolume?.(getStoredVolume()); } catch {}
         if (startTime > 0) playerRef.current.seekTo(startTime, true);
         playerRef.current.playVideo();
         setStatus('loading');
@@ -403,6 +428,39 @@ export function YouTubePlayer({ url, autoPlay = false, shouldPlay = false, onPla
         </div>
 
       </div>
+
+      {/* Barre de volume */}
+      <div className="flex items-center gap-3 px-1">
+        <span style={{ color: 'rgba(240,244,255,0.35)', fontSize: '0.75rem', flexShrink: 0 }}>
+          {volume === 0 ? '🔇' : volume < 40 ? '🔈' : volume < 75 ? '🔉' : '🔊'}
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={volume}
+          onChange={e => {
+            const v = parseInt(e.target.value, 10);
+            setVolume(v);
+            saveVolume(v);
+            if (playerRef.current && readyRef.current) {
+              try { playerRef.current.setVolume?.(v); } catch {}
+              if (v === 0) { try { playerRef.current.mute?.(); } catch {} }
+              else { try { playerRef.current.unMute?.(); } catch {} }
+            }
+          }}
+          className="flex-1"
+          style={{
+            accentColor: '#FF00AA',
+            height: 4,
+            cursor: 'pointer',
+          }}
+        />
+        <span className="text-xs font-bold tabular-nums" style={{ color: 'rgba(240,244,255,0.35)', minWidth: 28, textAlign: 'right' }}>
+          {volume}%
+        </span>
+      </div>
+
     </div>
   );
 }
