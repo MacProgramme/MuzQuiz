@@ -63,8 +63,7 @@ export default function SignupPage() {
     const userId = data.user?.id;
     if (!userId) { setErr("Erreur lors de la création du compte."); setLoading(false); return; }
 
-    // Créer le profil (fonctionne si session active = confirmation email désactivée)
-    // Si email confirmation activée, le trigger SQL crée le profil automatiquement
+    // Créer le profil — le trigger SQL peut déjà l'avoir créé
     const { error: profileError } = await supabase.from('profiles').insert({
       id: userId,
       nickname: nickname.trim(),
@@ -72,15 +71,15 @@ export default function SignupPage() {
       newsletter_subscribed: newsletter,
     });
 
-    // Si l'insertion a réussi (session active), on va directement au profil
-    if (!profileError) {
+    // Si erreur de doublon (trigger a déjà créé le profil), on ignore et on redirige
+    if (!profileError || profileError.code === '23505') {
       router.push('/profile');
       return;
     }
 
-    // Sinon, confirmation d'email requise — on affiche un message à l'utilisateur
+    // Autre erreur inattendue
     setLoading(false);
-    setErr('✅ Compte créé ! Vérifie ton email pour confirmer ton inscription, puis connecte-toi.');
+    setErr('Erreur lors de la création du profil. Réessaie ou contacte le support.');
   };
 
   const initial = nickname.trim() ? nickname.trim()[0].toUpperCase() : '?';
