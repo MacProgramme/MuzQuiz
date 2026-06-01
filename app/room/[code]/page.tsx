@@ -323,8 +323,10 @@ export default function RoomPage() {
     const allPlayers = room.public_screen ? players.filter(p => !p.is_host) : players;
     // On exclut les joueurs marqués absents
     const activePlayers = allPlayers.filter(p => !p.is_absent);
+    // Compter les joueurs UNIQUES ayant répondu (évite les doublons optimiste+realtime pour le même joueur)
+    const uniqueAnswererCount = new Set(qcmAnswers.map(a => a.player_id)).size;
     // Révéler si : tous les joueurs présents ont répondu, OU si tout le monde est absent
-    if (allPlayers.length > 0 && (activePlayers.length === 0 || qcmAnswers.length >= activePlayers.length)) {
+    if (allPlayers.length > 0 && (activePlayers.length === 0 || uniqueAnswererCount >= activePlayers.length)) {
       revealQCMAndNext();
     }
   }, [qcmAnswers, players, room, myPlayer, qcmRevealed]);
@@ -332,7 +334,8 @@ export default function RoomPage() {
   // Auto-révéler Buzz Quiz quand le joueur buzzé a répondu
   useEffect(() => {
     if (!room || !isBuzzMechanic(room.mode) || !buzz || !myPlayer?.is_host || qcmRevealed) return;
-    if (qcmAnswers.length >= 1) {
+    const uniqueAnswererCount = new Set(qcmAnswers.map(a => a.player_id)).size;
+    if (uniqueAnswererCount >= 1) {
       revealQCMAndNext();
     }
   }, [qcmAnswers, room, buzz, myPlayer, qcmRevealed]);
@@ -344,7 +347,7 @@ export default function RoomPage() {
   // Sync btPreloadingRef avec le state React (pour accès dans les callbacks async)
   useEffect(() => { btPreloadingRef.current = btPreloading; }, [btPreloading]);
 
-  // Réinitialiser le préchargement BT quand la salle passe en attente (replay)
+  // Réinitialiser le préchargement BT et prevQuestionRef quand la salle passe en attente (replay)
   useEffect(() => {
     if (room?.status === 'waiting') {
       setBtPreloading(null);
@@ -352,6 +355,8 @@ export default function RoomPage() {
       btPreloadingRef.current = null;
       btReadySetRef.current   = new Set();
       btTotalCountRef.current = 0;
+      // Reset pour que le prochain startGame déclenche toujours le re-init (Bug fix : relancer une fois/deux)
+      prevQuestionRef.current = undefined;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.status]);

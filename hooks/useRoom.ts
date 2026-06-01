@@ -34,10 +34,11 @@ export function useRoom(code: string, nickname: string) {
   // Garde pour éviter la double-exécution de revealQCMAndNext
   const isRevealingRef = useRef(false);
 
-  // Effacer earnedThisRound dès que la question change
+  // Effacer earnedThisRound dès que la question change + reset le guard de reveal
   useEffect(() => {
     if (room?.current_question === undefined) return;
     setEarnedThisRound({});
+    isRevealingRef.current = false;
   }, [room?.current_question]);
 
   useEffect(() => {
@@ -376,12 +377,10 @@ export function useRoom(code: string, nickname: string) {
     }
 
     // Après 10s (5s reveal + 5s classement) : question suivante
-    // earnedThisRound sera effacé automatiquement par l'useEffect sur current_question
+    // Le nettoyage de qcmRevealed/qcmAnswers est géré par onRoomUpdate quand current_question change
+    // isRevealingRef est réinitialisé par l'useEffect sur current_question
     setTimeout(async () => {
       await nextQuestion(room);
-      setQcmRevealed(false);
-      setQcmAnswers([]);
-      isRevealingRef.current = false;
     }, 10000);
   }, [room, myPlayer]); // qcmAnswers retiré des deps — on passe par qcmAnswersRef
 
