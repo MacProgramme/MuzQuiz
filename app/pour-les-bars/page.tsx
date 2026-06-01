@@ -37,7 +37,7 @@ const FEATURES = [
   },
   {
     title: 'Jusqu\'à 250 participants',
-    desc: 'Accueillez jusqu\'à 250 joueurs simultanément dans une même partie selon votre abonnement.',
+    desc: 'Accueillez jusqu\'à 250 joueurs simultanément dans une même partie. Une solution adaptée aussi bien aux petits groupes qu\'aux grands événements.',
   },
 ];
 
